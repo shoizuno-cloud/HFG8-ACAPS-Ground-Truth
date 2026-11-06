@@ -35,9 +35,7 @@
     "title": "Escalating cross-border insecurity linked to the Sudan conflict increases protection risks and humanitarian needs in eastern Chad",
     "country_iso": "TCD",
     "country": "Chad",
-    "probability_acaps": "High",
     "impact_acaps": 4,
-    "level": "High",
     "status": "Active",
     "horizon_months": 6,
     "triggers": [
@@ -75,5 +73,12 @@
   ],
   "seconds": 60,
   "served_from": "live",
-  "generated_at": "2026-11-07T09:00:00Z"
+  "generated_at": "2026-11-07T09:00:00Z",
+  "blind": true,
+  "accuracy_prompt": "Is this something you saw, read, or heard?",
+  "source_tags": [
+    "saw",
+    "read",
+    "heard"
+  ]
 }

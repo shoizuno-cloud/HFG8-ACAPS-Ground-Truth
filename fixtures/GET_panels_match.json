@@ -1,0 +1,101 @@
+{
+  "risk_id": "R1043",
+  "experts": [
+    {
+      "pseudonym": "synthetic-0",
+      "match": 0.95,
+      "geo_tags": [
+        "TCD"
+      ],
+      "theme_tags": [
+        "displacement"
+      ]
+    },
+    {
+      "pseudonym": "synthetic-1",
+      "match": 0.88,
+      "geo_tags": [
+        "TCD"
+      ],
+      "theme_tags": [
+        "conflict"
+      ]
+    },
+    {
+      "pseudonym": "synthetic-2",
+      "match": 0.81,
+      "geo_tags": [
+        "TCD"
+      ],
+      "theme_tags": [
+        "displacement"
+      ]
+    },
+    {
+      "pseudonym": "synthetic-3",
+      "match": 0.74,
+      "geo_tags": [
+        "TCD"
+      ],
+      "theme_tags": [
+        "conflict"
+      ]
+    },
+    {
+      "pseudonym": "synthetic-4",
+      "match": 0.67,
+      "geo_tags": [
+        "TCD"
+      ],
+      "theme_tags": [
+        "displacement"
+      ]
+    },
+    {
+      "pseudonym": "synthetic-5",
+      "match": 0.6,
+      "geo_tags": [
+        "TCD"
+      ],
+      "theme_tags": [
+        "conflict"
+      ]
+    },
+    {
+      "pseudonym": "synthetic-6",
+      "match": 0.53,
+      "geo_tags": [
+        "TCD"
+      ],
+      "theme_tags": [
+        "displacement"
+      ]
+    },
+    {
+      "pseudonym": "synthetic-7",
+      "match": 0.46,
+      "geo_tags": [
+        "TCD"
+      ],
+      "theme_tags": [
+        "conflict"
+      ]
+    }
+  ],
+  "composition": {
+    "max_per_affiliation": 3,
+    "ok": true,
+    "geo_spread": [
+      "TCD",
+      "SDN",
+      "FRA"
+    ],
+    "theme_cover": [
+      "conflict",
+      "displacement"
+    ],
+    "gaps": []
+  },
+  "served_from": "live",
+  "generated_at": "2026-11-07T09:00:00Z"
+}

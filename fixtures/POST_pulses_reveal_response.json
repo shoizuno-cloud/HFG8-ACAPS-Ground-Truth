@@ -47,18 +47,34 @@
   "missing_themes": [
     {
       "theme": "night-time militia movement near Adré",
-      "count": 3
+      "count": 3,
+      "origin": "many",
+      "corroboration": "single-source"
     },
     {
       "theme": "camp capacity in Ouaddaï",
-      "count": 2
+      "count": 2,
+      "origin": "many",
+      "corroboration": "corroborated"
     },
     {
       "theme": "seasonal access after rains",
-      "count": 1
+      "count": 1,
+      "origin": "single",
+      "corroboration": "not checked"
     }
   ],
   "revealed_at": "2026-11-07T10:00:00Z",
   "served_from": "live",
-  "generated_at": "2026-11-07T09:00:00Z"
+  "generated_at": "2026-11-07T09:00:00Z",
+  "integrity": {
+    "anchoring_shift": 0.04,
+    "herding": "none",
+    "collusion_pairs": 0,
+    "recency": "none",
+    "coverage_gaps": [
+      "no displacement expert on panel"
+    ],
+    "used_round": 2
+  }
 }

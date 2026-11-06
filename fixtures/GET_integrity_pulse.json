@@ -1,0 +1,20 @@
+{
+  "pulse_id": "P-0001",
+  "anchoring_shift": 0.04,
+  "herding": "none",
+  "collusion_pairs": 0,
+  "recency": "none",
+  "coverage_gaps": [
+    "no displacement expert on panel"
+  ],
+  "used_round": 2,
+  "evidence": {
+    "anchoring": "mean |round2 - round1| = 0.04 (threshold 0.15)",
+    "herding": "3 of 8 moved toward mean, 2 gave new reasons",
+    "collusion": "no pair above 0.9 agreement over 3+ pulses",
+    "recency": "GDELT z=2.4 but ACLED z=2.9: indicators moved too"
+  },
+  "moderator_only": true,
+  "served_from": "live",
+  "generated_at": "2026-11-07T09:00:00Z"
+}

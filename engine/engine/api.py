@@ -84,3 +84,20 @@ def board():
 @app.get("/sim/proof")
 def proof():
     return fixture("GET_sim_proof.json")
+
+
+@app.get("/radar/status")
+def radar_status():
+    return fixture("GET_radar_status.json")
+
+@app.post("/experts/apply", status_code=201)
+def experts_apply(body: dict):
+    return fixture("POST_experts_apply_response.json")
+
+@app.get("/panels/match")
+def panels_match(risk_id: str = "R1043"):
+    return fixture("GET_panels_match.json")
+
+@app.get("/integrity/{pulse_id}")
+def integrity(pulse_id: str):
+    return fixture("GET_integrity_pulse.json")
