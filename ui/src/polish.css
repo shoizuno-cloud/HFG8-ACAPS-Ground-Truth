@@ -442,3 +442,13 @@ main.workspace {
   grid-template-columns: none;
   gap: 0;
 }
+.qr-address-note {
+  max-width: 38ch;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  text-align: center;
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 8px;
+}

@@ -6,15 +6,24 @@ test("jury QR, private calibration, reduced motion and keyboard access", async (
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/stage");
   await expect(page.getByRole("img", { name: /QR code/ })).toBeVisible();
+  await expect(
+    page.getByText("Computer-only address.", { exact: false }),
+  ).toBeVisible();
   await page
     .getByLabel("Expert invitation URL")
     .fill("http://192.168.1.25:5173/e/demo");
+  await expect(
+    page.getByRole("status").filter({ hasText: "previous link" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Generate QR" }).click();
   await expect(
     page.getByRole("link", {
       name: "http://192.168.1.25:5173/e/demo",
       exact: true,
     }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Network address supplied.", { exact: false }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Enlarge QR" }).click();
   expect(
@@ -59,4 +68,12 @@ test("expert card accessibility and text scaling", async ({ page }) => {
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  await page.getByRole("button", { name: "Seal my answer" }).click();
+  await page
+    .getByRole("link", { name: "View your private calibration" })
+    .click();
+  await expect(page).toHaveURL(/\/me\/demo\/calibration$/);
+  await expect(
+    page.getByRole("link", { name: "View your contribution" }),
+  ).toHaveCount(0);
 });

@@ -243,7 +243,11 @@ export function Radar() {
                 {visible.map((r) => (
                   <tr key={r.risk_id}>
                     <td>
-                      {r.country}
+                      <a
+                        href={`/countries/${encodeURIComponent(r.country_iso)}`}
+                      >
+                        {r.country}
+                      </a>
                       <small>{r.risk_id}</small>
                     </td>
                     <td>{r.title}</td>

@@ -211,8 +211,8 @@ export function ExpertCard({ token }: { token: string }) {
                   label="Copy commitment"
                 />
               </div>
-              <a href={`/me/${encodeURIComponent(token)}/impact`}>
-                View your private contribution
+              <a href={`/me/${encodeURIComponent(token)}/calibration`}>
+                View your private calibration
               </a>
             </div>
           ) : (
@@ -243,7 +243,11 @@ export function ExpertCard({ token }: { token: string }) {
                 </div>
                 <h2>{card.risk.title}</h2>
                 <details className="evidence">
-                  <summary>Indicator evidence</summary>
+                  <summary>
+                    {card.pulse.evidence[0]
+                      ? `${card.pulse.evidence[0].source}: ${card.pulse.evidence[0].value.toLocaleString("en-GB")} versus ${card.pulse.evidence[0].baseline.toLocaleString("en-GB")} baseline`
+                      : "Indicator evidence"}
+                  </summary>
                   {card.pulse.evidence.map((e) => (
                     <p key={e.indicator}>
                       <a href={safeUrl(e.url)} target="_blank" rel="noreferrer">

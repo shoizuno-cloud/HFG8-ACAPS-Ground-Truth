@@ -13,6 +13,8 @@ export function Stage() {
   const [qr, setQr] = useState(mock ? invitation : "");
   const [error, setError] = useState("");
   const [presentation, setPresentation] = useState(false);
+  const qrHost = qr ? new URL(qr).hostname : "";
+  const computerOnly = ["localhost", "127.0.0.1", "[::1]"].includes(qrHost);
   return (
     <Frame
       title="Jury access"
@@ -105,6 +107,11 @@ export function Stage() {
             <div
               className={presentation ? "qr-panel presentation-qr" : "qr-panel"}
             >
+              <p className="qr-address-note">
+                {computerOnly
+                  ? "Computer-only address. Replace it with your LAN address before inviting phones."
+                  : "Network address supplied. Test it on both phones before presenting."}
+              </p>
               <QRCodeSVG
                 value={qr}
                 size={256}
@@ -127,6 +134,12 @@ export function Stage() {
                 {qr}
               </a>
               <CopyButton value={qr} label="Copy invitation" />
+              {qr !== invitation.trim() && (
+                <p className="qr-address-note" role="status">
+                  The QR still uses the previous link. Generate QR to apply your
+                  changes.
+                </p>
+              )}
               <button
                 aria-pressed={presentation}
                 onClick={() => setPresentation((v) => !v)}
@@ -176,12 +189,6 @@ export function Calibration({ token }: { token: string }) {
       title="Your calibration"
       subtitle="A private view of how your forecasts resolve."
     >
-      <a
-        className="button-link"
-        href={`/me/${encodeURIComponent(token)}/impact`}
-      >
-        View your contribution
-      </a>
       <div className="mode-banner">
         <LockKeyhole size={16} />
         {mock

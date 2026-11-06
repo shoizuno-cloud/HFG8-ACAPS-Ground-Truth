@@ -27,7 +27,6 @@ For the backend connection, run `npm run dev:live` and open http://localhost:517
 - `/committee`: open an application ID and record committee approval. Mock mode uses two distinct synthetic admin choices; API mode never assumes approval counts or invents credentials.
 - `/stage`: QR invitation with LAN/HTTPS URL validation, enlarged display and copy control. Each live expert needs their own backend-issued invitation. No credential is minted by this page.
 - `/me/:token/calibration`: private Brier score and reliability report, with overconfidence when supplied. The fixture is historical and explicitly not linked to your new mock answer.
-- `/me/:token/impact`: private contribution story, linked from the sealed-answer receipt. A scroll-driven CSS 3D paper sculpture moves from a sealed view to a shared panel across four chapters. Native scrolling is preserved, motion can be disabled, and reduced-motion users get a compact static layout. The illustration is not a beneficiary count. Recognises resolved forecasts and earlier correct signals using the existing calibration response. People-helped and lives-changed totals stay explicitly unmeasured until verified action and outcome records exist; no beneficiary count or individual attribution is inferred from forecast accuracy. No contract or endpoint was added.
 
 Mock demo: load synthetic answers → reveal → prepare draft → enter decision note → accept/edit → ledger. Reset demo clears the tab's saved decision. Rejection adds nothing to the current round's ledger; eligible resolved history remains visible.
 
@@ -37,14 +36,23 @@ Mock demo: load synthetic answers → reveal → prepare draft → enter decisio
 npx playwright install chromium
 npm test
 npm run test:live
+npm run test:scaffold
 npm run build
 ```
 
 Mock UI tests run on port 5174. API-mode contract tests run on 5176 and intercept HTTP/SSE responses; they are not a complete live-backend integration test. Both cover 375px phone, 1440px desktop and 1920px projector widths. Accessibility checks use axe. Screenshots are written to `test-results/` and `test-results-live/`.
 
+The optional scaffold smoke suite requires the existing team API running on port 18000. It starts a frontend on 5177 and uses the real `/api` proxy, with no intercepted responses. It checks Radar, panel matching, the blind card, synthetic submission, private calibration, ledger honesty and clear errors for unimplemented pulse lookup and approval. Screenshots go to `test-results-scaffold/`. The backend remains a fixture scaffold; these checks do not establish a working production seal, scoring engine or admin gateway.
+
+The optional private contribution story was removed at the user's request. The sealed-answer receipt now links directly to private calibration; there is no contribution route, animation bundle or public impact counter.
+
 The expert timer is a gentle guide and never discards the answer. Failed requests retain in-memory form values; invitation tokens and expert answers are not written to browser storage. Only mock analyst decisions use session storage. Public views require five contributions; regional means require three. Round one hides ratings and rating-bearing questions even if an older API supplies them.
 
 ## Handoff
+
+The ACAPS-connected discovery extension adds `/countries`, `/countries/:ISO`, `/analysis`, `/topics` and `/search?q=…`. Shared navigation keeps Radar as the entry point and groups analyst/committee/jury actions under Workspace. Country pages join loaded risks to the analyst desk; analysis supports keyword, country, theme, publication-date and sort filters. Global search covers country profiles, connected risks, selected reports and resources.
+
+Official country/report/topic links were checked on 6 November 2026. The seven-profile, four-report catalogue is a dated editorial snapshot, not a complete archive or live feed. Additional countries come from the connected risk service. Full country coverage, current publications, datasets, downloads, API access and newsletter subscriptions open ACAPS's official services. No publications endpoint, API credentials, severity scores or subscription backend were invented. Update `src/acaps-catalog.ts` to refresh selected metadata; a live catalogue needs a backend feed agreed with Lane A.
 
 See `V2_HANDOFF.md` for the v1-to-v2 comparison, fixture inconsistencies and backend dependencies. In particular, the skeleton has no expert approval, pulse lookup, SSE or resolution implementation yet. The v2 draft contains an uncorroborated claim; API approval is blocked until the backend removes or corroborates it. The integrity and matching fixtures also disagree about thematic coverage.
 
