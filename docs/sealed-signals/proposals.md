@@ -44,5 +44,5 @@ Priority: **M** = before the Sat 20:00 merge, **S** = before the Sun 10:30 freez
 ## P11. Check the "over a million refugees" claim (M) - team
 - The master prompt states "over a million Sudanese refugees in eastern Chad since 2023". The UNHCR figures found were about 800,000 to 870,000 registered arrivals by mid-2025. Either source a current figure or change the sentence in the README and slides. Lane C has used the verifiable wording.
 
-## P12. Change to the brief given to the analysts' desk copy (L)
+## P12. Confirm the "six-step method" with ACAPS (L)
 - Master prompt describes ACAPS's process as a "six-step method". We found no numbered list in ACAPS's published methodology material. Ask Alex for the official steps (question for the 6 Nov follow-up). Until then impact.md uses a six-step grouping labelled as ours.
