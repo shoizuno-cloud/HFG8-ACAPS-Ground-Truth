@@ -1,9 +1,21 @@
 {
   "pulse_id": "P-0001",
   "n": 8,
-  "plain_mean": 0.69,
-  "weighted_probability": 0.78,
-  "surprisingly_popular": "yes",
+  "mean": 0.69,
+  "spread": {
+    "min": 0.3,
+    "max": 0.9,
+    "iqr": 0.2
+  },
+  "minority_rationales": [
+    "Border raids have slowed since mid-September; the pressure is displacement, not attacks."
+  ],
+  "weighted_mean": 0.69,
+  "sp_experiment": {
+    "answer": "yes",
+    "method": "Prelec 2017 / Palley & Soll peer-prediction weighting",
+    "label": "experimental"
+  },
   "dissent_index": 0.31,
   "distribution": [
     {
@@ -65,16 +77,18 @@
     }
   ],
   "revealed_at": "2026-11-07T10:00:00Z",
+  "integrity_notes": [
+    {
+      "kind": "coverage_gap",
+      "text": "Trigger T2 (new refugee influx) has no panel member tagged displacement.",
+      "evidence": "panel tags: conflict x5, political x3"
+    },
+    {
+      "kind": "shared_origin",
+      "text": "Two 'what are we missing' entries may share an origin (near-identical wording).",
+      "evidence": "similarity 0.93"
+    }
+  ],
   "served_from": "live",
-  "generated_at": "2026-11-07T09:00:00Z",
-  "integrity": {
-    "anchoring_shift": 0.04,
-    "herding": "none",
-    "collusion_pairs": 0,
-    "recency": "none",
-    "coverage_gaps": [
-      "no displacement expert on panel"
-    ],
-    "used_round": 2
-  }
+  "generated_at": "2026-11-07T09:00:00Z"
 }

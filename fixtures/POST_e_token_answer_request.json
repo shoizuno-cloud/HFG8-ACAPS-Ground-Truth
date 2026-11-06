@@ -1,10 +1,11 @@
 {
   "mask": "pseudonym",
-  "agree": null,
+  "stance": "estimate",
   "probability": 0.8,
-  "panel_guess": 0.65,
-  "missing": "Militia movements near Adré at night are not in any report yet.",
-  "changed_mind": false,
   "confidence": 4,
-  "source_tag": "heard"
+  "panel_share_yes": 0.65,
+  "missing": "Militia movements near Adré at night are not in any report yet.",
+  "source_tag": "heard",
+  "round": 1,
+  "changed_mind": false
 }

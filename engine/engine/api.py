@@ -101,3 +101,12 @@ def panels_match(risk_id: str = "R1043"):
 @app.get("/integrity/{pulse_id}")
 def integrity(pulse_id: str):
     return fixture("GET_integrity_pulse.json")
+
+
+@app.post("/risks/{risk_id}/contract", status_code=201)
+def freeze_contract(risk_id: str, body: dict):
+    return fixture("GET_risks_R1043.json")
+
+@app.get("/pulses/{pulse_id}/outcome-report")
+def outcome_report(pulse_id: str):
+    return fixture("GET_pulses_outcome_report.json")

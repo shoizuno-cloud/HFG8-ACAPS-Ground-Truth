@@ -71,7 +71,6 @@
     "pseudonym",
     "anonymous"
   ],
-  "seconds": 60,
   "served_from": "live",
   "generated_at": "2026-11-07T09:00:00Z",
   "blind": true,
@@ -80,5 +79,13 @@
     "saw",
     "read",
     "heard"
-  ]
+  ],
+  "rating_hidden_until_submission": true,
+  "stances": [
+    "estimate",
+    "outside_my_expertise",
+    "not_enough_evidence"
+  ],
+  "elicitation": "What share of this panel will put the probability above 0.5?",
+  "mask_note": "Distinctive wording can be recognised by peers even under a pseudonym."
 }

@@ -1,12 +1,39 @@
-# Sealed Signals — master prompt v2 (team of 3)
+# Sealed Signals — master prompt v3 (team of 3)
+
+> **v3, Fri 6 Nov night — after two independent technical reviews.** The loop stands; the claims around it were
+> over-stated. If your agent is on v2: re-read sections 0, 4, 5, 6, 6a, 7, 8 and 10. Summary of changes:
+> 1. "Sealed" means: commitments prove timing and consistency and block *peer* anchoring. They do not hide answers from
+>    the server. Section 1a is the who-can-learn-what table; it replaces every "nothing leaves the device" sentence.
+> 2. Aggregation: **equal-weight mean is primary**; spread and minority rationales shown; surprisingly-popular is a
+>    labelled experiment with a defined elicitation; no fixed extremizing; weights start equal, shrink to a prior, capped.
+> 3. Score against the export's **Probability** field (five bands), never Risk Level; the number mapping is an assumption.
+> 4. Synthetic results are a **sensitivity test**, not proof. No "earlier than ACAPS" claim: the export has no structured
+>    rating history (verified), so the timing chart is dropped.
+> 5. A frozen **question contract** per risk before any scoring (docs/sealed-signals/question-contract.md).
+> 6. Anonymity for the pilot, stated honestly: restricted registry, stable internal ids, pseudonyms to peers, aggregates
+>    to the public. Blind-signed credentials = phase 2; Semaphore = one slide. No "claim later" for anonymous answers.
+> 7. Integrity detectors are **descriptions, not diagnoses**: no auto-penalties, no auto-fallback, analyst reads them.
+>    Priority: coverage gap and single-origin claims. "n ≥ 5" is a disclosure rule, not an anonymity guarantee.
+> 8. Skeptic tightened (exact provenance; judgement / observation / inference separated; uncorroborated ≠ false).
+> 9. Deterministic draft template is the default; the agent loop stays behind `FF_AGENTS=false`.
+> 10. Ledger gains "what decision, for whom, by when" and "panel view rejected: analyst rationale".
+> 11. Score forecasts, not people: committee-side only; group outcome report to all who answered; private calibration
+>     opt-in after 5 resolutions; never score free text; scores never gate approval.
+> 12. Card: no countdown in the product (jury exercise only); "outside my expertise" and "not enough evidence" options;
+>     round 2 optional and asynchronous; wording "rating hidden until after submission".
+> 13. Doorbell: analyst-triggered is primary; automated indicator mapping is phase 2 as a per-risk menu.
+> 14. Pitch: OpenTimestamps, ML-KEM/ML-DSA and the hardware notary are out of the 3 minutes; one privacy-engineering
+>     page in the repo. "Ready for a supervised pilot of this workflow", not "pilot-ready Monday".
+> Innovation framing: "distinctive for this challenge": a one-minute masked expert loop that publishes its own
+> limitations and misses, with hidden-rating first rounds, descriptive integrity notes and a decision-oriented ledger.
 
 > **v2, Fri 6 Nov evening — what changed after the ACAPS mentor interview.** If your agent already started on v1, read
 > section 0a first, then re-read sections 4, 5 and 6: contracts and routes gained fields and endpoints; nothing was removed.
 > 1. We build **the Risk Radar platform ACAPS does not have**, on their live API (CSV fallback), and put the expert loop on top.
 > 2. Experts are vetted professionals (analysts, journalists, researchers) with **geographic + thematic tags**; pulses route
 >    to the best-matched 8, not a fixed country list. Sign-up → ACAPS committee approval → credential.
-> 3. New **bias and integrity layer** (section 6a): blind-first round, accuracy prompt, calibration/overconfidence, herding,
->    collusion, recency, coverage gaps, rumour propagation and corroboration. Flags are moderator-only.
+> 3. New **integrity layer** (section 6a, superseded by v3 wording): hidden-rating first round, accuracy prompt, descriptive
+>    integrity notes, shared-origin and corroboration checks on free text. Notes are moderator-only.
 > 4. New **public honesty box** on every ledger entry: what fed into this, confidence, gaps, hit rate, misses included.
 > 5. The app is **one validation layer among others**: nothing changes an ACAPS product automatically (unchanged, now explicit).
 > 6. Email magic link is the primary channel; WhatsApp second.
@@ -23,14 +50,13 @@ These branches hold only our scaffold plus the ACAPS data; the organisers' origi
 ## 0. The idea in one paragraph (keep this text identical in README, slides and UI)
 
 Sealed Signals is the Risk Radar platform ACAPS does not have: the live Risk List from the ACAPS API, with an expert loop,
-a bias and integrity layer and a public audit trail built on top. It lets ACAPS ask a small, trusted panel of vetted experts
-(5–10, matched by geographic and thematic tags) to challenge and forecast its risk analyses in one minute, behind a mask
-each expert chooses. A daily "doorbell" watches open indicators mapped to the
-risk's own triggers and fires a pulse when something shifts (or when an analyst, or two experts, ask). Answers are sealed,
-opened together, aggregated with the surprisingly-popular method and reliability weights, turned into a cited draft update
-the analyst accepts or rejects, and published as a group view on a public ledger. When the risk resolves, every forecast is
-Brier-scored, weights update, and experts get a private calibration report. Nothing identifying ever leaves the expert's
-device; nothing publishes itself.
+descriptive integrity notes and a public audit trail on top. An ACAPS analyst (or, in phase 2, an indicator doorbell)
+sends a one-minute question to the eight best-matched vetted experts. Experts answer on their phone behind a mask they
+choose, with ACAPS's rating hidden until after submission. Answers are committed with a timestamp, opened together,
+summarised as an equal-weight mean with spread and minority reasons, annotated with integrity notes the analyst reads,
+turned into a cited draft the analyst accepts, edits or rejects, and published as a group view on a ledger with an honesty
+box that states what fed into it, its limits and its misses. When the risk resolves, forecasts are scored committee-side
+and every panel member gets the group outcome report. Nothing publishes itself.
 
 Tagline: **The machine rings the doorbell, the panel answers, the analyst decides, the ledger remembers.**
 Demo risk: **R1043**, escalating cross-border insecurity in eastern Chad (Sudan war). Numbers from the data: 139 risks,
@@ -52,11 +78,26 @@ Demo risk: **R1043**, escalating cross-border insecurity in eastern Chad (Sudan 
 - **Today's process**: 32 analysts track their countries' parameters daily, score risks manually with simple thresholds,
   update weekly. "Not very automated, lots of space to improve."
 
+## 1a. Who can learn what (replaces every "sealed" or "nothing leaves the device" claim)
+
+| Party | Before reveal | After reveal | Ever |
+|---|---|---|---|
+| The expert | their own answer | their answer + group view | their own private calibration (opt-in) |
+| Peers on the panel | nothing | anonymised distribution, pseudonymous rationales if the author chose `pseudonym` | never a name, never a `known`/`anonymous` author |
+| ACAPS admins / analyst | that an answer exists (count) | answers with the mask the expert chose; `anonymous` answers without identity | the identity registry (restricted, logged access) |
+| The public | nothing | aggregates with n ≥ 5, honesty box, outcomes | never an individual answer or rationale |
+| The server | the committed value is stored encrypted at rest; application access controls, not cryptography, keep staff from reading it early | everything the admins see | the registry, under access logging |
+
+Commit-and-reveal guarantees: an answer cannot be changed after submission, the timestamp is verifiable, and peers cannot
+see each other before the round closes. It does not guarantee confidentiality from the operator. Small panels with
+distinctive rationales can re-identify a dissenter to peers; the card warns about this next to the mask picker.
+
 ## 1. Hard rules (from the ACAPS brief; a jury will check)
 
 1. **No real expert data.** Synthetic experts and answers only (`data/synthetic/`).
-2. **Expert-controlled anonymity** per answer: `known` (to ACAPS) · `pseudonym` (to peers) · `anonymous`. Public output is
-   aggregate only; never return an aggregate with fewer than **5** contributions.
+2. **Expert-controlled confidentiality** per answer: `known` (to ACAPS) · `pseudonym` (to peers) · `anonymous` (no
+   identity stored with the answer). Public output is aggregate only; never return an aggregate with fewer than **5**
+   contributions (a disclosure rule, not an anonymity guarantee).
 3. **One minute, one card, no login** (magic link). Minutes, not sessions.
 4. **No chatbot feel, no engagement metrics.** AI is analyst-side only. We show calibration and outcomes, never time-in-app.
 5. **Nothing publishes itself.** Rating updates reach the ledger only through the analyst's accept / edit / reject.
@@ -115,15 +156,18 @@ Risk          risk_id, title, country_iso, country, probability_acaps (text: Ver
               level ("Low"|"Medium"|"High"), status, triggers[{id,title,description}], horizon_months=6, sources[]
 Pulse         id, risk_id, panel_id, fired_at, reason ("doorbell"|"analyst"|"experts"|"heartbeat"), round (1|2),
               evidence[{source, indicator, value, baseline, z, url}], question, expires_at, n_answers
-Answer        id, pulse_id, mask, pseudonym|null, agree (bool|null in round 1: blind-first, ACAPS rating hidden),
-              probability (0..1), confidence (1..5), panel_guess (0..1), missing (≤240 chars),
-              source_tag ("saw"|"read"|"heard"|null), changed_mind (bool, round 2 only), sealed_at, revealed_at|null
-Seal          answer_id, commitment (sha256), sealed_at, anchor|null
-RoundResult   pulse_id, n, plain_mean, weighted_probability, surprisingly_popular ("yes"|"no"), dissent_index (0..1),
+Answer        id, pulse_id, mask, pseudonym|null, probability (0..1)|null, confidence (1..5)|null,
+              stance ("estimate"|"outside_my_expertise"|"not_enough_evidence"), panel_share_yes (0..1)|null
+              (elicitation, fixed: "what share of this panel will put the probability above 0.5?"),
+              missing (≤240 chars), source_tag ("saw"|"read"|"heard"|null), round (1|2), changed_mind (bool, round 2 only),
+              committed_at, revealed_at|null
+Commitment    answer_id, commitment (sha256 of canonical json + salt), committed_at   # timing + consistency proof only
+RoundResult   pulse_id, n, mean (equal weight, PRIMARY), spread {min, max, iqr}, minority_rationales[],
+              weighted_mean (shrunk, capped; secondary), sp_experiment {answer ("yes"|"no"), method:"Prelec 2017 / Palley & Soll peer-prediction weighting", label:"experimental"},
               distribution[{bucket, count}], agreement_by_region[{region, n, mean}], missing_themes[{theme, count, origin ("many"|"single"),
               corroboration ("corroborated"|"single-source"|"uncorroborated"|"not checked")}], revealed_at,
-              integrity{anchoring_shift, herding ("none"|"suspected"), collusion_pairs (int), recency ("none"|"suspected"),
-              coverage_gaps[], used_round (1|2)}                       # moderator-only; stripped from public responses
+              integrity_notes[{kind ("convergence"|"co_movement"|"shared_origin"|"coverage_gap"|"news_driven"),
+              text (descriptive, never a verdict), evidence}]           # moderator-only; stripped from public responses
 DraftUpdate   id, risk_id, pulse_id, proposed_probability (text scale), proposed_level, rationale_md,
               claims[{claim_id, text, evidence_kind ("panel"|"indicator"|"source"), evidence_ref, numbers[]}],
               skeptic[{claim_id, verdict ("supported"|"not_supported"), checks[]}], missing_checks[{theme, status}],
@@ -131,11 +175,14 @@ DraftUpdate   id, risk_id, pulse_id, proposed_probability (text scale), proposed
               status ("draft"|"accepted"|"edited"|"rejected"), decided_by, decided_at, note
 LedgerEntry   risk_id, pulse_id, sealed_at, group_probability, acaps_probability, acaps_level,
               outcome (null|"materialised"|"not_materialised"), resolved_at|null, verify_hash,
-              honesty{n, agreement (0..1), confidence_band [lo, hi], coverage_gaps[], claims_corroborated (int),
-              claims_total (int), panel_hit_rate (0..1|null), caveat (str)}        # public, on every entry
-Score         pseudonym, risk_id, brier, resolved_at, weight_after
-Calibration   pseudonym, n_resolved, mean_brier, reliability_weight, moved_before_acaps (int), overconfidence (−1..1),
-              note   (private to the expert)
+              honesty{n, agreement (0..1), spread [min, max], coverage_gaps[], claims_corroborated (int),
+              claims_total (int), claims_in_verification_queue (int), panel_hit_rate (0..1|null), misses (int), caveat (str),
+              decision_use {what_decision, for_whom, by_when}, panel_view_rejected (bool), analyst_rationale (str|null)}   # public
+QuestionContract  risk_id, event (one sentence), location, horizon_deadline (date), resolution_source, adjudication_rule,
+              frozen_at   # must exist before a pulse can be scored
+Score         expert_internal_id, risk_id, brier, resolved_at, weight_after        # committee-side only
+OutcomeReport pulse_id, group_mean, outcome, analyst_decision_summary              # sent to everyone who answered
+Calibration   expert_internal_id, n_resolved, mean_brier, overconfidence (−1..1), note   # private, opt-in, after 5 resolutions
 ```
 
 Every response carries `served_from: "live"` and `generated_at`. Every aggregate carries `n`; `n < 5` is never returned.
@@ -149,19 +196,21 @@ GET  /risks                       active risks (live ACAPS API, CSV fallback) ·
 POST /experts/apply               {geo_tags, theme_tags, affiliation_tag, languages, channel} → {expert_id, status:"applied"}
 POST /experts/{id}/approve        committee approval (needs 2 admins) → status approved, credential issued
 GET  /panels/match?risk_id=       the 8 best-matched approved experts + composition check
-GET  /integrity/{pulse_id}        moderator-only: the integrity block + per-check evidence
+GET  /integrity/{pulse_id}        moderator-only: integrity notes (descriptive) + evidence
+POST /risks/{risk_id}/contract    freeze the QuestionContract (required before resolve)
+GET  /pulses/{id}/outcome-report  the group outcome report sent to all who answered
 POST /pulses                      {risk_id, reason:"analyst", question?} → Pulse
 POST /pulses/doorbell/run         run the detector once → {shifts[], pulses_fired[]}
 GET  /pulses/{id}                 Pulse
 GET  /e/{token}                   expert card payload: {pulse, risk, round, group_view_if_round2}
-POST /e/{token}/answer            Answer → {sealed_at, commitment}
+POST /e/{token}/answer            Answer → {committed_at, commitment}
 POST /pulses/{id}/reveal          → RoundResult (opens round 1, starts round 2)
 GET  /pulses/{id}/result          RoundResult
 POST /pulses/{id}/draft           → DraftUpdate
 POST /drafts/{id}/decision        {action: accept|edit|reject, edited_probability?, note} → DraftUpdate (+ LedgerEntry on accept/edit)
 GET  /ledger · GET /ledger/{risk_id} · POST /ledger/verify {verify_hash} → {valid, sealed_at, anchor}
 POST /risks/{risk_id}/resolve     {outcome, resolved_at} → {scores_written, weights_updated}
-GET  /me/{token}/calibration      Calibration (private)
+GET  /me/{token}/calibration      Calibration (private, opt-in, 404 until 5 resolutions)
 GET  /analyst/board               {super_estimators[{pseudonym, n, mean_brier, weight}], divergence[{risk_id, panel, acaps}]}
 GET  /sim/proof                   contents of reports/proof.json
 GET  /events                      SSE: pulse_fired · answer_sealed · round_revealed · draft_decided · risk_resolved
@@ -171,30 +220,42 @@ Example payloads for every route are in `fixtures/` (Lane B starts from these; L
 
 ## 6. Algorithms (Lane A)
 
-- **Seal**: `commitment = sha256(canonical_json(answer) + salt)`, stored with `sealed_at` before anything else; plaintext
-  encrypted at rest; values appear only in aggregates after reveal. `verify_hash` of a ledger entry = sha256 of the round's
-  sorted commitments. Optional daily anchor (OpenTimestamps) behind `FF_ANCHOR`.
-- **Masks**: `pseudonym = HMAC(server_key, expert_id)`. Anonymous answers carry no pseudonym and count in aggregates only.
-  Membership proof: `FF_ZK=true` uses a Semaphore group per panel (JS SDK in the card); default `FF_ZK=false` uses an HMAC
-  credential so the demo never blocks on circuits. Say on the slide which one is running.
-- **Surprisingly popular**: compare the actual share of "yes" (will materialise within 6 months) with the mean of
-  `panel_guess`; the answer whose actual share exceeds its predicted share is the SP answer.
-- **Weighted aggregate**: `w = 1 / (0.1 + mean_brier)` (new expert = median weight); aggregate in log-odds; extremize ×1.3;
-  back to probability. Map to ACAPS's scale: <0.2 Very Low · <0.4 Low · <0.6 Medium · <0.8 High · else Very High.
-- **Scoring**: Brier = (p − outcome)². Calibration per pseudonym. `moved_before_acaps` = expert on the correct side of 0.5
-  while ACAPS's rating was not.
+- **Commitment**: `commitment = sha256(canonical_json(answer) + salt)`, stored with `committed_at` before anything else;
+  plaintext encrypted at rest; values appear only in aggregates after the round closes. Guarantee: timing and
+  consistency, resistance to peer anchoring. Not confidentiality from the operator (section 1a). `verify_hash` of a
+  ledger entry = sha256 of the round's sorted commitments; the public Verify button checks exactly that and says so.
+- **Masks (pilot design)**: restricted identity registry with stable internal expert ids and logged access; pseudonym
+  to peers = HMAC(server_key, expert_id); `anonymous` answers are stored without any identity link and cannot be claimed
+  later. Blind-signed single-use credentials are the phase-2 path if anonymity from ACAPS itself is required (threat
+  model: issuance timing, network metadata, revocation, scoring). Zero-knowledge group membership (Semaphore) is one slide
+  in docs/sealed-signals/privacy-engineering.md, not a build.
+- **Aggregate (primary)**: equal-weight arithmetic mean of probabilities, with spread (min, max, IQR) and the minority
+  rationales shown next to it. **Experiment (labelled)**: surprisingly-popular on the binary question, elicitation fixed
+  as "what share of this panel will put the probability above 0.5?" (Prelec, Seung & McCoy 2017; peer-prediction
+  weighting per Palley & Soll; Lane C verifies the exact citations before any slide).
+- **Weighted mean (secondary)**: weights start equal; after resolutions, performance estimates shrink toward the prior
+  (n_resolved / (n_resolved + 5)); any single weight capped at 2× the median. No extremizing. Map to ACAPS's Probability
+  bands with an explicit, documented assumption (Very Low .1 · Low .3 · Medium .5 · High .7 · Very High .9); the export
+  publishes no numeric bands (verified).
+- **Scoring**: only after a frozen QuestionContract. Brier = (p − outcome)² per forecast, committee-side. Stances
+  `outside_my_expertise` and `not_enough_evidence` are never scored. Free text is never scored. Scores never gate approval
+  or removal in the pilot.
 - **k-anonymity**: any aggregate needs n ≥ 5; regional breakdowns need n ≥ 3 per region or are merged.
-- **Doorbell**: parse the `Triggers` column; map each trigger to indicators by keyword table (conflict/attack/raid → acled;
-  refugee/displace/influx → unhcr; escalation/tension/political → gdelt); shift if 7-day count ≥ 3× the 90-day baseline
-  or z ≥ 2; max one pulse per expert per 7 days; heartbeat every 28 days. Connectors ship with cached fixtures so offline works.
-- **Analyst-side verification loop** (`engine/agents/`, flag `FF_AGENTS`, default on with a deterministic fallback so it
-  never blocks the demo). Same pattern as our FloodSense engine, model-optional, never expert-facing:
+- **Doorbell**: analyst-triggered pulse is the primary path. Phase 2 (behind `FF_DOORBELL`): the analyst picks indicators
+  per risk from a menu (ACLED events, UNHCR arrivals, GDELT volume), 7-day count vs 90-day baseline, z ≥ 2 or 3×; one
+  pulse per expert per 7 days; connectors with cached fixtures. The eastern Chad replay demonstrates phase 2 only;
+  no timing claim versus ACAPS ratings (the export has no structured rating history).
+- **Draft update**: the default path is a deterministic template with traceable fields (every sentence names its
+  aggregate, indicator record or source). The agent loop below is behind `FF_AGENTS=false` and is used only if it is
+  stable by Saturday 20:00.
+- **Analyst-side verification loop** (`engine/agents/`, flag `FF_AGENTS`, default off). Same pattern as our FloodSense engine, model-optional, never expert-facing:
   1. **Investigator** drafts the rating update as claims. Each claim cites one of three evidence kinds: a panel aggregate
      (`n`, weighted probability, SP answer, a missing-theme count), a doorbell indicator (source, value, baseline, URL), or
      a source already in the risk's `Source` / `Rationale` fields. No other knowledge is allowed in a claim.
-  2. **Skeptic** tries to break each claim with at most three checks: does the cited aggregate exist and have n >= 5; does
-     the number in the claim equal the cited value (tolerance 2 %); is the cited URL present in the risk's sources or the
-     pulse evidence. For each `missing` theme the panel raised, the Skeptic looks for corroboration in the ACAPS API /
+  2. **Skeptic** checks each claim: the number is exactly the value in a versioned aggregate or indicator record (no
+     tolerance); a factual claim carries a supporting passage, publication date and geography; the claim is labelled as
+     panel judgement, observed indicator or analyst inference; the event definition, horizon and probability scale match
+     the question contract; no wording stronger than the evidence. For each `missing` theme the panel raised, the Skeptic looks for corroboration in the ACAPS API /
      ReliefWeb (cached fixtures offline) and labels it `corroborated` / `uncorroborated` / `not checked`. Claims that fail are
      marked, never deleted.
   3. **Judge** scores the draft: citation coverage, numbers match, grounding (supported / partial / unsupported per claim),
@@ -205,18 +266,17 @@ Example payloads for every route are in `fixtures/` (Lane B starts from these; L
   Deterministic fallback when no model is configured: the Investigator composes claims from templates over the aggregates
   and evidence, the Skeptic and Judge run their checks exactly as above.
 
-## 6a. Bias and integrity layer (Lane A builds, Lane B shows on the desk only, Lane C explains)
+## 6a. Integrity layer (Lane A builds, Lane B shows on the desk only, Lane C explains)
 
 Expert-facing, the only two changes to the card:
-- **Blind-first round.** Round 1 hides ACAPS's rating; the expert gives their own number first. Round 2 shows ACAPS and
-  the anonymised group. The round-1 → round-2 shift is logged as `anchoring_shift` (Tversky & Kahneman, anchoring; Delphi
+- **Rating hidden until after submission.** Round 1 does not display ACAPS's rating; the expert submits their own number
+  first (we avoid displaying the anchor; we cannot guarantee cognitively independent judgement). The optional round 2
+  shows ACAPS and the anonymised group; the shift is logged as an integrity note (Tversky & Kahneman on anchoring; Delphi
   practice of independent first rounds).
 - **Accuracy prompt + source tag.** Above the "what are we missing" line: "Is this something you saw, read, or heard?"
   with a three-way tag (Pennycook & Rand: a single accuracy nudge measurably reduces the spread of false claims).
 
 Moderator-facing detectors (desk only; never public, never shown to experts):
-- **Calibration / overconfidence** per pseudonym: calibration curve, overconfidence index (Tetlock, Good Judgment
-  Project). Feeds the weight and the expert's private report.
 - **Herding**: round-2 answers converge toward the mean with no new reasons → `herding: suspected`; the aggregate then uses
   round 1 (`used_round`).
 - **Collusion / independence**: pairwise agreement across pulses beyond what shared evidence explains → `collusion_pairs`;
@@ -227,42 +287,50 @@ Moderator-facing detectors (desk only; never public, never shown to experts):
   goes public as a caveat in the honesty box.
 
 Rumour pipeline for the free-text claims:
-- **Propagation**: near-identical wording across experts or rounds counts once and is marked `origin: single`.
+- **Shared origin** (priority, deterministic): near-identical wording across experts or rounds counts once and is noted
+  as "these claims may share an origin".
 - **Corroboration** (the Skeptic, section 6): each claim checked against the ACAPS API, ReliefWeb and ACLED (cached fixtures
-  offline) → `corroborated / single-source / uncorroborated`. Uncorroborated claims never enter the draft; they reach the
-  analyst as "to verify" with the source tag.
+  offline) → `corroborated / single-source / uncorroborated`. Uncorroborated claims never enter the draft; they sit in a
+  verification queue for the analyst with the source tag. Absence from the selected databases is not evidence of falsity.
 
-Public honesty box on every ledger entry: n, agreement, confidence band, coverage gaps, claims corroborated / total, the
-panel's past hit rate including misses, and a one-line caveat. This is the mentor's "state what fed into this".
+Public honesty box on every ledger entry: n, agreement, spread, coverage gaps, claims corroborated / total / in
+verification queue, the panel's hit rate and number of misses, a one-line caveat, "what decision this could inform, for
+whom, by when", and when the analyst rejected the panel view, that fact and the analyst's rationale. This is the mentor's
+"state what fed into this".
 
-Deterministic first, all of it; no model is needed for any detector. Tests: a seeded herded round, a seeded colluding
-pair, a copied claim, a panel with a coverage gap each produce the expected flag.
+Deterministic, all of it. Seeded tests show the code produces the intended note; they are not a sensitivity or
+specificity claim, and the README says so.
 
-## 7. Proof simulation (Lane A builds, Lane C uses on the slide)
+## 7. Sensitivity test on the resolved risks (Lane A builds, Lane C presents it as what it is)
 
-On the 104 resolved risks: 8 synthetic experts per risk (3 good, 3 average, 2 noisy; signal = outcome + noise). Compare
-Brier of plain mean · weighted+extremized · ACAPS rating mapped to probability (Very Low .1 · Low .3 · Medium .5 · High .7 ·
-Very High .9), with bootstrap CIs, plus "share of risks where the weighted panel was on the right side earlier than ACAPS".
-Output `reports/proof.json` and one bar chart `reports/proof.png`. The slide states the assumptions: a method test, not a
-claim about real experts.
+On the 104 resolved risks, simulate panels of eight under several scenarios: mixed accuracy; shared bias (all experts
+pulled the same way); correlated errors (shared sources); no expert advantage (pure noise). Report Brier of the equal-weight
+mean, the shrunk weighted mean and the ACAPS Probability band mapped to a number (stated assumption), with bootstrap
+intervals labelled "resampling spread, not statistical confidence". Output `reports/sensitivity.json` and one chart. It is a
+software and sensitivity test of the pipeline; it says nothing about real experts and makes no timing claim. Off the
+3-minute headline; on the repo page and in Q&A.
 
 ## 8. UI (Lane B) — three screens
 
 1. **Expert card** `/e/:token` — phone first, looks like a message from a colleague: evidence line, risk title,
    "Still High?" toggle, probability slider with words, "What will the panel say?" slider, one text line (≤240), mask picker
-   (badge / nickname / ghost), big **Seal** button, 60-s countdown, "Sealed. You'll hear how it resolves." Round 1 is
-   blind: no ACAPS rating on the card. The "what are we missing" line carries the accuracy prompt and the saw/read/heard tag.
-   Round 2 shows ACAPS's rating, the anonymised distribution and a "changed my mind" toggle. Primary channel: email magic
-   link; the card also renders inside a WhatsApp link preview.
+   (badge / nickname / ghost) with a one-line note that distinctive rationales can be recognised by peers, big **Submit**
+   button, "Submitted. You'll get the group outcome when this resolves." No countdown in the product (the jury exercise
+   adds one). Two extra choices beside the slider: "outside my expertise" and "not enough evidence". ACAPS's rating is
+   hidden until after submission. The "what are we missing" line carries the accuracy prompt and the saw/read/heard tag.
+   Round 2 is optional and asynchronous, opened only when there is new evidence or meaningful disagreement; it shows
+   ACAPS's rating, the anonymised distribution and a "changed my mind" toggle. Primary channel: email magic link.
 2. **Analyst desk** `/desk` — projector-friendly: live envelope tray (SSE), Reveal button, distribution chart (ACAPS line,
    panel dots, SP highlight), Chad map with agreement by region, digest with cited reasons, draft card with
-   Accept / Edit / Reject, super-estimator board (pseudonyms), doorbell log with evidence, and an **integrity panel** per
-   round: anchoring shift, herding, collusion pairs, recency, coverage gaps, each with its evidence (section 6a). Plus a
+   Accept / Edit / Reject (with the "what decision, for whom, by when" fields and a rationale box), committee-only
+   scoring view, analyst-trigger button per risk (doorbell log behind the phase-2 flag), and an **integrity notes** panel
+   per round: descriptive sentences with evidence (section 6a), no verdict colours. Plus a
    **Radar** view: the live Risk List from the ACAPS API as a table and map with a "source: ACAPS API / CSV" badge, and a
    committee view for expert applications (approve needs two admins).
 3. **Public ledger** `/ledger` — per risk: sealed-at, group probability, ACAPS rating, outcome, **Verify** (turns green),
-   and the **honesty box** (n, agreement, confidence band, coverage gaps, corroborated claims, hit rate, caveat). No names
-   anywhere, no flags about anyone.
+   and the **honesty box** (n, agreement, spread, coverage gaps, corroborated / queued claims, hit rate and misses, caveat,
+   decision use, and "panel view rejected" with the analyst's rationale when that happened). No names anywhere, no notes
+   about anyone.
 
 White background, one accent colour, big type. Build against `fixtures/` first (a `VITE_MOCK=1` mode serving the fixtures),
 switch to the live API at the Saturday 20:00 merge.
@@ -319,11 +387,12 @@ Professional, minimal, modern. The jury should think "this already exists in pro
 ## 10. Lanes
 
 ### Lane A — Backend (engine, data, proof)
-Build sections 4–7 in `engine/`, `scripts/seed.py`, `scripts/demo_replay.py`, SSE. Order: models + db + seed → radar
-(ACAPS API client with CSV fallback) → experts + tags + committee approval + panel matching → pulses + answer/seal (blind
-round 1, source tag) → reveal + aggregate → integrity detectors (6a) → verification loop (investigator, skeptic incl.
-corroboration, judge) → draft + decision + ledger with honesty box → resolve + scoring + calibration → doorbell with
-fixtures → simulation + proof.png. Keep `fixtures/` true to real responses (regenerate them from the running API).
+Build sections 4–7 in `engine/`, `scripts/seed.py`, SSE. Order: models + db + seed → radar (ACAPS API client with CSV
+fallback) → experts + tags + committee approval + panel matching → analyst-triggered pulses + answer/commit (rating hidden,
+stances, source tag) → reveal + equal-weight aggregate with spread and minority rationales → integrity notes (6a) →
+deterministic draft template + tightened Skeptic checks → decision + ledger with honesty box → question contract +
+resolve + committee-side scoring + outcome report → sensitivity test + chart → phase-2 doorbell behind its flag if time
+remains → agent loop behind its flag only if stable. Keep `fixtures/` true to real responses (regenerate them from the running API).
 Milestones: API with seeded data Sat 10:00 · full loop Sat 18:00 · proof.png Sat 20:00 · polish Sun.
 
 ### Lane B — Frontend (three screens + demo stage)
@@ -353,9 +422,15 @@ Milestones: expert card mock Sat 12:00 · desk + ledger mock Sat 16:00 · live A
 7. **README narrative** (section 0 + why + limits), and the one-paragraph submission description.
 8. **More features**: a ranked list of what to add after the hackathon (voice-first on device, machine panel member,
    hardware notary, anticipatory triggers, French/Arabic), each with the stakeholder it serves.
-9. **Bias and honesty narrative**: one slide that names each detector in section 6a with its research source (Tversky &
-   Kahneman; Tetlock / Good Judgment Project; Prelec 2017; Pennycook & Rand), and the mentor's own words on honesty and
-   "one validation layer among others". Verify every citation before it goes on a slide.
+9. **Honesty and limits narrative**: one slide on hidden-rating first rounds, descriptive integrity notes, the honesty box
+   and the group outcome report, with sources (Tversky & Kahneman on anchoring; Tetlock / Good Judgment Project on
+   calibration; Prelec, Seung & McCoy 2017 and Palley & Soll on peer-prediction methods, experiment only; Pennycook &
+   Rand on accuracy prompts; the Delphi method). Verify every citation, including any PMC reference, before a slide.
+10a. **Privacy-engineering page** (docs/sealed-signals/privacy-engineering.md): the who-can-learn-what table, the pilot
+   anonymity design, the phase-2 blind-signature path with its threat model, and one paragraph each on ZK membership,
+   timestamp anchoring and post-quantum protection of the registry as research directions. None of it in the 3 minutes.
+10b. **Question contract template** (docs/sealed-signals/question-contract.md) with R1043 filled in: event, location,
+   deadline, resolution source, adjudication rule.
 10. **Platform framing**: "the Risk Radar platform ACAPS does not have" — one before/after slide: website + API today,
     platform + loop + audit trail tomorrow; what the 32 analysts gain per week.
 

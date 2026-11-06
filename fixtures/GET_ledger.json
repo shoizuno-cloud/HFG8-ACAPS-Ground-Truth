@@ -13,17 +13,26 @@
       "honesty": {
         "n": 8,
         "agreement": 0.69,
-        "confidence_band": [
-          0.66,
-          0.88
+        "spread": [
+          0.3,
+          0.9
         ],
         "coverage_gaps": [
-          "no displacement expert on panel"
+          "no panel member tagged displacement"
         ],
         "claims_corroborated": 1,
         "claims_total": 3,
+        "claims_in_verification_queue": 1,
         "panel_hit_rate": null,
-        "caveat": "First round for this panel; no track record yet. One raised claim is single-source."
+        "misses": 0,
+        "caveat": "First round for this panel; no track record yet. One raised claim is single-source.",
+        "decision_use": {
+          "what_decision": "Pre-position shelter and cash in Ouaddaï",
+          "for_whom": "NGO preparedness lead, eastern Chad",
+          "by_when": "2026-11-20"
+        },
+        "panel_view_rejected": false,
+        "analyst_rationale": null
       }
     },
     {
@@ -39,15 +48,24 @@
       "honesty": {
         "n": 7,
         "agreement": 0.81,
-        "confidence_band": [
-          0.6,
-          0.82
+        "spread": [
+          0.5,
+          0.85
         ],
         "coverage_gaps": [],
         "claims_corroborated": 2,
         "claims_total": 2,
+        "claims_in_verification_queue": 0,
         "panel_hit_rate": 0.8,
-        "caveat": "Panel of 7; one expert paused."
+        "misses": 1,
+        "caveat": "Panel of 7; one expert paused.",
+        "decision_use": {
+          "what_decision": "Extend food distribution contract",
+          "for_whom": "WFP country office",
+          "by_when": "2026-06-01"
+        },
+        "panel_view_rejected": true,
+        "analyst_rationale": "Panel mean 0.72 rejected on 2026-05-02: indicators flat; the risk later materialised. Recorded as a miss for the analyst, not the panel."
       }
     }
   ],
