@@ -1,3 +1,4 @@
+import { PortalHeader } from "./PortalHeader";
 import { DraftNarrative, pendingClaims } from "./Grounding";
 import { HonestyBox, IntegrityPanel, PanelMatch } from "./V2Panels";
 import { useEffect, useState, type ReactNode } from "react";
@@ -34,41 +35,7 @@ export function Frame({
       <a className="skip-link" href="#page-content">
         Skip to content
       </a>
-      <header className="site-header workspace-header">
-        <a className="brand" href="/">
-          <span className="brand-mark">
-            <LockKeyhole size={19} />
-          </span>
-          Sealed Signals
-        </a>
-        <nav aria-label="Main navigation">
-          <a
-            href="/"
-            aria-current={location.pathname === "/" ? "page" : undefined}
-          >
-            Radar
-          </a>
-          <a href="/committee">Committee</a>
-          <a
-            href="/desk"
-            aria-current={location.pathname === "/desk" ? "page" : undefined}
-          >
-            Analyst desk
-          </a>
-          <a
-            href="/ledger"
-            aria-current={location.pathname === "/ledger" ? "page" : undefined}
-          >
-            Public ledger
-          </a>
-          <a
-            href="/stage"
-            aria-current={location.pathname === "/stage" ? "page" : undefined}
-          >
-            Jury access
-          </a>
-        </nav>
-      </header>
+      <PortalHeader />
       <main id="page-content" className="workspace live-workspace">
         <div className="workspace-title">
           <div>
@@ -78,8 +45,8 @@ export function Frame({
         </div>
         {children}
         <footer className="workspace-footer">
-          Synthetic experts and answers only. Public output is aggregate only.
-          Analyst approval is required.
+          Hackathon prototype. Synthetic experts and answers only. Public output
+          is aggregate only. Analyst approval is required.
         </footer>
       </main>
     </>
@@ -376,7 +343,11 @@ function LiveDesk() {
     await run("Loading risks", async () => {
       const response = await endpoint.risks();
       setRisks(response.risks);
-      setSelected((previous) => previous || response.risks[0]?.risk_id || "");
+      setSelected((previous) =>
+        response.risks.some((r) => r.risk_id === previous)
+          ? previous
+          : response.risks[0]?.risk_id || "",
+      );
       try {
         setBoard(await endpoint.board());
       } catch {
@@ -390,33 +361,43 @@ function LiveDesk() {
     void load();
   }, []);
   useEffect(() => {
+    let active = true;
     const events = new EventSource(`${apiBase}/events`);
     events.onopen = () => setConnection("Connected");
     events.onerror = () =>
-      setConnection("Disconnected · retrying automatically");
+      setConnection(
+        events.readyState === EventSource.CLOSED
+          ? "Unavailable · refresh answers manually"
+          : "Disconnected · retrying automatically",
+      );
     const onEvent = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
+        if (event.type === "pulse_fired") {
+          setMessage(
+            `A new pulse is available: ${data.pulse_id || "refresh the pulse list"}.`,
+          );
+          return;
+        }
         if (data.pulse_id && pulse && data.pulse_id !== pulse.id) return;
         if (
           event.type === "answer_sealed" &&
           pulse &&
-          Number.isInteger(data.n_answers)
+          Number.isInteger(data.n_answers) &&
+          data.n_answers >= 0
         )
           setPulse((p) => (p ? { ...p, n_answers: data.n_answers } : p));
         if (event.type === "round_revealed" && pulse)
           void endpoint
             .result(pulse.id)
             .then((value) => {
-              if (validResult(value)) setGroup(value);
+              if (active && validResult(value) && value.pulse_id === pulse.id)
+                setGroup(value);
             })
-            .catch(() =>
-              setMessage("Round changed. Refresh the result to retrieve it."),
-            );
-        if (event.type === "pulse_fired")
-          setMessage(
-            `A new pulse is available: ${data.pulse_id || "refresh the pulse list"}.`,
-          );
+            .catch(() => {
+              if (active)
+                setMessage("Round changed. Refresh the result to retrieve it.");
+            });
         if (event.type === "draft_decided")
           setMessage(
             "An analyst decision was recorded. Refresh the ledger to view it.",
@@ -444,10 +425,17 @@ function LiveDesk() {
       "risk_resolved",
     ])
       events.addEventListener(type, onEvent as EventListener);
-    return () => events.close();
+    return () => {
+      active = false;
+      events.close();
+    };
   }, [pulse?.id]);
   const risk = risks.find((r) => r.risk_id === selected);
   function clearRound(value: Pulse) {
+    if (value.risk_id !== selected)
+      throw new Error(
+        "The API returned a pulse for another risk. Select that risk before opening it.",
+      );
     setPulse(value);
     setGroup(null);
     setDraft(null);
@@ -605,6 +593,10 @@ function LiveDesk() {
                         onClick={() =>
                           void run("Revealing round", async () => {
                             const value = await endpoint.reveal(pulse.id);
+                            if (value.pulse_id !== pulse.id)
+                              throw new Error(
+                                "The API returned a result for a different pulse. Refresh the selected pulse.",
+                              );
                             if (!validResult(value))
                               throw new Error(
                                 "Group view withheld: at least five contributions are required.",
@@ -630,6 +622,10 @@ function LiveDesk() {
                         onClick={() =>
                           void run("Opening result", async () => {
                             const value = await endpoint.result(pulse.id);
+                            if (value.pulse_id !== pulse.id)
+                              throw new Error(
+                                "The API returned a result for a different pulse. Refresh the selected pulse.",
+                              );
                             if (!validResult(value))
                               throw new Error(
                                 "Group view withheld: fewer than five contributions.",

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { mock } from "./api";
 import { endpoint } from "./service";
 import { percent } from "./desk-model";
@@ -164,27 +164,37 @@ export function IntegrityPanel({ pulseId }: { pulseId: string }) {
   );
 }
 export function PanelMatch({ riskId }: { riskId: string }) {
+  const generation = useRef(0);
   const [value, setValue] = useState<Match | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(false);
   async function load() {
+    const ticket = ++generation.current;
     setLoading(true);
     setError("");
     try {
-      setValue(
-        mock
-          ? (await import("../../fixtures/GET_panels_match.json")).default
-          : await endpoint.match(riskId),
-      );
+      const response = mock
+        ? (await import("../../fixtures/GET_panels_match.json")).default
+        : await endpoint.match(riskId);
+      if (response.risk_id !== riskId)
+        throw new Error(
+          "The API returned a panel for a different risk. Please retry.",
+        );
+      if (ticket === generation.current) setValue(response);
     } catch (e) {
-      setError((e as Error).message);
+      if (ticket === generation.current) setError((e as Error).message);
     } finally {
-      setLoading(false);
+      if (ticket === generation.current) setLoading(false);
     }
   }
   useEffect(() => {
+    generation.current++;
     setValue(null);
     setError("");
+    setLoading(false);
+    return () => {
+      generation.current++;
+    };
   }, [riskId]);
   return (
     <Section title="Panel matching">
