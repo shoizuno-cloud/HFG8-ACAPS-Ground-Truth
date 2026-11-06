@@ -397,7 +397,7 @@ Milestones: API with seeded data Sat 10:00 · full loop Sat 18:00 · proof.png S
 
 ### Lane B — Frontend (three screens + demo stage)
 Build section 8 in `ui/` against `fixtures/` from the first hour (`VITE_MOCK=1`), then the live API. The expert card is the
-hero (blind round 1, accuracy prompt, source tag): test it on two real phones over the venue Wi-Fi by Saturday 18:00; QR flow
+hero (rating hidden until submission, stances, accuracy prompt, source tag): test it on two real phones over the venue Wi-Fi by Saturday 18:00; QR flow
 for the jury. Analyst desk on a projector with the integrity panel and the Radar view; public ledger with the honesty box.
 Milestones: expert card mock Sat 12:00 · desk + ledger mock Sat 16:00 · live API Sat 20:00 · stage polish Sun.
 
