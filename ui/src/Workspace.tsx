@@ -1,3 +1,4 @@
+import { PortalHeader } from "./PortalHeader";
 import { HistoricalLedger } from "./HistoricalLedger";
 import { DraftNarrative } from "./Grounding";
 import { HonestyBox, IntegrityPanel, PanelMatch } from "./V2Panels";
@@ -61,31 +62,7 @@ function Shell({
 }) {
   return (
     <>
-      <header className="site-header workspace-header">
-        <a className="brand" href="/e/demo">
-          <span className="brand-mark">
-            <LockKeyhole size={19} />
-          </span>
-          Sealed Signals
-        </a>
-        <nav aria-label="Main navigation">
-          <a href="/">Radar</a>
-          <a href="/committee">Committee</a>
-          <a href="/desk" aria-current={page === "desk" ? "page" : undefined}>
-            Analyst desk
-          </a>
-          <a
-            href="/ledger"
-            aria-current={page === "ledger" ? "page" : undefined}
-          >
-            Public ledger
-          </a>
-          <a href="/stage">Jury access</a>
-          <a href="/e/demo">
-            Expert card <ArrowRight size={14} />
-          </a>
-        </nav>
-      </header>
+      <PortalHeader />
       <a className="skip-link" href="#workspace-content">
         Skip to content
       </a>

@@ -14,11 +14,15 @@ const Calibration = lazy(() =>
 );
 const Radar = lazy(() => import("./Radar").then((m) => ({ default: m.Radar })));
 import { Apply, Committee } from "./Gateway";
+const Discovery = lazy(() =>
+  import("./Discovery").then((m) => ({ default: m.Discovery })),
+);
 import "./theme.css";
 import "./styles.css";
 import "./workspace.css";
 import "./polish.css";
 import "./v2.css";
+import "./discovery.css";
 
 const MockWorkspace = lazy(() =>
   import("./Workspace").then((m) => ({ default: m.Workspace })),
@@ -47,9 +51,6 @@ class Boundary extends React.Component<
     );
   }
 }
-const Impact = lazy(() =>
-  import("./Impact").then((m) => ({ default: m.Impact })),
-);
 function Router() {
   const path = location.pathname;
   if (path === "/" || path === "/radar") return <Radar />;
@@ -57,13 +58,20 @@ function Router() {
     const page = path === "/desk" ? "desk" : "ledger";
     return mock ? <MockWorkspace page={page} /> : <LiveWorkspace page={page} />;
   }
+  if (["/countries", "/analysis", "/topics", "/search"].includes(path))
+    return (
+      <Discovery
+        page={path.slice(1) as "countries" | "analysis" | "topics" | "search"}
+      />
+    );
+  const country = /^\/countries\/([A-Za-z]{3})\/?$/.exec(path);
+  if (country)
+    return <Discovery page="countries" iso={country[1].toUpperCase()} />;
   if (path === "/stage") return <Stage />;
   if (path === "/apply") return <Apply />;
   if (path === "/committee") return <Committee />;
   const expert = /^\/e\/([^/]+)\/?$/.exec(path);
   if (expert) return <ExpertCard token={expert[1]} />;
-  const impact = /^\/me\/([^/]+)\/impact\/?$/.exec(path);
-  if (impact) return <Impact token={impact[1]} />;
   const calibration = /^\/me\/([^/]+)\/calibration\/?$/.exec(path);
   if (calibration) return <Calibration token={calibration[1]} />;
   return (

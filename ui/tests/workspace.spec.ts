@@ -79,6 +79,7 @@ test("rejection does not publish; editing preserves selected probability after n
   await expect(
     page.getByRole("heading", { name: "No approved group views yet" }),
   ).toBeVisible();
+  await page.locator("summary").click();
   await page.getByRole("link", { name: "Analyst desk", exact: true }).click();
   await page.getByRole("button", { name: "Reset demo" }).click();
   await page.getByRole("button", { name: "Load synthetic answers" }).click();

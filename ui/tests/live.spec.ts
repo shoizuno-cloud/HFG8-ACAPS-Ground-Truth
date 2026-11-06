@@ -13,6 +13,30 @@ import integrity from "../../fixtures/GET_integrity_pulse.json" with { type: "js
 import radar from "../../fixtures/GET_radar_status.json" with { type: "json" };
 import matched from "../../fixtures/GET_panels_match.json" with { type: "json" };
 
+test("discovery uses connected risks and retains official links when the service fails", async ({
+  page,
+}) => {
+  await contractApi(page);
+  await page.goto("/countries/TCD");
+  await expect(page.getByRole("link", { name: "Review risk" })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText(
+    "Connected risk service",
+  );
+  await page.route("http://127.0.0.1:18000/risks", (route) => route.abort());
+  await page.reload();
+  await expect(page.getByRole("status")).toContainText(
+    "Risk service unavailable",
+  );
+  await expect(page.getByRole("link", { name: "Review risk" })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Official Chad analysis" }),
+  ).toHaveAttribute("href", "https://www.acaps.org/en/countries/chad");
+  await page.goto("/analysis");
+  await expect(page.getByRole("link", { name: "Read on ACAPS" })).toHaveCount(
+    4,
+  );
+});
+
 async function contractApi(page: Page) {
   const writes: { path: string; body: any }[] = [];
   await page.route("http://127.0.0.1:18000/**", async (route) => {
@@ -297,33 +321,24 @@ test("uncorroborated API claims remain to verify and block publication", async (
   ).toBeEnabled();
 });
 
-test("private contribution retries API errors and treats empty history as pending", async ({
+test("a result for another pulse is not revealed on the selected desk", async ({
   page,
 }) => {
-  let available = false;
-  await page.route("**/me/private-invitation/calibration", (route) => {
-    return route.fulfill({
-      status: available ? 200 : 503,
+  await contractApi(page);
+  await page.route("**/pulses/P-0001/reveal", (route) =>
+    route.fulfill({
+      json: { ...result, pulse_id: "P-another" },
       headers: { "Access-Control-Allow-Origin": "*" },
-      json:
-        !available
-          ? { detail: "Unavailable" }
-          : { ...calibration, n_resolved: 0, moved_before_acaps: 0 },
-    });
-  });
-  await page.goto("/me/private-invitation/impact");
-  await expect(page.getByRole("alert")).toContainText("503");
-  available = true;
-  await page.getByRole("button", { name: "Try again" }).click();
-  await expect(page.locator(".contribution-number")).toHaveText(
-    "0resolved forecasts",
+    }),
   );
+  await page.goto("/desk");
+  await page.getByRole("button", { name: "Ask panel" }).click();
+  await page.getByRole("button", { name: "Reveal round", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("different pulse");
   await expect(
-    page.getByText("Waiting for your first forecast to resolve."),
-  ).toBeVisible();
-  await expect(page.getByText("Not yet measured", { exact: true })).toHaveCount(
-    2,
+    page.getByRole("button", { name: "Prepare draft" }),
+  ).toBeDisabled();
+  await expect(page.getByText("Weighted panel", { exact: true })).toHaveCount(
+    0,
   );
-  await expect(page.getByText("quiet-heron")).toHaveCount(0);
-  expect(await page.evaluate(() => localStorage.length)).toBe(0);
 });

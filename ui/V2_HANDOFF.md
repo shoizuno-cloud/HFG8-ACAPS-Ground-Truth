@@ -27,9 +27,17 @@ The integrity fixture says there is no displacement expert, while the matching f
 
 ## What verification proves
 
+The private contribution story was dropped at the user's request. Its page, artwork, animation dependencies and links have been removed; private calibration remains. Jury access now identifies loopback addresses and warns when the displayed QR still uses a previous link. Desk responses are checked against the selected risk/pulse, and stale event results are ignored after switching context.
+
+In addition to contract tests, `npm run test:scaffold` makes real HTTP requests through the Vite proxy to the existing local scaffold on port 18000. Nine browser checks exercise available paths and verify graceful failure of missing routes. No backend source was changed, and the API is still fixture-backed.
+
 Mock browser tests exercise the offline UI. API-mode browser tests intercept network responses to test HTTP bodies, SSE handling, errors, masks, approval, public privacy thresholds, scoring requests and unavailable features. These are contract tests, not evidence of a working live scoring or cryptographic service. Fixture Verify is not a blockchain transaction. API Verify reports the backend's verdict and any supplied timestamp anchor.
 
 ## Before the merge and rehearsal
+
+ACAPS reader workflows now live inside the existing visual system: country directory/context, searchable and filtered selected publications, topics/data services, and portal-wide search. Risk links use the existing `/risks` contract and take analysts to `/desk?risk_id=…`. Radar country names now open country context. No backend files or shared contracts changed. Official metadata is explicitly dated 6 November 2026; the curated catalogue includes seven profiles, four reports and seven resources. It is not a full or live mirror. Official downloads, subscriptions, complete archives and methodology remain on ACAPS. Browser checks cover discovery, empty filters, deep links, global search, accessibility and connected-service failure without fixture fallback.
+
+The team scaffold and the organiser `main` currently have separate root histories. The preliminary frontend checkpoint preserves the team's existing `lane/frontend` history; a rebase onto `main` was attempted and aborted after root scaffold conflicts. No force push was used, no root conflicts were resolved by changing other lanes, and `main` was not changed. Future integration needs the team to reconcile that history deliberately.
 
 - Connect to the completed engine and run the full R1043 flow, including two distinct authenticated committee admins.
 - Test on two real phones over venue Wi-Fi. Use a LAN host or HTTPS invitation; loopback URLs do not work from another device.
