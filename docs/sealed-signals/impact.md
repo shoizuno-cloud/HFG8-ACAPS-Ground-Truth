@@ -231,3 +231,101 @@ Pilot measure: minutes per weekly update with and without the draft, for the sam
 - ACAPS analysts decide. The committee administers. [mentor, master prompt rule 8]
 - Public pages show aggregates, caveats and track record. Never flags about a person.
 - AI works analyst-side only. Experts never talk to a model.
+
+---
+
+## Part 3. Impact chain, with evidence
+
+Label for every figure: **cited** (with source), **[data]** (computed by us from the Risk Radar export), or **illustrative** (our own number to show the arithmetic; not a finding).
+
+### 3.1 The chain
+
+```
+better-calibrated  ->  earlier       ->  anticipatory   ->  aid pre-      ->  lower cost
+probability            decision          funds released     positioned        and mortality
+(this product)         (donors,          (IFRC, WFP,        (stock, cash,     (outside this
+                       agencies)         CERF triggers)     staff in place)   product)
+```
+
+Strength of each link:
+
+| Link | Evidence | Strength |
+|---|---|---|
+| Panel plus weights gives a better probability than one rating | Method evidence in `bias-and-honesty.md`; our proof simulation (Lane A) | Moderate for the method; **untested on real experts**. The simulation is synthetic. |
+| Better probability gives an earlier decision | Reasoned only. No study of ACAPS ratings changing funding timing was found. | **Weak.** This is the link the pilot must test. |
+| Earlier decision gives anticipatory funds | CERF, IFRC and WFP release money against pre-agreed triggers | Strong for weather-driven hazards, **thin for conflict and displacement** |
+| Funds give pre-positioned aid | Evaluations below | Moderate, cited |
+| Pre-positioned aid gives lower cost and mortality | Evaluations below; mortality evidence is thinner than cost evidence | Moderate on cost, weak on mortality |
+
+Plain statement: the evidence in the right half of the chain comes mostly from floods, droughts and harsh winters, where forecasts trigger money. Conflict-driven risks such as R1043 have fewer formal triggers. We do not claim the same returns apply.
+
+### 3.2 Cited evidence on anticipatory action
+
+All items below were checked against the listed source pages on 6 Nov 2026 through search snippets. We did not read every full PDF. Re-check each before it appears on a slide.
+
+1. WFP, FAO and OCHA, "Saving lives, time and money: evidence from anticipatory action", May 2025. Reports that evidence from Kenya, Bangladesh, Nepal and Somalia shows returns of up to USD 7 in avoided losses and added benefits per USD 1 invested. Source: [PreventionWeb record](https://www.preventionweb.net/publication/saving-lives-time-and-money-evidence-anticipatory-action-may-2025); PDF on [docs.wfp.org](https://docs.wfp.org/api/documents/WFP-0000166327/download).
+2. Same report, Mongolia: anticipatory action for the 2017/18 harsh winter (dzud) was implemented four months before the standard emergency response.
+3. Same report, Bangladesh: about 500,000 people reached ahead of peak monsoon flooding in the Jamuna basin. Summaries say within five days of the warning. FAO and PreventionWeb word the attribution differently, so we quote only "about 500,000 reached before peak flooding" and check the PDF before saying more.
+4. FAO household-survey calculation for El Nino: up to USD 3 returned per USD 1 invested ([FAO newsroom](https://www.fao.org/newsroom/story/ready-set-anticipate/en)); regional FAO good-practice page puts the Latin America and Caribbean average at USD 2.34 per USD 1 ([FAO KORE](https://www.fao.org/in-action/kore/good-practices/good-practices-details/en/c/1759081/)).
+5. Caveat from the Anticipation Hub synthesis: methods for cost-effectiveness and return on investment vary between studies, so figures are not directly comparable ([Anticipation Hub](https://www.anticipation-hub.org/news/building-the-evidence-for-anticipatory-action-what-weve-learned-and-whats-next)).
+6. Mechanism: CERF anticipatory action frameworks release funds when a pre-agreed trigger is reached. In 2020 a forecast of severe Jamuna floods led CERF to allocate USD 5.2 million in Bangladesh. IFRC DREF early action protocols work the same way, with triggers set in advance. Source: [CERF overview](https://cerf.un.org/sites/default/files/resources/CERF_Atforefront_AA.pdf); [Centre for Humanitarian Data](https://centre.humdata.org/anticipatory-action-in-bangladesh-before-peak-monsoon-flooding/).
+
+Dropped, not cited: the "half the cost of previous responses" claim for Bangladesh. It appeared in one summary and we could not confirm it in the report.
+
+### 3.3 ACAPS numbers
+
+From the Risk Radar export [data]:
+- 139 risks, 57 countries, 104 resolved, 28 active.
+- Among resolved risks, **High-rated: 32 of 38 materialised (84 %)**. **Medium-rated: 27 of 58 (47 %)**. Low-rated: 3 resolved only, too few to use. The ACAPS data dictionary gives the same rates.
+- What this means for a user: a Medium rating is close to a coin flip. A funder cannot tell from "Medium" whether to act. Panel input and a stated probability are most useful in this band.
+- Brier score of the ACAPS rating mapped to a probability (Very Low 0.1, Low 0.3, Medium 0.5, High 0.7, Very High 0.9), on the 99 resolved risks that carry a probability rating: **0.213**. A forecaster who always says 0.5 scores 0.25. Lower is better. Our computation; the mapping is a convention from the master prompt, not an ACAPS statement.
+- Caveat from the brief: older imported records resolve over much longer periods than the six-month horizon, so these rates mix time frames. [brief]
+
+### 3.4 Worked example: R1043, eastern Chad
+
+Facts from the export [data, R1043 record]:
+- Title: escalating cross-border insecurity linked to the Sudan conflict, eastern Chad.
+- Rated Probability High, Impact 4, Risk Level High, trend Deteriorated, status Active.
+- Expected exposure: more than 500,000 people.
+- Priority needs: Protection, Food security, Livelihoods, Health.
+- Update of 30 Sep 2026: more than 400 Sudanese refugees per day crossing by 25 Sep, about 20 times the earlier rate; more than 55,000 arrivals since the start of 2026.
+- The first trigger (T0618) is expansion of cross-border attacks around Adré, Tine and other border localities.
+
+A figure we could not confirm: the master prompt says "over a million Sudanese refugees in eastern Chad since 2023". The UNHCR figures we found were about 800,000 to 870,000 registered arrivals by mid-2025, so a million may be right for late 2026 but we have no source. Use "more than 800,000 registered by mid-2025 (UNHCR)" or confirm a newer figure before saying a million.
+
+**What the loop would do (illustrative):**
+
+1. Doorbell: weekly conflict counts for the border area rise to 3 times the 90-day baseline. The detector fires a pulse for R1043. (Replay uses cached fixtures; see Lane A.)
+2. Panel: up to 8 experts tagged for Chad or neighbouring Sudan and conflict or displacement answer blind in a minute each.
+3. Suppose the sealed round 1 median is 0.78, plain mean 0.74, and the surprisingly-popular answer is "yes". ACAPS's High maps to 0.7. **These numbers are illustrative.**
+4. Analyst receives a cited draft: probability 0.78 (High), with a "to verify" note on one uncorroborated claim.
+5. Analyst accepts. The ledger records the group view, the honesty box and a Verify hash.
+
+**Why the number matters (illustrative arithmetic).** A planner will act early when the probability p is above the ratio of early cost to late cost.
+- Suppose early action costs USD 20 per person and the same help after the shock costs USD 40 per person. Ratio 0.5. **Illustrative.**
+- Suppose a plan covers 50,000 people (a fraction of the exposed population above). **Illustrative.**
+- Early action costs 50,000 x 20 = USD 1.0 million, spent whether or not the shock comes.
+- Waiting costs p x 50,000 x 40 = p x USD 2.0 million in expectation.
+- At p = 0.78: waiting costs USD 1.56 million. Acting early saves USD 0.56 million in expectation.
+- At p = 0.70: waiting costs USD 1.40 million. Saves USD 0.40 million.
+- At p = 0.45: waiting costs USD 0.90 million. Waiting is cheaper by USD 0.10 million.
+
+The point is the flip: with this ratio, a Medium rating sitting at 0.45 to 0.5 gives no answer, and a 0.1 error in p changes the decision. We do not claim these costs are real. We claim that calibration decides which side of the line a planner lands on. That is why the product scores every forecast.
+
+What would have to be true for impact: (a) the panel is better calibrated than the rating alone; (b) a donor or agency changes timing because of it; (c) a funding mechanism exists for a conflict-driven risk. The pilot can test (a) and part of (b). It cannot test (c).
+
+### 3.5 What we will not claim
+
+- That the tool reduces mortality. We have no evidence of that.
+- That ROI figures from floods and droughts apply to Chad.
+- That the proof simulation shows experts are accurate. It tests the aggregation method on synthetic experts.
+
+### 3.6 Pilot measures that would close the gaps
+
+| Gap | Measure in a two-month pilot |
+|---|---|
+| Is the panel better than the rating? | Brier of panel vs ACAPS rating on risks that resolve inside the pilot; share of risks where the panel was on the right side earlier |
+| Does it save analyst time? | Minutes per weekly update with and without the draft |
+| Will experts stay? | Share of pulses answered; share of approved experts still answering in week 8; no time-in-app metric |
+| Do readers use it? | Number of readers who open the ledger entry; reader interviews with two personas |
+| Does anyone act earlier? | Interviews with one donor or agency on whether the panel view changed timing |
