@@ -150,3 +150,84 @@ Persona link: indirect. Aisha's 150-person team and Pierre's deployments act on 
 | Readers | One label, no visible basis [mentor] | Basis, record and outcome on each rating | Website, ledger, API [assumption] | Hidden errors; steering |
 | Committee | No formal gateway [assumption] | Audit trail and composition rules | Desk, weekly [assumption] | Workload; pressure to admit |
 | Affected people | Indirect | Possible earlier preparation | None | Leak of a contributor; thin panels |
+
+---
+
+## Part 2. Before and after
+
+### 2.1 Today: how a risk is made and kept current
+
+We could not find a numbered six-step list published by ACAPS. The 2019 methodology brief and the mentor give us the pieces below, which we group into six steps. Treat the grouping as ours. Confirm it with Alex before the pitch.
+
+| Step | What happens today | Source |
+|---|---|---|
+| 1. Monitor | Analysts track their countries' parameters daily | [mentor] |
+| 2. Identify | A hazard that could trigger a new crisis or a sharp worsening is named, with triggers | ACAPS risk methodology brief, 2019 |
+| 3. Rate | Probability and impact are set by expert judgement on a five-point scale, with simple thresholds. Not calculated. | ACAPS risk methodology brief, 2019; [mentor] |
+| 4. Consult | An analyst calls one or two experts or chats with peers. Not recorded or scored. | [brief] |
+| 5. Publish and update | Published on the website and through the API. Updated weekly by hand. | [mentor] |
+| 6. Close | The risk is marked materialised or not materialised, with a description | [data: Status, Hazard materialisation fields] |
+
+What is missing: no structured way to ask a wider trusted group; no record of who was right; no platform on top of the dataset and API; no public statement of what fed into each rating.
+
+### 2.2 After: the loop
+
+Eight stages, each with one owner. Only the analyst's decision changes a rating.
+
+```
+ DOORBELL ──> MATCHED PANEL ──> SEALED ANSWERS ──> INTEGRITY CHECKS
+ machine       up to 8 vetted     blind round 1,     anchoring, herding,
+ watches       experts by         mask per answer,   collusion, recency,
+ triggers      geo + theme tag    60 seconds         coverage (moderator only)
+                                                         │
+                                                         v
+ SCORING  <──  LEDGER with  <──  ANALYST DECISION  <──  VERIFIED DRAFT
+ Brier,        HONESTY BOX       accept / edit /         every claim cited,
+ weights,      public, Verify    reject (the only        skeptic + judge
+ private       turns green       step that changes       checks, uncorroborated
+ report                          a rating)               claims held back
+```
+
+The same loop in Mermaid, for GitHub and slides:
+
+```mermaid
+flowchart LR
+  A[Doorbell] --> B[Matched panel]
+  B --> C[Sealed answers]
+  C --> D[Integrity checks]
+  D --> E[Verified draft]
+  E --> F[Analyst decision]
+  F --> G[Ledger with honesty box]
+  G --> H[Scoring and weights]
+  H -.-> B
+```
+
+### 2.3 What changes, step by step
+
+| Today | With Sealed Signals | Who gains |
+|---|---|---|
+| Analyst notices a shift by reading | Doorbell reads indicators against the risk's own triggers and says when 7-day count is 3 times the 90-day baseline or z is 2 or more | Analysts |
+| One or two experts, by phone | Up to 8 matched experts, blind first, in a minute each | Analysts, experts |
+| Answers live in a chat | Answers are sealed with a hash before anyone sees them, then opened together | Readers, experts |
+| Rating set by judgement alone | Panel number sits next to the rating. The analyst still decides. | Readers |
+| Weekly manual rewrite | A cited draft the analyst edits, with unsupported claims marked | Analysts |
+| No record of who was right | Brier score per resolved risk, weights update, private report | Experts, committee |
+| No stated basis | Honesty box on every entry, misses included | Readers |
+| Dataset and API only | A platform on the API with the loop on top | All |
+
+### 2.4 What the 32 analysts gain per week
+
+We have not measured this. These are the saved steps we expect, to be timed in the December pilot. [assumption]
+- No hunting for which expert to call: the panel is matched by tag.
+- No chasing replies: pulses expire and the analyst sees who answered.
+- A draft with citations replaces a blank page.
+- Disagreement is shown, not summarised away.
+- The closing record of right and wrong builds without extra entry.
+
+Pilot measure: minutes per weekly update with and without the draft, for the same analyst on comparable risks.
+
+### 2.5 What does not change
+
+- ACAPS analysts decide. The committee administers. [mentor, master prompt rule 8]
+- Public pages show aggregates, caveats and track record. Never flags about a person.
+- AI works analyst-side only. Experts never talk to a model.
