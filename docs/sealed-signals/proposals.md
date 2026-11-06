@@ -53,7 +53,7 @@ Priority: **M** = before the Sat 20:00 merge, **S** = before the Sun 10:30 freez
 2. Section 4 says "Palley & Soll" for peer-prediction weighting. The records show Palley and Soll 2019 is "pivoting"; peer-prediction weighting is Palley and Satopaa 2023. See `bias-and-honesty.md` 3.5.
 3. Section 8b still lists "sealing", "reliability weights (super-estimator board)", "surprisingly-popular highlighted" and a "calibration report" as wired features. Under v3 the weights are secondary, SP is a labelled experiment, and calibration is opt-in after 5 resolutions.
 4. Lane C item 6 lists "the proof chart" among slides; section 7 says the test is off the headline.
-5. Section 2 and the file layout still show `FF_ZK` / `FF_ANCHOR` in 8b; privacy page says ZK and anchoring are research directions, not in the build. Remove from 8b or mark off.
+5. Section 8b still names the flags `FF_ZK` and `FF_ANCHOR`. The privacy page treats zero-knowledge membership and timestamp anchoring as research directions that are not in the build. Remove them from 8b or mark them off.
 
 ### P14. Demo trigger (M) - Lane B
 - The analyst sends the pulse from a button on `/desk` (v3). The demo script uses it. The phone then receives the magic link. Confirm the button works end to end and that the email link opens the card on the phone.
