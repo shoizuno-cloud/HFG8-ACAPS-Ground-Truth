@@ -1,6 +1,6 @@
 # Impact: who gains, what changes, why it matters
 
-Lane C. Status: part 1 of 3 (stakeholders). Parts 2 and 3 follow in this file.
+Lane C. Status: complete, revised for master prompt v3 (7 Nov). v3 changes reflected here: commitments instead of secrecy, equal-weight mean as the headline number, analyst-triggered pulses, descriptive integrity notes, scoring of forecasts not people, no countdown in the product, synthetic results as a sensitivity test.
 
 Labels used in this file:
 - **[data]** computed from `data/risk-radar-export.csv` by us.
@@ -34,14 +34,14 @@ Persona link: none of the four personas. They are the product's moderators and t
 **Today.** Each analyst tracks the parameters of their countries daily, scores risks by hand against simple thresholds, and updates weekly. [mentor] To check a view they call one or two experts or chat with peers. The answer is not recorded in a way anyone can score later. [brief]
 
 **With Sealed Signals.**
-- A daily doorbell reads open indicators mapped to each risk's own triggers and says when something shifted. The analyst can also ring it by hand. Two experts can ring it too.
-- A matched panel of up to 8 vetted experts answers in a minute. Answers stay sealed until the analyst opens them.
-- The analyst receives one screen: distribution, the panel's surprisingly-popular answer, missing themes, an integrity panel, and a cited draft update. The analyst accepts, edits or rejects. Nothing publishes itself.
+- The analyst sends a one-minute question for a risk with one click. (Phase 2: a doorbell reads indicators the analyst picked from a menu for that risk and suggests a pulse.)
+- A matched panel of up to 8 vetted experts answers in a minute each. Answers are committed with a timestamp and opened together.
+- The analyst receives one screen: the equal-weight mean, spread and minority reasons, missing themes, descriptive integrity notes, and a cited draft update built from a fixed template. The analyst accepts, edits or rejects. Nothing publishes itself.
 
 **What they get.**
 - A number and the reasons behind it, with every claim cited to a panel aggregate, an indicator or an existing source.
-- A moderator-only integrity panel (anchoring, herding, collusion, recency, coverage gaps).
-- A track record: which experts were right, and whether the panel beat the analyst's own rating.
+- Moderator-only integrity notes: plain descriptions such as "round 2 answers moved toward the mean without new reasons" or "no displacement expert on this panel". They describe. They do not judge a person or change the number.
+- A track record on resolved questions: how the panel's group forecast compared with the ACAPS Probability band, held committee-side.
 - Less drafting time per weekly update. [assumption] We have not measured this. The pilot should time it.
 
 **How they want to give their view.** At a desk, on a large screen, in English first. Decision in under five minutes per pulse. [assumption]
@@ -50,7 +50,7 @@ Persona link: none of the four personas. They are the product's moderators and t
 - A draft that cites something false, or an unsourced number. One bad citation costs trust for weeks.
 - Extra work: a second system to maintain next to the weekly update.
 - A tool that reads as a replacement for their judgement.
-- Pulses that fire too often. Design limit: one pulse per expert per 7 days, heartbeat every 28 days.
+- Pulses that fire too often. Design limit: one pulse per expert per 7 days.
 
 ### 1.2 Vetted experts (analysts, journalists, researchers, early-warning practitioners)
 
@@ -60,27 +60,28 @@ Persona link: closest to Pierre (field MEAL officer who wants a method and has n
 
 **With Sealed Signals.**
 - They apply with geographic and thematic tags. The ACAPS committee approves on credentials and track of work. [mentor]
-- A pulse arrives by email magic link. No login. One card, 60 seconds.
-- Round 1 is blind: ACAPS's rating is hidden, so their view is their own. They give a probability, a confidence, a guess of what the panel will say, one line on what is missing, and a tag: saw, read or heard.
-- They choose a mask per answer: known to ACAPS, pseudonym to peers, or anonymous.
-- Round 2 shows ACAPS's rating and the anonymised group, and asks whether they changed their mind.
+- A pulse arrives by email magic link. No login. One card, about a minute. There is no countdown in the product.
+- ACAPS's rating is hidden until after they submit, so their first number is their own. They give a probability, a confidence, a guess of what share of the panel will put it above 0.5, one line on what is missing, and a tag: saw, read or heard. They can instead choose "outside my expertise" or "not enough evidence". Those are never scored.
+- They choose a mask per answer: known to ACAPS, pseudonym to peers, or anonymous. The card warns that a distinctive reason can be recognised by peers on a small panel.
+- Round 2 is optional and asynchronous. It opens only when there is new evidence or real disagreement. It shows ACAPS's rating and the anonymised group, and asks whether they changed their mind.
 
 **What they get.**
-- A private calibration report after each risk resolves. It is theirs alone.
+- A group outcome report when the risk resolves: the group mean, the outcome and what the analyst decided. Everyone who answered gets it.
+- A private calibration view, opt-in, after 5 resolutions. Before that there is too little data to say anything.
 - Evidence that their view was heard: the ledger shows the group view and, later, the outcome.
-- Credit that builds with track record, never with time in the app. No streaks, no engagement counts.
+- No streaks, no engagement counts. Scores belong to forecasts, are held committee-side, and never decide who is approved or removed.
 - A reason to come back that is not a gamified one: the question is relevant to a place they follow.
 
 **How they want to give their view.**
 - Channel: email magic link first, WhatsApp second, as the master prompt sets. [assumption] To test at the pilot with real people.
 - Language: English first, French next. Arabic is on the future list. [brief: French named as a working language]
-- Time: a minute, on a phone, outside office hours as much as in them. A 60-second countdown keeps it short. [assumption]
+- Time: a minute, on a phone, outside office hours as much as in them. One card, no countdown in the product. [assumption]
 
 **What would make them stop.**
 - A card that takes more than a minute or asks for a login.
-- Any sign that their answer could be traced back when they chose a mask.
+- Any sign that their answer could be traced back when they chose a mask. We tell them plainly who can learn what (master prompt section 1a): ACAPS admins see answers with the mask chosen, the identity registry is restricted and logged, and `anonymous` answers are stored without identity.
 - Being asked too often. Cap: one pulse per expert per 7 days.
-- Hearing nothing back. The "how it resolved" message and the calibration report answer this.
+- Hearing nothing back. The group outcome report answers this.
 - A panel they see as stacked, or an app that feels like a chatbot.
 
 ### 1.3 ACAPS readers (UN agencies, INGOs, donors such as ECHO, FCDO and CERF, insurers)
@@ -90,15 +91,15 @@ Persona link: Emily (donor methodology head who struggles to judge reliability),
 **Today.** They read the Risk List on the website or pull it through the API into their own systems. [mentor] A rating is a single analyst-set label. They cannot see how it was reached, how often ACAPS has been right, or whether people on the ground recognise the picture. [brief] Emily "has to go elsewhere to check it".
 
 **With Sealed Signals.**
-- Each Risk List entry can carry, next to the ACAPS rating, the panel's group view, sealed at a stated time and checkable with a Verify button.
-- Every ledger entry has an honesty box: number of contributors, agreement, confidence band, coverage gaps, claims corroborated out of total, the panel's past hit rate with misses included, and a caveat line.
+- Each Risk List entry can carry, next to the ACAPS rating, the panel's group view, committed at a stated time. A Verify button checks the timing and consistency of the round, nothing more.
+- Every ledger entry has an honesty box: number of contributors, agreement, spread, coverage gaps, claims corroborated, queued for checking and total, the panel's hit rate and number of misses, a caveat line, what decision the view could inform (for whom, by when), and, when the analyst rejected the panel view, that fact and the analyst's reason.
 - When the risk resolves, the outcome appears on the same entry.
 
 **What they get.**
 - For Emily: a stated basis for each number and a visible record of past errors.
-- For Aisha: a view on what the people who follow a context expect, in numbers, with an earlier signal when the panel moves before ACAPS.
+- For Aisha: a view on what the people who follow a context expect, in numbers, and a stated view she can compare with the ACAPS rating. We make no claim that the panel moves before ACAPS: the export has no structured rating history to test that.
 - For Jose: a documented channel through which his field teams' view can reach the analysis without exposing them. [assumption: only if his teams are admitted as experts]
-- For donors and insurers: a calibrated probability they can compare with ACAPS's own record. Today High-rated risks materialised 84 % of the time and Medium-rated 47 % [data: 32 of 38 and 27 of 58 resolved risks].
+- For donors and insurers: a stated group probability they can compare with ACAPS's own record once questions resolve. Today High-rated risks materialised 84 % of the time and Medium-rated 47 % [data: 32 of 38 and 27 of 58 resolved risks].
 
 **How they want to give their view.** They do not contribute. They read, via the website, a ledger page or the existing API. [assumption] Public pages show aggregates only.
 
@@ -135,7 +136,7 @@ Persona link: indirect. Aisha's 150-person team and Pierre's deployments act on 
 
 **What they get.** Nothing direct. We say so plainly. The case for impact rests on whether better forecasts change an agency's decision, which part 3 treats as the weakest link.
 
-**Risks to them.** If an expert's identity leaks, the expert is in danger, and so are the people they work with. This is why anonymity is chosen per answer, public output is aggregate only, and no aggregate is shown with fewer than 5 contributions.
+**Risks to them.** If an expert's identity leaks, the expert is in danger, and so are the people they work with. This is why confidentiality is chosen per answer and public output is aggregate only. Two limits we state: an aggregate with 5 or more contributions is a disclosure rule, not an anonymity guarantee, and on a small panel a distinctive reason can be recognised by peers.
 
 **What would make us stop.** Any evidence that the tool exposes a contributor or biases attention toward places with more experts and away from places with fewer. The second is a real risk: contexts with few vetted experts get a thinner panel. The honesty box states this as a coverage gap.
 
@@ -146,7 +147,7 @@ Persona link: indirect. Aisha's 150-person team and Pierre's deployments act on 
 | Group | Today | Main gain | Channel and time | Stops if |
 |---|---|---|---|---|
 | Analysts (32) | Manual scoring, weekly updates, informal calls [mentor] | One screen with cited draft and integrity checks | Desk, minutes per pulse [assumption] | Draft cites falsehood; extra workload |
-| Experts | Informal chats, no feedback [brief] | Private calibration report, a heard view | Email link, then WhatsApp; 60 s [assumption] | Login, traceability, over-asking |
+| Experts | Informal chats, no feedback [brief] | Group outcome report, a heard view, opt-in calibration | Email link, then WhatsApp; about a minute [assumption] | Login, traceability, over-asking |
 | Readers | One label, no visible basis [mentor] | Basis, record and outcome on each rating | Website, ledger, API [assumption] | Hidden errors; steering |
 | Committee | No formal gateway [assumption] | Audit trail and composition rules | Desk, weekly [assumption] | Workload; pressure to admit |
 | Affected people | Indirect | Possible earlier preparation | None | Leak of a contributor; thin panels |
@@ -175,27 +176,27 @@ What is missing: no structured way to ask a wider trusted group; no record of wh
 Eight stages, each with one owner. Only the analyst's decision changes a rating.
 
 ```
- DOORBELL ──> MATCHED PANEL ──> SEALED ANSWERS ──> INTEGRITY CHECKS
- machine       up to 8 vetted     blind round 1,     anchoring, herding,
- watches       experts by         mask per answer,   collusion, recency,
- triggers      geo + theme tag    60 seconds         coverage (moderator only)
-                                                         │
-                                                         v
- SCORING  <──  LEDGER with  <──  ANALYST DECISION  <──  VERIFIED DRAFT
- Brier,        HONESTY BOX       accept / edit /         every claim cited,
- weights,      public, Verify    reject (the only        skeptic + judge
- private       turns green       step that changes       checks, uncorroborated
- report                          a rating)               claims held back
+ ANALYST TRIGGER ─> MATCHED PANEL ─> COMMITTED ANSWERS ─> INTEGRITY NOTES
+ (phase 2:         up to 8 vetted     rating hidden until     descriptive, for the
+ indicator         experts by         submission, mask per    analyst only
+ doorbell)         geo + theme tag    answer, about a minute        │
+                                                                    v
+ SCORING  <──  LEDGER with  <──  ANALYST DECISION  <──  CITED DRAFT
+ Brier,        HONESTY BOX       accept / edit /         fixed template, every
+ committee-    public, Verify    reject (the only        sentence traceable;
+ side; group   checks timing     step that changes       unchecked claims queued
+ outcome       and consistency   a rating)
+ report to all
 ```
 
 The same loop in Mermaid, for GitHub and slides:
 
 ```mermaid
 flowchart LR
-  A[Doorbell] --> B[Matched panel]
-  B --> C[Sealed answers]
-  C --> D[Integrity checks]
-  D --> E[Verified draft]
+  A[Analyst trigger] --> B[Matched panel]
+  B --> C[Committed answers]
+  C --> D[Integrity notes]
+  D --> E[Cited draft]
   E --> F[Analyst decision]
   F --> G[Ledger with honesty box]
   G --> H[Scoring and weights]
@@ -206,13 +207,13 @@ flowchart LR
 
 | Today | With Sealed Signals | Who gains |
 |---|---|---|
-| Analyst notices a shift by reading | Doorbell reads indicators against the risk's own triggers and says when 7-day count is 3 times the 90-day baseline or z is 2 or more | Analysts |
-| One or two experts, by phone | Up to 8 matched experts, blind first, in a minute each | Analysts, experts |
-| Answers live in a chat | Answers are sealed with a hash before anyone sees them, then opened together | Readers, experts |
+| Analyst notices a shift by reading, then looks for someone to ask | The analyst sends a one-minute question to a matched panel with one click. Phase 2: an indicator doorbell, using indicators the analyst picks per risk, suggests a pulse (7-day count at 3 times the 90-day baseline, or z of 2 or more). | Analysts |
+| One or two experts, by phone | Up to 8 matched experts, ACAPS rating hidden until they submit, about a minute each | Analysts, experts |
+| Answers live in a chat | Answers are committed with a timestamp, so they cannot be changed afterwards and peers cannot see each other early. They are opened together. This does not hide them from the operator. | Readers, experts |
 | Rating set by judgement alone | Panel number sits next to the rating. The analyst still decides. | Readers |
-| Weekly manual rewrite | A cited draft the analyst edits, with unsupported claims marked | Analysts |
-| No record of who was right | Brier score per resolved risk, weights update, private report | Experts, committee |
-| No stated basis | Honesty box on every entry, misses included | Readers |
+| Weekly manual rewrite | A cited draft from a fixed template. Every sentence names its aggregate, indicator or source. The analyst edits. Unsupported claims go to a queue. | Analysts |
+| No record of who was right | Brier score per forecast on resolved questions, held committee-side. Group outcome report to everyone who answered. Private calibration, opt-in, after 5 resolutions. | Experts, committee |
+| No stated basis | Honesty box on every entry: what fed in, limits, misses, what decision it could inform, and when the analyst rejected the panel view | Readers |
 | Dataset and API only | A platform on the API with the loop on top | All |
 
 ### 2.4 What the 32 analysts gain per week
@@ -251,7 +252,7 @@ Strength of each link:
 
 | Link | Evidence | Strength |
 |---|---|---|
-| Panel plus weights gives a better probability than one rating | Method evidence in `bias-and-honesty.md`; our proof simulation (Lane A) | Moderate for the method; **untested on real experts**. The simulation is synthetic. |
+| A panel mean gives a better probability than one rating | Aggregation literature in `bias-and-honesty.md`; Lane A's sensitivity test on synthetic panels | Plausible in general; **untested on real experts**. The sensitivity test says nothing about real experts. |
 | Better probability gives an earlier decision | Reasoned only. No study of ACAPS ratings changing funding timing was found. | **Weak.** This is the link the pilot must test. |
 | Earlier decision gives anticipatory funds | CERF, IFRC and WFP release money against pre-agreed triggers | Strong for weather-driven hazards, **thin for conflict and displacement** |
 | Funds give pre-positioned aid | Evaluations below | Moderate, cited |
@@ -295,11 +296,11 @@ A figure we could not confirm: the master prompt says "over a million Sudanese r
 
 **What the loop would do (illustrative):**
 
-1. Doorbell: weekly conflict counts for the border area rise to 3 times the 90-day baseline. The detector fires a pulse for R1043. (Replay uses cached fixtures; see Lane A.)
-2. Panel: up to 8 experts tagged for Chad or neighbouring Sudan and conflict or displacement answer blind in a minute each.
-3. Suppose the sealed round 1 median is 0.78, plain mean 0.74, and the surprisingly-popular answer is "yes". ACAPS's High maps to 0.7. **These numbers are illustrative.**
-4. Analyst receives a cited draft: probability 0.78 (High), with a "to verify" note on one uncorroborated claim.
-5. Analyst accepts. The ledger records the group view, the honesty box and a Verify hash.
+1. Trigger: the R1043 analyst sees more cross-border incidents and sends a pulse. (Phase 2 would suggest it from indicators the analyst picked. The eastern Chad replay shows phase 2 only.)
+2. Panel: up to 8 experts tagged for Chad or neighbouring Sudan and conflict or displacement answer in about a minute each, with the ACAPS rating hidden until they submit.
+3. Suppose the equal-weight mean is 0.74, the range is 0.45 to 0.90, and one minority reason says displacement is the larger risk. ACAPS's High maps to 0.7 (a stated assumption). **These numbers are illustrative.**
+4. Analyst receives a cited draft: probability 0.74 (High), with one claim in the verification queue. Absence from the checked databases is not evidence the claim is false.
+5. Analyst accepts. The ledger records the group view, the honesty box (including the decision it could inform, for whom, by when) and a Verify hash.
 
 **Why the number matters (illustrative arithmetic).** A planner will act early when the probability p is above the ratio of early cost to late cost.
 - Suppose early action costs USD 20 per person and the same help after the shock costs USD 40 per person. Ratio 0.5. **Illustrative.**
@@ -318,13 +319,13 @@ What would have to be true for impact: (a) the panel is better calibrated than t
 
 - That the tool reduces mortality. We have no evidence of that.
 - That ROI figures from floods and droughts apply to Chad.
-- That the proof simulation shows experts are accurate. It tests the aggregation method on synthetic experts.
+- That the sensitivity test shows experts are accurate, or that the panel moves earlier than ACAPS. It tests the software on synthetic panels. The export has no structured rating history, so no timing claim can be made.
 
 ### 3.6 Pilot measures that would close the gaps
 
 | Gap | Measure in a two-month pilot |
 |---|---|
-| Is the panel better than the rating? | Brier of panel vs ACAPS rating on risks that resolve inside the pilot; share of risks where the panel was on the right side earlier |
+| Is the panel better than the rating? | Brier of the panel mean vs the ACAPS Probability band (mapped to numbers, stated assumption) on questions that resolve inside the pilot. Two months will yield few resolutions, so report counts, not significance. |
 | Does it save analyst time? | Minutes per weekly update with and without the draft |
 | Will experts stay? | Share of pulses answered; share of approved experts still answering in week 8; no time-in-app metric |
 | Do readers use it? | Number of readers who open the ledger entry; reader interviews with two personas |
