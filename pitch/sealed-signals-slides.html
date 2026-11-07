@@ -157,6 +157,18 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
 #s6 .it .ico{width:84px;height:84px;border-radius:20px}#s6 .it .ico svg{width:44px;height:44px}
 #s6 .it b{font-size:76px !important}#s6 .it p{font-size:21px}#s6 .it h4{font-size:30px}
 #s6 .dots th{font-size:23px;padding:14px 8px}#s6 .dots td{font-size:25px;padding:17px 8px}#s6 .d{width:28px;height:28px}
+
+#s4 .lab{display:flex;gap:16px;align-items:flex-start;padding:12px 0;border-bottom:1.5px solid var(--line)}
+#s4 .lab .num{width:40px;height:40px;border-radius:50%;background:var(--teal);color:#fff;font-weight:600;font-size:20px;display:flex;align-items:center;justify-content:center;flex:none}
+#s4 .lab h4{font-size:24px;font-weight:600;line-height:1.15}
+#s4 .lab p{font-size:18px;color:var(--muted);line-height:1.35}
+#s4 .callout{position:absolute;width:40px;height:40px;border-radius:50%;background:var(--teal);color:#fff;font-weight:600;font-size:20px;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+#s5 .one{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
+#s5 .one h4{font-size:34px;font-weight:600}
+#s5 .one p{font-size:25px;color:var(--muted);line-height:1.35;max-width:330px}
+#s5 .prom{display:flex;gap:22px;align-items:center;border:2px solid var(--line);border-radius:16px;padding:26px 30px;background:#fff}
+#s5 .prom h4{font-size:30px;font-weight:600;margin-bottom:6px}
+#s5 .prom p{font-size:21px;color:var(--muted);line-height:1.35}
 </style></head><body>
 <div id="stage">
 
@@ -203,54 +215,69 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
  <div class="foot"><span>Nothing publishes itself. One validation layer among others.</span><span>3</span></div>
 </section>
 <section class="slide" id="s4">
- <div class="line" data-s="0">Bias designed out on the card. Every claim checked before a person decides.</div>
- <div style="display:flex;gap:70px;align-items:flex-start">
-  <div style="width:860px" class="ig" data-s="1">
-   <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 5.1A10 10 0 0 1 12 5c5 0 9 4 10 7a11 11 0 0 1-2.3 3.4M6.6 6.6A11 11 0 0 0 2 12c1 3 5 7 10 7a10 10 0 0 0 3.4-.6"/></svg></div><div><h4>Anchoring</h4><p>ACAPS's rating and the alert stay hidden until the expert has submitted.</p></div></div>
-   <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><path d="M7 11V6a1.5 1.5 0 0 1 3 0v5M10 10V4a1.5 1.5 0 0 1 3 0v6M13 10V5a1.5 1.5 0 0 1 3 0v6M16 11a1.5 1.5 0 0 1 3 0v4a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3.4L3 14a1.6 1.6 0 0 1 2.7-1.7L7 14"/></svg></div><div><h4>Forced guessing</h4><p>"Outside my area" and "not enough evidence" are real answers, never scored. Ranges printed under every word.</p></div></div>
-   <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><path d="M3 7h13l-3-3M21 17H8l3 3"/><path d="M3 7v3M21 17v-3"/></svg></div><div><h4>Confirmation bias</h4><p>One line: the strongest reason this would not happen.</p></div></div>
-   <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><path d="M6 10a6 6 0 0 1 12 0c0 3-2 4-2.5 6a3.5 3.5 0 0 1-7 .5"/><path d="M10 10a2 2 0 0 1 4 0c0 1.5-2 2-2 4"/></svg></div><div><h4>Overclaiming</h4><p>Saw, read or heard, tagged before free text. The tag travels with the claim.</p></div></div>
-   <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><rect x="3" y="11" width="12" height="10" rx="2"/><path d="M6 11V8a3 3 0 0 1 6 0v3"/><circle cx="18" cy="17" r="4"/><path d="M18 15v2l1.5 1"/></svg></div><div><h4>Herding and social pressure</h4><p>Mask per answer. Committed with a timestamp, revealed together at the deadline. Round 2 shows only an anonymised spread.</p></div></div>
-   <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="3"/><path d="M15.5 14.5A6 6 0 0 1 22 20"/></svg></div><div><h4>Packed panels</h4><p>Vetted by committee, at most three of eight from one affiliation, coverage gap stated.</p></div></div>
+ <div class="line" data-s="0">The expert screen, built against six biases. Then every claim is checked before a person decides.</div>
+ <div style="display:flex;gap:50px;align-items:flex-start">
+  <div style="position:relative;flex:none" data-s="1">
+   <div class="phone" style="height:740px;width:380px">
+    <div class="from">Alex, ACAPS Risk Radar</div>
+    <div class="qn" style="font-size:19px">Will more than 50,000 new arrivals from Sudan be registered in Ouaddaï and Wadi Fira by 31 March 2027?</div>
+    <div class="w"><span>very unlikely</span><small>under 10 %</small></div>
+    <div class="w"><span>unlikely</span><small>10 to 35 %</small></div>
+    <div class="w"><span>even</span><small>35 to 65 %</small></div>
+    <div class="w sel"><span>likely</span><small>65 to 90 %</small></div>
+    <div class="w"><span>very likely</span><small>over 90 %</small></div>
+    <div class="st"><span>Outside my area</span><span>Not enough evidence</span></div>
+    <div class="opt">Strongest reason this would NOT happen?</div>
+    <div class="opt">Saw, read or heard?</div>
+    <div class="mask"><span>named to ACAPS</span><span>nickname to peers</span><span>no identity kept</span></div>
+    <div class="go">Review and confirm</div>
+   </div>
+   <div class="callout" style="left:-20px;top:40px">1</div>
+   <div class="callout" style="left:-20px;top:255px">2</div>
+   <div class="callout" style="left:-20px;top:468px">2</div>
+   <div class="callout" style="left:-20px;top:512px">3</div>
+   <div class="callout" style="left:-20px;top:547px">4</div>
+   <div class="callout" style="left:-20px;top:588px">5</div>
+   <div class="callout" style="left:-20px;top:648px">6</div>
+  </div>
+  <div style="width:600px" data-s="2">
+   <div class="lab"><div class="num">1</div><div><h4>No anchor</h4><p>The question only. ACAPS's rating and the alert are hidden until after submission.</p></div></div>
+   <div class="lab"><div class="num">2</div><div><h4>No forced guessing</h4><p>Ranges printed under the words. "Outside my area" and "not enough evidence" are real answers, never scored.</p></div></div>
+   <div class="lab"><div class="num">3</div><div><h4>Argue the opposite</h4><p>One line against the expert's own view, to counter confirmation bias.</p></div></div>
+   <div class="lab"><div class="num">4</div><div><h4>Saw, read or heard</h4><p>A source tag before free text; it travels with the claim and counters overclaiming.</p></div></div>
+   <div class="lab"><div class="num">5</div><div><h4>Mask per answer</h4><p>Named, nickname or no identity, chosen each time, limits stated.</p></div></div>
+   <div class="lab" style="border:none"><div class="num">6</div><div><h4>Sealed until the deadline</h4><p>Confirm commits a timestamped hash. All answers open together, so nobody herds and nobody is pressured.</p></div></div>
   </div>
   <div style="flex:1">
-   <div class="flow" data-s="2">
-    <div class="st"><div class="ico "><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg></div><h4>Investigator</h4><p>writes claims, each citing a record</p></div><div class="ar"></div>
-    <div class="st"><div class="ico "><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><h4>Skeptic</h4><p>exact number, source, date, place</p></div><div class="ar"></div>
-    <div class="st"><div class="ico "><svg viewBox="0 0 24 24"><path d="M12 3v18M5 21h14M3 8h18"/><path d="M6 8l-3 7a3 3 0 0 0 6 0l-3-7M18 8l-3 7a3 3 0 0 0 6 0l-3-7"/></svg></div><h4>Judge</h4><p>coverage, grounding, one repair round</p></div><div class="ar"></div>
-    <div class="st"><div class="ico a"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h4>Analyst</h4><p>accept, edit, reject, on record</p></div>
+   <p style="font-size:22px;color:var(--muted);margin-bottom:22px" data-s="3">Then the agent loop checks every claim</p>
+   <div style="display:flex;flex-direction:column;gap:18px" data-s="3">
+    <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg></div><div><h4>Investigator</h4><p>writes the draft as claims, each citing a record</p></div></div>
+    <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div><h4>Skeptic</h4><p>exact number, source, date, place; unsourced claims held</p></div></div>
+    <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><path d="M12 3v18M5 21h14M3 8h18"/><path d="M6 8l-3 7a3 3 0 0 0 6 0l-3-7M18 8l-3 7a3 3 0 0 0 6 0l-3-7"/></svg></div><div><h4>Judge</h4><p>scores coverage and grounding; one repair round</p></div></div>
+    <div class="it"><div class="ico a"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><div><h4>Analyst</h4><p>accepts, edits or rejects, on record</p></div></div>
    </div>
-   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;margin-top:90px" data-s="3">
-    <div class="stat"><b>0</b><span>tolerance on any number in the draft</span></div>
-    <div class="stat"><b>held</b><span>unsourced claims wait in a queue; absence is not falsity</span></div>
-    <div class="stat"><b>n &lt; 5</b><span>never aggregated, never shown</span></div>
-   </div>
-   <div style="margin-top:90px;border-top:2px solid var(--line);padding-top:28px" data-s="4">
-    <p style="font-size:22px;color:var(--muted);margin-bottom:12px">Patterns described to the analyst, never a verdict on a person</p>
-    <span class="chip t" style="font-size:19px;padding:8px 16px">convergence after reveal</span><span class="chip t" style="font-size:19px;padding:8px 16px">co-movement</span><span class="chip t" style="font-size:19px;padding:8px 16px">shared origin</span><span class="chip t" style="font-size:19px;padding:8px 16px">news-driven</span><span class="chip t" style="font-size:19px;padding:8px 16px">coverage gap</span>
+   <div style="margin-top:34px;border-top:2px solid var(--line);padding-top:18px" data-s="4">
+    <p style="font-size:19px;color:var(--muted);margin-bottom:10px">Patterns described to the analyst, never a verdict on a person</p>
+    <span class="chip t">convergence after reveal</span><span class="chip t">co-movement</span><span class="chip t">shared origin</span><span class="chip t">news-driven</span><span class="chip t">coverage gap</span>
    </div>
   </div>
  </div>
  <div class="foot"><span>Model-optional: a deterministic template is the default; the LLM loop sits behind a flag and never faces an expert</span><span>4</span></div>
 </section>
 <section class="slide" id="s5">
- <div class="line" data-s="0">Why every stakeholder can trust it.</div>
- <div style="display:grid;grid-template-columns:1fr 1fr 420px 1fr 1fr;gap:30px;align-items:start;margin-top:30px">
-  <div class="stk" data-s="1"><div class="ico a"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h4>Experts</h4><ul><li>mask per answer</li><li>sealed until the deadline</li><li>never scored as a person</li><li>see their own calibration first</li></ul></div>
-  <div class="stk" data-s="1"><div class="ico a"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg></div><h4>Analysts</h4><ul><li>alerts from arithmetic</li><li>bias described, not judged</li><li>every number checked</li><li>their decision on record</li></ul></div>
-  <div class="stk" data-s="2" style="border:2px solid var(--line);border-radius:16px;padding:28px 20px;background:#fff"><div class="ico big"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v18M12 8h5M12 12h5M12 16h3"/></svg></div><h4>Public ledger</h4><ul><li>group view and spread</li><li>decision it informs</li><li>honesty box and misses</li><li><b style="color:var(--teal)">Verify</b>: hash recomputed</li></ul></div>
-  <div class="stk" data-s="3"><div class="ico a"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="3"/><path d="M15.5 14.5A6 6 0 0 1 22 20"/></svg></div><h4>ACAPS committee</h4><ul><li>vetted panels, two approvals</li><li>identity map encrypted</li><li>every read logged</li><li>outcomes signed</li></ul></div>
-  <div class="stk" data-s="3"><div class="ico a"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div><h4>Readers and donors</h4><ul><li>what fed into a rating</li><li>when it was wrong</li><li>aggregates of five or more</li><li>never an individual</li></ul></div>
+ <div class="line" data-s="0">Why people can trust it.</div>
+ <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:40px;margin-top:40px">
+  <div class="one" data-s="1"><div class="ico big a"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h4>Experts</h4><p>Answer in a minute, behind a mask they choose, and never get judged as a person.</p></div>
+  <div class="one" data-s="1"><div class="ico big a"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg></div><h4>Analysts</h4><p>See agreement, disagreement and what is missing, then decide, on record.</p></div>
+  <div class="one" data-s="2"><div class="ico big a"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="3"/><path d="M15.5 14.5A6 6 0 0 1 22 20"/></svg></div><h4>ACAPS</h4><p>Vets the panel, holds the keys, and sees every access to the identity list.</p></div>
+  <div class="one" data-s="2"><div class="ico big a"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div><h4>Readers and donors</h4><p>See what fed into a rating, its limits, and when it was wrong.</p></div>
  </div>
- <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:26px;margin-top:110px" data-s="4">
-  <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><rect x="3" y="11" width="12" height="10" rx="2"/><path d="M6 11V8a3 3 0 0 1 6 0v3"/><circle cx="18" cy="17" r="4"/><path d="M18 15v2l1.5 1"/></svg></div><div><h4 style="font-size:21px">Commit and reveal</h4><p style="font-size:16px">SHA-256, timestamped. Proves timing, not secrecy.</p></div></div>
-  <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><path d="M3 7c3-2 6-2 9 0 3-2 6-2 9 0v5c0 4-3 7-9 9-6-2-9-5-9-9z"/><path d="M8 12h2M14 12h2"/></svg></div><div><h4 style="font-size:21px">Masks</h4><p style="font-size:16px">Pseudonymised to peers; limits stated.</p></div></div>
-  <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 0 2-2V5h14v1a2 2 0 0 0 2 2v3a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2v3H5v-3a2 2 0 0 0-2-2v-1a2 2 0 0 0 2-2V8z"/><path d="M12 5v14" stroke-dasharray="2 3"/></svg></div><div><h4 style="font-size:21px">Blind credentials</h4><p style="font-size:16px">RFC 9474, one-time, unlinkable to approval.</p></div></div>
-  <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V21M5 13a7 7 0 0 0 14 0M3 13h4M17 13h4"/></svg></div><div><h4 style="font-size:21px">Anchoring</h4><p style="font-size:16px">OpenTimestamps daily root. A timestamp, not a blockchain.</p></div></div>
-  <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg></div><div><h4 style="font-size:21px">Post-quantum</h4><p style="font-size:16px">ML-KEM-768 keys, AES-256-GCM at rest, ML-DSA-65 signatures.</p></div></div>
-  <div class="it"><div class="ico "><svg viewBox="0 0 24 24"><path d="M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11"/></svg></div><div><h4 style="font-size:21px">Access log</h4><p style="font-size:16px">Every registry read, with a reason, visible to the committee.</p></div></div>
+ <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;margin-top:80px">
+  <div class="prom" data-s="3"><div class="ico big"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><div><h4>Locked before anyone looks</h4><p>Every answer is sealed with a timestamp and opened together. It proves when it was said, not that it is true.</p></div></div>
+  <div class="prom" data-s="3"><div class="ico big"><svg viewBox="0 0 24 24"><path d="M3 7c3-2 6-2 9 0 3-2 6-2 9 0v5c0 4-3 7-9 9-6-2-9-5-9-9z"/><path d="M8 12h2M14 12h2"/></svg></div><div><h4>Names protected, limits stated</h4><p>Hidden from peers and the public; ACAPS access is defined and logged. Not anonymous from ACAPS, and we say so.</p></div></div>
+  <div class="prom" data-s="3"><div class="ico big"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div><h4>Anyone can check the record</h4><p>One click recomputes the seal. The public page keeps the misses, including when the analyst overruled a panel that was right.</p></div></div>
  </div>
- <div class="foot"><span>What we do not claim: secrecy from the operator, anonymity from ACAPS, a blockchain product, or scores on people</span><span>5</span></div>
+ <div class="foot"><span>Under the hood: SHA-256 commitments, blind-signed credentials, OpenTimestamps anchoring, ML-KEM-768 and ML-DSA-65, access log. Detail in the Q&A slides.</span><span>5</span></div>
 </section>
 <section class="slide" id="s6">
  <div class="line" data-s="0">It runs, it is different, and it is ready for a supervised pilot.</div>
