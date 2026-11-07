@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { VerificationTrail } from "./VerificationTrail";
 import ledger from "../../fixtures/GET_ledger.json";
 import { HonestyBox } from "./V2Panels";
 import { Section, CopyButton } from "./LiveWorkspace";
 import { date, percent } from "./desk-model";
 export function HistoricalLedger({ query }: { query: string }) {
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
   return (
     <>
       {ledger.entries
@@ -33,7 +34,19 @@ export function HistoricalLedger({ query }: { query: string }) {
                 <small>{e.resolved_at && date(e.resolved_at)}</small>
               </div>
             </div>
-            <HonestyBox value={e.honesty} />
+            <HonestyBox
+              value={e.honesty}
+              context={`${e.risk_id} / ${e.pulse_id}`}
+            />
+            <VerificationTrail
+              entry={e}
+              fixture
+              receipt={
+                checked[e.verify_hash]
+                  ? { valid: true, anchor: null }
+                  : undefined
+              }
+            />
             <dl className="ledger-details">
               <div>
                 <dt>Sealed at</dt>
@@ -48,16 +61,18 @@ export function HistoricalLedger({ query }: { query: string }) {
             </dl>
             <div className="panel-actions">
               <button
-                className={checked ? "verified-button" : ""}
-                onClick={() => setChecked(true)}
+                className={checked[e.verify_hash] ? "verified-button" : ""}
+                onClick={() =>
+                  setChecked((v) => ({ ...v, [e.verify_hash]: true }))
+                }
               >
-                {checked
+                {checked[e.verify_hash]
                   ? "Historical fixture matched"
                   : "Check historical receipt"}
               </button>
               <CopyButton value={e.verify_hash} label="Copy historical hash" />
             </div>
-            {checked && (
+            {checked[e.verify_hash] && (
               <p role="status" className="panel-caption">
                 Historical fixture match only. No blockchain or timestamp
                 anchor.

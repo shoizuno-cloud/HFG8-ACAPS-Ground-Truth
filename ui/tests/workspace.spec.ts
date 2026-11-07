@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { test } from "./workspace-session";
+import AxeBuilder from "@axe-core/playwright";
 
 async function draftReady(page: Page) {
   await page.goto("/desk");
@@ -62,6 +63,31 @@ test("approval gates public ledger, verification is labelled and both screens fi
   await expect(
     page.getByRole("status").filter({ hasText: "No blockchain anchor" }),
   ).toContainText("No blockchain anchor");
+  const trail = page
+    .getByRole("region", { name: "From contribution to verification" })
+    .first();
+  await trail
+    .getByRole("button", { name: "Verified Fixture matched", exact: true })
+    .click();
+  await expect(
+    trail.getByText(
+      "No cryptographic proof or blockchain transaction was performed.",
+      { exact: false },
+    ),
+  ).toBeVisible();
+  await expect(
+    trail.getByRole("link", { name: "Open timestamp proof" }),
+  ).toHaveCount(0);
+  await expect(
+    trail.getByRole("button", {
+      name: "Verified Fixture matched",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await trail.screenshot({
+    path: `test-results/verification-trail-${info.project.name}.png`,
+  });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

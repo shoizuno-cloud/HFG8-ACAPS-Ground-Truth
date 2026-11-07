@@ -137,22 +137,19 @@ main.public-home {
   align-items: end;
   gap: 24px;
 }
-.public-section-heading p,
-.public-topics > div > p {
+.public-section-heading p {
   font-size: 13px;
   color: var(--muted);
   margin: 0 0 12px;
 }
-.public-section-heading h2,
-.public-topics h2 {
+.public-section-heading h2 {
   font-size: 36px;
   line-height: 1.2;
   letter-spacing: -1px;
   font-weight: 500;
   margin: 0;
 }
-.public-section-heading > a,
-.public-topics > div > a {
+.public-section-heading > a {
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -203,26 +200,6 @@ main.public-home {
   min-height: 44px;
   margin-top: auto;
   font-size: 13px;
-}
-.public-topics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 64px;
-  background: var(--accent-soft);
-  padding: 56px 64px;
-}
-.public-topics h2 {
-  margin-bottom: 24px;
-}
-.public-topics > div + div > a {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  align-items: center;
-  min-height: 72px;
-  border-bottom: 1px solid #c7d9d3;
-  text-decoration: none;
-  font-size: 18px;
 }
 .public-workspace-entry {
   display: flex;
@@ -379,13 +356,8 @@ main.login-redirect {
     gap: 32px;
   }
   .public-research,
-  .public-topics,
   .public-workspace-entry {
     padding: 40px 32px;
-  }
-  main.login-layout {
-    gap: 40px;
-    grid-template-columns: 1fr 1fr;
   }
   .public-feature img {
     height: 240px;
@@ -421,7 +393,6 @@ main.login-redirect {
     font-size: 22px;
   }
   .public-research,
-  .public-topics,
   .public-workspace-entry {
     padding: 40px 20px;
   }
@@ -430,12 +401,10 @@ main.login-redirect {
     flex-direction: column;
     gap: 12px;
   }
-  .public-section-heading h2,
-  .public-topics h2 {
+  .public-section-heading h2 {
     font-size: 30px;
   }
   .public-report-grid,
-  .public-topics,
   .public-footer,
   .workspace-entry-grid {
     grid-template-columns: 1fr;
@@ -446,24 +415,9 @@ main.login-redirect {
   .public-report-grid h3 {
     margin-bottom: 16px;
   }
-  .public-topics {
-    gap: 24px;
-  }
   .public-workspace-entry {
     align-items: start;
     flex-direction: column;
-  }
-  main.login-layout {
-    grid-template-columns: 1fr;
-    margin: 40px auto;
-    padding: 0 20px;
-    gap: 32px;
-  }
-  .login-context h1 {
-    font-size: 35px;
-  }
-  .login-panel {
-    padding: 24px;
   }
   .workspace-welcome {
     padding: 22px;

@@ -245,7 +245,9 @@ test("ledger suppresses small groups and reports failed verification; calibratio
 }, info) => {
   await contractApi(page);
   await page.goto("/ledger");
-  await expect(page.getByText("8 contributions")).toBeVisible();
+  await expect(
+    page.locator(".ledger-stats").getByText("8 contributions", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: /R0987/ })).toHaveCount(0);
   await expect(page.getByText("quiet-heron")).toHaveCount(0);
   await page.getByRole("button", { name: "Verify entry" }).click();
@@ -379,4 +381,211 @@ test("a result for another pulse is not revealed on the selected desk", async ({
   await expect(
     page.getByText("Equal-weight mean", { exact: true }),
   ).toHaveCount(0);
+});
+
+test("verification trail distinguishes backend validity, usable anchors and mismatched timestamps", async ({
+  page,
+}) => {
+  await contractApi(page);
+  let receipt = {
+    valid: true,
+    sealed_at: ledger.entries[0].sealed_at,
+    anchor: null as string | null,
+  };
+  await page.route("**/ledger/verify", (route) =>
+    route.fulfill({
+      json: receipt,
+      headers: { "Access-Control-Allow-Origin": "*" },
+    }),
+  );
+  await page.goto("/ledger");
+  const trail = page.getByRole("region", {
+    name: "From contribution to verification",
+  });
+  await expect(
+    trail.getByRole("heading", { name: "External anchor not checked" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Verify entry", exact: true }).click();
+  await expect(
+    trail.getByRole("button", {
+      name: "Verified API check passed",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    trail.getByRole("heading", { name: "No external anchor", exact: true }),
+  ).toBeVisible();
+  receipt = { ...receipt, anchor: "https://example.org/proof/round-1" };
+  await page.getByRole("button", { name: "Verify entry", exact: true }).click();
+  await expect(
+    trail.getByRole("link", { name: "Open timestamp proof" }),
+  ).toHaveAttribute("href", receipt.anchor);
+  await expect(
+    trail.getByRole("heading", { name: "External anchor supplied" }),
+  ).toBeVisible();
+  receipt = { ...receipt, anchor: "javascript:alert(1)" };
+  await page.getByRole("button", { name: "Verify entry", exact: true }).click();
+  await expect(
+    trail.getByRole("heading", { name: "No external anchor", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /timestamp proof|Timestamp anchor/ }),
+  ).toHaveCount(0);
+  receipt = {
+    ...receipt,
+    valid: false,
+    anchor: "https://example.org/proof/round-1",
+  };
+  await page.getByRole("button", { name: "Verify entry", exact: true }).click();
+  await expect(
+    trail.getByRole("button", { name: "Verified Check failed", exact: true }),
+  ).toBeVisible();
+  await expect(
+    trail.getByRole("link", { name: "Open timestamp proof" }),
+  ).toHaveCount(0);
+  receipt = { ...receipt, valid: true, sealed_at: "2020-01-01T00:00:00Z" };
+  await page.getByRole("button", { name: "Verify entry", exact: true }).click();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "receipt timestamp does not match" }),
+  ).toBeVisible();
+  await expect(
+    trail.getByRole("button", { name: "Verified Check failed", exact: true }),
+  ).toBeVisible();
+});
+
+test("v3 abstentions submit null estimates and calibration waits for opt-in and five resolutions", async ({
+  page,
+}) => {
+  const writes = await contractApi(page);
+  await page.goto("/e/private-invitation");
+  await page
+    .getByRole("button", { name: "Not enough evidence", exact: true })
+    .click();
+  await expect(page.getByRole("slider")).toHaveCount(0);
+  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Submitted. You’ll get the group outcome.",
+    }),
+  ).toBeVisible();
+  expect(writes.find((w) => w.path.endsWith("/answer"))?.body).toMatchObject({
+    stance: "not_enough_evidence",
+    probability: null,
+    confidence: null,
+    panel_share_yes: null,
+    round: 1,
+  });
+  let requests = 0;
+  await page.route(
+    "http://127.0.0.1:18000/me/private-invitation/calibration",
+    (route) => {
+      requests++;
+      return route.fulfill({
+        json: { ...calibration, n_resolved: 4 },
+        headers: { "Access-Control-Allow-Origin": "*" },
+      });
+    },
+  );
+  await page.goto("/me/private-invitation/calibration");
+  await expect(
+    page.getByRole("button", { name: "View my private calibration" }),
+  ).toBeVisible();
+  expect(requests).toBe(0);
+  await page
+    .getByRole("button", { name: "View my private calibration" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Five resolutions required" }),
+  ).toBeVisible();
+  expect(requests).toBe(1);
+  await expect(page.getByText("0.12", { exact: true })).toHaveCount(0);
+});
+
+test("v3 aggregate stays primary and mismatched outcome reports are withheld", async ({
+  page,
+}) => {
+  await contractApi(page);
+  await page.route("**/pulses/P-0001/reveal", (route) =>
+    route.fulfill({
+      json: { ...result, weighted_mean: 0.83 },
+      headers: { "Access-Control-Allow-Origin": "*" },
+    }),
+  );
+  await page.goto("/desk");
+  await page.getByRole("button", { name: "Ask panel", exact: true }).click();
+  await page.getByRole("button", { name: "Reveal round", exact: true }).click();
+  await expect(
+    page
+      .getByText("Equal-weight mean", { exact: true })
+      .locator("..")
+      .getByText("69%", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Secondary weighted mean: 83%.", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(result.minority_rationales[0], { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Open group outcome report" }).click();
+  await expect(page.locator(".outcome-report")).toContainText(
+    "Equal-weight group mean: 69%",
+  );
+  await page.route("**/pulses/P-0001/outcome-report", (route) =>
+    route.fulfill({
+      json: {
+        pulse_id: "P-other",
+        group_mean: 0.69,
+        outcome: "materialised",
+        analyst_decision_summary: "Must not render",
+      },
+      headers: { "Access-Control-Allow-Origin": "*" },
+    }),
+  );
+  await page.getByRole("button", { name: "Open group outcome report" }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "does not match a confirmed group",
+  );
+  await expect(page.locator(".outcome-report")).toHaveCount(0);
+  await expect(page.getByText("Must not render", { exact: true })).toHaveCount(
+    0,
+  );
+});
+
+test("a successful status without a frozen contract cannot unlock scoring", async ({
+  page,
+}) => {
+  const writes = await contractApi(page);
+  await page.route("**/risks/R1043/contract", (route) =>
+    route.fulfill({
+      json: risks.risks[0],
+      headers: { "Access-Control-Allow-Origin": "*" },
+    }),
+  );
+  await page.goto("/desk");
+  await page.getByRole("button", { name: "Ask panel", exact: true }).click();
+  await page.getByRole("button", { name: "Freeze question contract" }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "did not confirm this frozen contract",
+  );
+  await page.getByRole("button", { name: "Reveal round", exact: true }).click();
+  await page.getByRole("button", { name: "Prepare draft" }).click();
+  await page.getByLabel("Decision note").fill("Keep High for the demo.");
+  await page
+    .getByLabel("Decision to inform", { exact: true })
+    .fill("Pre-position shelter");
+  await page
+    .getByLabel("Decision owner", { exact: true })
+    .fill("Preparedness lead");
+  await page
+    .getByLabel("Decision needed by", { exact: true })
+    .fill("2026-11-20");
+  await page.getByRole("button", { name: "Accept draft", exact: true }).click();
+  await page.getByLabel("Resolution date (UTC)").fill("2026-11-05");
+  await page.getByLabel("I confirm this is an observed outcome.").check();
+  await expect(
+    page.getByRole("button", { name: "Resolve risk and score forecasts" }),
+  ).toBeDisabled();
+  expect(writes.some((w) => w.path.endsWith("/resolve"))).toBe(false);
 });

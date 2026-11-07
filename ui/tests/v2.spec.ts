@@ -146,6 +146,10 @@ test("integrity is desk-only and the public ledger includes honesty and resolved
     page.getByRole("heading", { name: "Resolved history / R0987" }),
   ).toBeVisible();
   await expect(page.getByText("Includes misses")).toHaveCount(2);
-  await expect(page.getByRole("heading", {name:"Panel view rejected by the analyst"})).toBeVisible();
-  await expect(page.getByText("Pre-position shelter", {exact:true})).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Panel view rejected by the analyst" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Pre-position shelter", { exact: true }),
+  ).toBeVisible();
 });

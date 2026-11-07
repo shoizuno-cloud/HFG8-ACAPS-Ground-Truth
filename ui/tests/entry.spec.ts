@@ -46,11 +46,13 @@ test("public entry exposes research and Login opens the workspace without creden
 test("expired sessions return to the public page and unsafe destinations are ignored", async ({
   page,
 }) => {
-  await page.addInitScript(() =>
-    !sessionStorage.getItem("sealed-signals-demo-session") && sessionStorage.setItem(
-      "sealed-signals-demo-session",
-      JSON.stringify({ kind: "demo", expiresAt: 0 }),
-    ),
+  await page.addInitScript(
+    () =>
+      !sessionStorage.getItem("sealed-signals-demo-session") &&
+      sessionStorage.setItem(
+        "sealed-signals-demo-session",
+        JSON.stringify({ kind: "demo", expiresAt: 0 }),
+      ),
   );
   await page.goto("/ledger");
   await expect(page).toHaveURL(/\/\?next=%2Fledger$/);

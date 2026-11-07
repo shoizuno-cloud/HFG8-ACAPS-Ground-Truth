@@ -5,7 +5,13 @@ import { percent } from "./desk-model";
 import { Section } from "./LiveWorkspace";
 import type { Honesty, Integrity, Match } from "./v2-types";
 
-export function HonestyBox({ value }: { value?: Honesty }) {
+export function HonestyBox({
+  value,
+  context,
+}: {
+  value?: Honesty;
+  context?: string;
+}) {
   if (!value || value.n < 5)
     return (
       <div className="honesty-box">
@@ -17,7 +23,10 @@ export function HonestyBox({ value }: { value?: Honesty }) {
       </div>
     );
   return (
-    <section className="honesty-box" aria-label="Public honesty box">
+    <section
+      className="honesty-box"
+      aria-label={`Public honesty box${context ? ` · ${context}` : ""}`}
+    >
       <h3>What fed into this view</h3>
       <div className="honesty-grid">
         <div>

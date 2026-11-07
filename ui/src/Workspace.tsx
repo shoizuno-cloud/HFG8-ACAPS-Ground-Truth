@@ -3,8 +3,10 @@ import {
   emptyDecisionUse,
   completeDecisionUse,
   OutcomeReportPanel,
+  QuestionContractPanel,
 } from "./V3Workflow";
 import { PortalHeader } from "./PortalHeader";
+import { VerificationTrail } from "./VerificationTrail";
 import { HistoricalLedger } from "./HistoricalLedger";
 import { DraftNarrative } from "./Grounding";
 import { HonestyBox, IntegrityPanel, PanelMatch } from "./V2Panels";
@@ -23,7 +25,6 @@ import {
 } from "lucide-react";
 import { mock } from "./api";
 import {
-  board,
   date,
   draft,
   eligibleEntries,
@@ -68,10 +69,10 @@ function Shell({
 }) {
   return (
     <>
-      <PortalHeader />
       <a className="skip-link" href="#workspace-content">
         Skip to content
       </a>
+      <PortalHeader />
       <main id="workspace-content" className="workspace">
         <div className="mode-banner">
           <ShieldCheck size={16} />
@@ -140,6 +141,9 @@ function Regions() {
   );
 }
 function Desk() {
+  const [, setFrozenContract] = useState<
+    import("./service").QuestionContract | null
+  >(null);
   const [decision, setDecision] = useState(readDecision);
   const [answers, setAnswers] = useState(decision ? result.n : 0);
   const [revealed, setRevealed] = useState(!!decision);
@@ -465,6 +469,10 @@ function Desk() {
           </Panel>
         </div>
         <aside className="desk-side">
+          <QuestionContractPanel
+            riskId={risk.risk_id}
+            onFrozen={setFrozenContract}
+          />
           <PanelMatch riskId={risk.risk_id} />
           {revealed && <IntegrityPanel pulseId={pulse.id} />}
           {import.meta.env.VITE_FF_DOORBELL === "1" && (
@@ -609,11 +617,18 @@ function Ledger() {
             </div>
           </div>
           <HonestyBox
+            context={`${entry.risk_id} / ${entry.pulse_id}`}
             value={{
               ...entry.honesty,
               decision_use:
                 decision?.decision_use || entry.honesty.decision_use,
             }}
+          />
+          <VerificationTrail
+            entry={entry}
+            fixture
+            decision={decision}
+            receipt={verified ? { valid: true, anchor: null } : undefined}
           />
           <dl className="ledger-details">
             <div>
