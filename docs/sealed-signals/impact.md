@@ -293,7 +293,7 @@ Facts from the export [data, R1043 record]:
 - Update of 30 Sep 2026: more than 400 Sudanese refugees per day crossing by 25 Sep, about 20 times the earlier rate; more than 55,000 arrivals since the start of 2026.
 - The first trigger (T0618) is expansion of cross-border attacks around Adré, Tine and other border localities.
 
-A figure we could not confirm: the master prompt says "over a million Sudanese refugees in eastern Chad since 2023". The UNHCR figures we found were about 800,000 to 870,000 registered arrivals by mid-2025, so a million may be right for late 2026 but we have no source. Use "more than 800,000 registered by mid-2025 (UNHCR)" or confirm a newer figure before saying a million.
+Refugee figure, updated 7 Nov 2026: UNHCR registers 1,425,743 Sudanese refugees in Chad (data date 2026-11-02; [UNHCR Operational Data Portal, Chad](https://data.unhcr.org/en/country/tcd)). This is the national total for Sudanese refugees. It includes people who arrived before April 2023 and is not an eastern-Chad-only figure. The master prompt line "over a million Sudanese refugees in eastern Chad since 2023" is therefore too loose: use "about 1.4 million Sudanese refugees registered in Chad (UNHCR, 2 Nov 2026)". The earlier "800,000 to 870,000 by mid-2025" figure is out of date.
 
 **What the loop would do (illustrative):**
 

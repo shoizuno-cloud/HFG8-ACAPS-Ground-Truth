@@ -42,8 +42,8 @@ Priority: **M** = before the Sat 20:00 merge, **S** = before the Sun 10:30 freez
 ### P10. One "what fed into this" sentence (S) - Lane A + B
 - Generated at the top of the honesty box from existing fields: "Based on 7 committed answers from a panel of 8, 2 of 3 claims corroborated, 1 in the verification queue."
 
-### P11. Refugee figure (M) - team
-- The master prompt (Lane C item 3) says "over a million Sudanese refugees in eastern Chad since 2023". UNHCR figures found were about 800,000 to 870,000 registered by mid-2025. Source a current figure or change the sentence. We use the verifiable wording.
+### P11. Refugee figure (M) - team (resolved 7 Nov)
+- Resolved. UNHCR registers 1,425,743 Sudanese refugees in Chad (data date 2026-11-02, https://data.unhcr.org/en/country/tcd). This is the national total and includes pre-2023 arrivals, so say "about 1.4 million Sudanese refugees registered in Chad (UNHCR, 2 Nov 2026)", not "in eastern Chad since 2023". `impact.md` 3.4 and `MASTER_PROMPT.md` (Lane C item 3) now use this figure. Not yet sourced: arrivals since April 2023 for Chad alone (UNHCR CORE document).
 
 ### P12. Six-step method (L) - team
 - No numbered ACAPS list found. Ask Alex for the official steps. impact.md labels its six-step grouping as ours.

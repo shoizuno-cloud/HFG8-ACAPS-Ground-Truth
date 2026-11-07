@@ -6,7 +6,7 @@ What changed from the first version: the opening is the Risk Alert Engine replay
 
 ## Roles
 
-Names to be filled in.
+Team: Zain Ul Haq (backend), (frontend: name to add), Sho Izuno (research and pitch). Role assignments not yet decided: names for Presenter (P), Driver (D) and Phone (F) to be filled in.
 
 - **Presenter (P):** speaks, stands at the screen, holds no device.
 - **Driver (D):** at the laptop on `/desk`. Clicks Send pulse, Reveal, Accept, Verify. Says nothing except the cue words.

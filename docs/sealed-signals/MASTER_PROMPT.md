@@ -459,7 +459,7 @@ Milestones: expert card mock Sat 12:00 · desk + ledger mock Sat 16:00 · live A
    after: doorbell → panel → cited draft → analyst decision → ledger → score. One diagram.
 3. **Impact chain**: better probability → earlier decision → anticipatory funds released (IFRC/WFP/CERF frameworks) → aid
    pre-positioned → lower cost and mortality. Cite FAO/WFP anticipatory-action evaluations; mark every number as cited or
-   illustrative. Worked example on R1043 (over a million Sudanese refugees in eastern Chad since 2023).
+   illustrative. Worked example on R1043 (about 1.4 million Sudanese refugees registered in Chad: 1,425,743, UNHCR, 2 Nov 2026; a national total that includes pre-2023 arrivals, not an eastern-Chad figure).
 4. **Interview Alex (ACAPS) today**: the question list in `docs/sealed-signals/questions-for-acaps.md`; write his answers
    verbatim into impact.md and quote him in the pitch.
 5. **Judging checklist** (`judging-checklist.md`): each dimension (problem understanding, expert experience, anonymity &

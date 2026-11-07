@@ -91,7 +91,7 @@ Lane A and Lane B own this section and the architecture detail.
 
 ## Team
 
-Zain Ul Haq (backend) | (frontend: name to add) | (research and pitch: name to add)
+Zain Ul Haq (backend) | (frontend: name to add) | Sho Izuno (research and pitch)
 
 ## ACAPS data terms
 
