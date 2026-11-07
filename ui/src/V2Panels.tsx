@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { mock } from "./api";
+import { sampleDataEnabled, sampleResult } from "./demo-data";
 import { endpoint } from "./service";
 import { percent } from "./desk-model";
 import { Section } from "./LiveWorkspace";
@@ -124,7 +125,11 @@ export function IntegrityPanel({ pulseId }: { pulseId: string }) {
     setValue(null);
     setError("");
     const job = mock
-      ? import("../../fixtures/GET_integrity_pulse.json").then((m) => m.default)
+      ? import("../../fixtures/GET_integrity_pulse.json").then((m) =>
+          sampleDataEnabled()
+            ? { ...m.default, integrity_notes: sampleResult.integrity_notes }
+            : m.default,
+        )
       : endpoint.integrity(pulseId);
     job
       .then((v) => {

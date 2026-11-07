@@ -1,3 +1,4 @@
+import { sampleDataEnabled, sampleResult } from "./demo-data";
 import { endpoint } from "./service";
 import cardFixture from "../../fixtures/GET_e_token.json";
 import resultFixture from "../../fixtures/GET_pulses_result.json";
@@ -41,7 +42,7 @@ export async function getCard(token: string): Promise<Card> {
     group_view_if_round2:
       token === "round2"
         ? (({ integrity_notes, ...publicResult }) => publicResult)(
-            resultFixture,
+            sampleDataEnabled() ? sampleResult : resultFixture,
           )
         : null,
   });

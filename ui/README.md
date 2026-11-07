@@ -36,6 +36,10 @@ Mock demo: load synthetic answers → reveal → prepare draft → enter decisio
 
 ## Checks
 
+The mock workspace now starts with UI-owned sample data: six exported risk contexts, eight synthetic panel estimates, five resolved forecast/ledger examples and three synthetic expert applications. Calibration scores are calculated from the sample forecasts. Probabilities, dates, decisions and receipt identifiers are illustrative; no real credentials, blockchain writes or remote publications occur. Existing decisions in the tab are preserved during automatic initialization.
+
+The overview's Sample workspace controls reload the examples, start a fresh analyst round or return to the original fixtures. Applications and committee approvals persist in session storage only in mock sample mode. API mode never uses these samples. Header and content use the same container inset; alignment is checked at phone, 1531px desktop and projector widths.
+
 ```powershell
 npx playwright install chromium
 npm test
