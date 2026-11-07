@@ -13,7 +13,7 @@ Style: white background, one accent colour (deep teal), large type, one idea per
 5. **Sensitivity test (backup slide).** The sensitivity chart. Caption: "Tests the software on 104 resolved risks with synthetic panels. Says nothing about real experts. No claim about timing." (Numbers from Lane A's sensitivity output.)
 6. **Integrity and honesty.** Four lines: "Rating hidden until submission (anchoring)." "Equal-weight mean with spread and minority reasons." "Notes for the analyst that describe, not judge." "Honesty box: limits, misses, the decision it could inform." Footer: "One validation layer among others. Commitments prove timing, not secrecy from the operator."
 7. **Impact and stakeholders.** Five names: analysts, experts, readers, committee, affected people. Line per group, one phrase each. Footer: "Better probability, earlier decision, anticipatory funds, pre-positioned aid. Evidence strongest for floods and drought; conflict is the open test."
-8. **Ready for a supervised pilot of this workflow.** Pilot: "Two months, one committee, eight experts, one country. Measures: panel mean vs ACAPS Probability band on questions that resolve, minutes saved per update, experts still answering in week 8." Team: names to be filled in.
+8. **Ready for a supervised pilot of this workflow.** Pilot: "Two months, one committee, eight experts, one country. Measures: panel mean vs ACAPS Probability band on questions that resolve, minutes saved per update, experts still answering in week 8." Team: Zain Ul Haq (backend) | (frontend: name to add) | Sho Izuno (research and pitch).
 
 ## Speaker notes
 
