@@ -709,17 +709,18 @@ Professional, minimal, modern. The jury should think "this already exists in pro
 
 ## 9a. The three minutes (Lane C owns demo-script.md; deck in pitch/sealed-signals-slides.html; these beats are fixed)
 
-The deck sells what we built, with proofs. Order: 1 the gap (47 %) · 2 the whole system on one screen, tech chips on each
-node · 3 alert engine: the Alerts page, the real April 2026 move reproduced by replay · 4 Reach: the pulse leaving by six
-channels, consent and STOP visible · 5 psychology layer: the card annotated with the six biases designed out, and the five
-descriptive desk notes · 6 agentic verification: Investigator, Skeptic, Judge with claim-level verdicts, a held claim and a
-rejected claim, the analyst decision · 7 scan, the jury is the Chad panel (60 s), then the live desk: reveal, draft,
-decision, ledger, one click on Verify · 8 cryptographic ledger: the ledger screen with six mechanisms, each "proves /
-does not" · 9 scoring and calibration: committee scoring at panel level, the outcome report, the miss on the page ·
-10 proof it runs: 123, 104, under 60 s, 9 flags, tests, measured, reviewed · 11 why it is different: comparison with an
-email thread, a survey tool and a prediction market · 12 pilot and team · close on the spine line. Q&A and fallback
-slides (B): personas and the ACAPS workflow mapping, the reveal view, the draft and ledger, the sensitivity test.
-Nothing is said on stage about a path that is off.
+The deck sells what we built, with proofs; the live demo is run from the product, not from a slide. Order: 1 the gap
+(47 %) · 2 the whole system on one screen, tech chips on each node · 3 alert engine: the Alerts page, the real April 2026
+move reproduced by replay · 4 Reach: the pulse leaving by six channels, consent and STOP visible · 5 psychology layer:
+the card annotated with six biases designed out, five descriptive desk notes · 6 agentic verification: Investigator,
+Skeptic, Judge with claim-level verdicts and the analyst decision · 7 why every stakeholder can trust it: the ledger
+with Verify and the miss on the page, and what experts, analysts, the committee and readers each get, with "what we do
+not claim" · 8 proof it runs: 123, 104, under 60 s, 9 flags, tests, measured, reviewed · 9 why it is different:
+comparison with an email thread, a survey tool and a prediction market · 10 pilot and team · close on the spine line.
+Live demo: switch to the product after slide 6 or after slide 9 (presenter's call): the jury scans the QR shown on the
+desk's Reach page, answers on the card, and the reveal, draft, decision and ledger happen live. Q&A slides (B):
+personas and workflow mapping, cryptographic mechanisms in detail, scoring and calibration, the reveal view, the draft
+and ledger, the sensitivity test. Nothing is said on stage about a path that is off.
 
 ## 10. Lanes
 
