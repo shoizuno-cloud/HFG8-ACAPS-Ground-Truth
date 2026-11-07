@@ -10,13 +10,14 @@ and the UI render them from there rather than keeping a second copy. `GET /api/t
 
 1. **Who can learn what**: see MASTER_PROMPT.md section 1a.
 2. **Pilot design**: restricted identity registry with logged access; stable internal ids; pseudonyms to peers;
-   `anonymous` answers stored without identity and not claimable; aggregates only to the public with n >= 5.
+   unattributed answers stored without an identity link, not claimable, and without personalised feedback
+   (the product says pseudonymised, never anonymous); aggregates only to the public with n >= 5.
 
 ## 3. The hardening stack, as built
 
 | # | Mechanism | Flag | Where the code is | Test evidence |
 | --- | --- | --- | --- | --- |
-| 1 | ML-KEM-768 + X25519 hybrid wrap of the AES-256-GCM key over the identity map | `FF_PQ`, on | `hardening/registry.py` | `test_crypto.py::test_registry_round_trip_under_the_hybrid_kem`, `::test_registry_ciphertext_is_not_decryptable_without_the_committee_key`, `::test_registry_falls_back_and_says_so_when_the_flag_is_off` |
+| 1 | ML-KEM-768 + X25519 hybrid key establishment wrapping the AES-256-GCM key over the identity map (AES-256-GCM at rest) | `FF_PQ`, on | `hardening/registry.py` | `test_crypto.py::test_registry_round_trip_under_the_hybrid_kem`, `::test_registry_ciphertext_is_not_decryptable_without_the_committee_key`, `::test_registry_falls_back_and_says_so_when_the_flag_is_off` |
 | 2 | ML-DSA-65 signature over each resolved outcome record | `FF_PQ`, on | `hardening/attest.py` | `::test_attestation_verifies_and_fails_on_a_flipped_byte`, `::test_attestation_fails_when_the_record_is_edited`, `::test_attestation_public_key_is_stable_across_instances` |
 | 3 | RSA blind signatures, RFC 9474 RSABSSA-SHA384-PSS-Deterministic | `FF_BLIND`, on | `hardening/credentials.py` | `::test_blind_signature_verifies_as_standard_rsa_pss`, `::test_a_credential_cannot_be_spent_twice`, `::test_the_issuer_cannot_match_a_spent_token_to_an_approval` |
 | 4 | Semaphore-shaped group membership | `FF_ZK`, **off** | `hardening/zk.py` | `::test_nullifier_rejects_a_second_answer`, `::test_the_verdict_never_claims_the_proof_was_checked` — see section 5 |

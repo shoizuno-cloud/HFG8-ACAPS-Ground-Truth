@@ -3,168 +3,118 @@
     "id": "P-0001",
     "risk_id": "R1043",
     "panel_id": "PAN-TCD",
-    "fired_at": "2026-11-07T16:10:52+00:00",
-    "reason": "doorbell",
     "round": 1,
-    "evidence": [
-      {
-        "source": "Expansion of cross-border attacks and insecurity - 40% complete",
-        "indicator": "trigger_completion:T1",
-        "value": 40,
-        "baseline": null,
-        "z": null,
-        "url": "https://reliefweb.int/report/chad/unfpa-situation-report-chad-humanitarian-response-1-30-april-2026",
-        "note": "Expansion of cross-border attacks and insecurity"
-      },
-      {
-        "source": "Attacks on strategic infrastructure in Chad - 10% complete",
-        "indicator": "trigger_completion:T2",
-        "value": 10,
-        "baseline": null,
-        "z": null,
-        "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions",
-        "note": "Attacks on strategic infrastructure in Chad"
-      },
-      {
-        "source": "Renewed proxy mobilisation and cross-border armed group activity - 20% complete",
-        "indicator": "trigger_completion:T3",
-        "value": 20,
-        "baseline": null,
-        "z": null,
-        "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions",
-        "note": "Renewed proxy mobilisation and cross-border armed group activity"
-      }
-    ],
-    "question": "Is the level of concern on this risk still right, and what are we missing? You will see the current ACAPS rating as soon as you submit.",
-    "expires_at": "2026-11-08T16:10:52+00:00",
-    "n_answers": 8
+    "question": {
+      "event": "More than 50,000 new arrivals from Sudan registered by UNHCR in Ouaddaï and Wadi Fira",
+      "location": "Ouaddaï and Wadi Fira, eastern Chad",
+      "threshold": "> 50,000 newly registered arrivals (cumulative from 1 Nov 2026)",
+      "deadline": "2027-03-31",
+      "text": "Will more than 50,000 new arrivals from Sudan be registered in Ouaddaï and Wadi Fira by 31 March 2027?"
+    },
+    "asked_by": "Alex, ACAPS Risk Radar",
+    "expires_at": "2026-11-09T09:00:00Z",
+    "reveal_status": "open",
+    "served_from": "live",
+    "generated_at": "2026-11-07T09:00:00Z"
   },
   "risk": {
     "risk_id": "R1043",
     "title": "Escalating cross-border insecurity linked to the Sudan conflict increases protection risks and humanitarian needs in eastern Chad",
-    "risk_type": "Marked deterioration in an existing crisis",
-    "country_iso": "TCD",
     "country": "Chad",
-    "impact_acaps": 4,
-    "status": "Active",
-    "trend": "Deteriorated",
-    "horizon_months": 6,
     "triggers": [
       {
         "id": "T1",
-        "acaps_trigger_id": "R1043 - T0618",
-        "title": "Expansion of cross-border attacks and insecurity",
-        "description": "Additional drone strikes, shelling, or armed incursions near the Chad–Sudan border, particularly around Adré, Tina, and other eastern border localities, increase civilian casualties, trigger further displacement into Chad, and constrain humanitarian operations in already fragile border areas. Continued insecurity may also disrupt cross-border trade and movement routes relied upon by refugees and host communities",
-        "completion_rate": 40,
-        "sources": [
-          {
-            "text": "reliefweb.int",
-            "url": "https://reliefweb.int/report/chad/unfpa-situation-report-chad-humanitarian-response-1-30-april-2026"
-          },
-          {
-            "text": "rfi.fr",
-            "url": "https://www.rfi.fr/fr/afrique/20260513-tchad-de-nouvelles-frappes-enregistr%C3%A9es-%C3%A0-la-fronti%C3%A8re-soudanaise-font-craindre-le-pire"
-          },
-          {
-            "text": "reliefweb.int",
-            "url": "https://reliefweb.int/report/chad/chad-food-security-outlook-update-refugee-impacts-are-driving-income-and-consumption-toward-crisis-ipc-phase-3-april-september-2026"
-          }
-        ]
+        "title": "Cross-border raids and militia activity in Ouaddaï",
+        "description": "Armed incursions from Darfur into border areas around Adré."
       },
       {
         "id": "T2",
-        "acaps_trigger_id": "R1043 - T0619",
-        "title": "Attacks on strategic infrastructure in Chad",
-        "description": "Threats by Sudanese actors against Chadian airports, border facilities, military positions, or transport infrastructure may materialise into direct attacks on strategic assets in eastern Chad. Any strike against airports such as Amdjarass, military installations, or critical transport corridors would increase the risk of direct confrontation between Chad and Sudanese armed actors, disrupt humanitarian and commercial operations, and further destabilise border regions",
-        "completion_rate": 10,
-        "sources": [
-          {
-            "text": "issafrica.org",
-            "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions"
-          },
-          {
-            "text": "acleddata.com",
-            "url": "https://acleddata.com/update/africa-overview-april-2026"
-          },
-          {
-            "text": "africacenter.org",
-            "url": "https://africacenter.org/wp-content/uploads/2026/04/Chad-Risks-Instability.pdf"
-          }
-        ]
+        "title": "New refugee influx",
+        "description": "Renewed fighting in Darfur drives further arrivals into eastern Chad."
       },
       {
         "id": "T3",
-        "acaps_trigger_id": "R1043 - T0620",
-        "title": "Renewed proxy mobilisation and cross-border armed group activity",
-        "description": "Historical patterns of proxy warfare between Chad and Sudan may re-emerge through the mobilisation, arming, or support of rebel groups and allied militias operating along the border. Increased involvement of SAF-aligned groups, RSF-linked actors, Darfuri armed factions, or Chadian rebel networks could expand the conflict beyond isolated border incidents and increase the likelihood of retaliatory attacks on Chadian territory.",
-        "completion_rate": 20,
-        "sources": [
-          {
-            "text": "issafrica.org",
-            "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions"
-          },
-          {
-            "text": "africacenter.org",
-            "url": "https://africacenter.org/wp-content/uploads/2026/04/Chad-Risks-Instability.pdf"
-          },
-          {
-            "text": "globalinitiative.net",
-            "url": "https://globalinitiative.net/analysis/how-border-criminal-economies-are-drawing-chad-further-into-sudans-conflict/"
-          }
-        ]
+        "title": "Escalation in Darfur",
+        "description": "RSF/SAF escalation in West and Central Darfur."
       }
     ],
-    "sources": [
-      {
-        "text": "africacenter.org",
-        "url": "https://africacenter.org/wp-content/uploads/2026/04/Chad-Risks-Instability.pdf"
-      },
-      {
-        "text": "acleddata.com",
-        "url": "https://acleddata.com/update/africa-overview-april-2026"
-      },
-      {
-        "text": "globalinitiative.net",
-        "url": "https://globalinitiative.net/analysis/how-border-criminal-economies-are-drawing-chad-further-into-sudans-conflict/"
-      },
-      {
-        "text": "issafrica.org",
-        "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions"
-      },
-      {
-        "text": "rfi.fr",
-        "url": "https://www.rfi.fr/fr/afrique/20260513-tchad-de-nouvelles-frappes-enregistr%C3%A9es-%C3%A0-la-fronti%C3%A8re-soudanaise-font-craindre-le-pire"
-      },
-      {
-        "text": "reliefweb.int",
-        "url": "https://reliefweb.int/report/chad/core-emergency-situation-chad-update-arrivals-sudan-17-may-2026"
-      }
-    ],
-    "materialised": null
+    "served_from": "live",
+    "generated_at": "2026-11-07T09:00:00Z"
   },
-  "round": 1,
-  "group_view_if_round2": null,
-  "already_answered": false,
   "mask_options": [
-    "known",
-    "pseudonym",
-    "anonymous"
+    {
+      "id": "known",
+      "label": "named to ACAPS"
+    },
+    {
+      "id": "pseudonym",
+      "label": "nickname to peers"
+    },
+    {
+      "id": "anonymous",
+      "label": "no identity kept",
+      "note": "you will not receive personal feedback on this answer"
+    }
   ],
-  "mask_note": "Distinctive wording can be recognised by peers even under a pseudonym.",
+  "served_from": "live",
+  "generated_at": "2026-11-07T09:00:00Z",
   "stances": [
     "estimate",
     "outside_my_expertise",
     "not_enough_evidence"
   ],
-  "source_tags": [
-    "saw",
-    "read",
-    "heard"
+  "mask_note": "In a panel of eight a distinctive reason may identify you to colleagues.",
+  "likelihood_words": [
+    {
+      "id": "very_unlikely",
+      "label": "very unlikely",
+      "range": "under 10 %",
+      "midpoint": 0.05
+    },
+    {
+      "id": "unlikely",
+      "label": "unlikely",
+      "range": "10 to 35 %",
+      "midpoint": 0.22
+    },
+    {
+      "id": "even",
+      "label": "even",
+      "range": "35 to 65 %",
+      "midpoint": 0.5
+    },
+    {
+      "id": "likely",
+      "label": "likely",
+      "range": "65 to 90 %",
+      "midpoint": 0.78
+    },
+    {
+      "id": "very_likely",
+      "label": "very likely",
+      "range": "over 90 %",
+      "midpoint": 0.95
+    }
   ],
-  "accuracy_prompt": "Is this something you saw, read, or heard?",
-  "elicitation": "What share of this panel will put the probability above 0.5?",
-  "rating_hidden_until_submission": true,
-  "blind": true,
-  "served_from": "live",
-  "generated_at": "2026-11-07T16:10:54+00:00"
+  "optional": {
+    "confidence": [
+      "not sure",
+      "fairly sure",
+      "sure"
+    ],
+    "note_prompt": "What are we missing?",
+    "note_prompt_alternate": "What is the strongest reason this would NOT happen?",
+    "source_tags": [
+      "saw",
+      "read",
+      "heard"
+    ],
+    "trigger_pick_prompt": "Which trigger would move your view most?"
+  },
+  "mask_default": null,
+  "correction_allowed_until": "2026-11-09T09:00:00Z",
+  "round": 1,
+  "group_view_if_round2": null,
+  "evidence_shown": false,
+  "acaps_band_shown": false
 }

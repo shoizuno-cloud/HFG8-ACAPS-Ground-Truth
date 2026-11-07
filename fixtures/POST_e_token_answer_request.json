@@ -1,15 +1,13 @@
 {
-  "mask": "anonymous",
+  "mask": "pseudonym",
   "stance": "estimate",
-  "probability": 0.7,
-  "confidence": 4,
-  "panel_share_yes": 0.65,
-  "source_tag": "saw",
+  "likelihood_word": "likely",
+  "probability": null,
+  "confidence": null,
+  "missing": "Militia movements near Adré at night are not in any report yet.",
+  "against": null,
+  "trigger_pick": "T1",
+  "source_tag": "heard",
   "round": 1,
-  "missing": "Camp capacity in Ouaddai is already past what the sites were planned for.",
-  "changed_mind": false,
-  "credential": {
-    "token_id": "9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f",
-    "signature": "APnph0lsMVkET02ys70RpbGJ9LOQvKp9WY0iIIeHMMfMKISssuNnTnf0iW727iG8n89V0bcrI4Dg64ncuroxBiwsBL4o/6P32yv5rPNFuuzyYaDy3RnxZYemN7LztkM/N7ol02NxKqeb02GwsDZLB+SknDcx8c6+7eOSttHgcJsoUybLWEikoWfzFNdAvURmx7MDm0omTHsnsA+tU3/6IrceVxHhfonvmd0BtHt3B/a/dF2qTkZl7DpTe42+EOAT0RoTSH954s20QFs5EHBEJnSPGqOj9CKHh2/q8ewYXjCjDy40ey9kv2Hm0W0tAmv8X46x+zNZCh8mPJj1ZUJ2IQ=="
-  }
+  "changed_mind": false
 }

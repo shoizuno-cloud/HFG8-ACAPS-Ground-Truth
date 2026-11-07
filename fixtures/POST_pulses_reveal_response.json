@@ -1,25 +1,19 @@
 {
   "pulse_id": "P-0001",
   "n": 8,
-  "n_estimates": 6,
-  "mean": 0.6583,
+  "mean": 0.69,
   "spread": {
     "min": 0.3,
-    "max": 0.85,
-    "iqr": 0.25
+    "max": 0.9,
+    "iqr": 0.2
   },
-  "minority_rationales": [
-    "Border raids have slowed since mid-September; the pressure is displacement, not attacks."
-  ],
-  "weighted_mean": 0.67,
+  "weighted_mean": 0.69,
   "sp_experiment": {
     "answer": "yes",
     "method": "Prelec 2017 / Palley & Soll peer-prediction weighting",
     "label": "experimental",
-    "actual_share_above_0_5": 0.8333,
-    "predicted_share": 0.6417
+    "elicitation": "what share of this panel will say likely or very likely?"
   },
-  "dissent_index": 0.25,
   "distribution": [
     {
       "bucket": "0.0-0.2",
@@ -31,11 +25,11 @@
     },
     {
       "bucket": "0.4-0.6",
-      "count": 1
+      "count": 2
     },
     {
       "bucket": "0.6-0.8",
-      "count": 2
+      "count": 3
     },
     {
       "bucket": "0.8-1.0",
@@ -44,76 +38,75 @@
   ],
   "agreement_by_region": [
     {
-      "region": "Ouaddai",
-      "n": 2,
-      "mean": 0.825
-    },
-    {
-      "region": "Sila",
-      "n": 2,
-      "mean": 0.425
+      "region": "Ouaddaï",
+      "n": 4,
+      "mean": 0.85
     },
     {
       "region": "Wadi Fira",
-      "n": 1,
-      "mean": null
+      "n": 3,
+      "mean": 0.6
     },
     {
-      "region": "unattributed",
+      "region": "N'Djamena",
       "n": 1,
       "mean": null
     }
   ],
   "missing_themes": [
     {
-      "theme": "Night-time militia movement near Adre is not in any public reporting yet.",
-      "count": 2,
+      "theme": "night-time militia movement near Adré",
+      "count": 3,
       "origin": "many",
       "corroboration": "single-source"
     },
     {
-      "theme": "Camp capacity in Ouaddai is already past what the sites were planned for.",
+      "theme": "camp capacity in Ouaddaï",
       "count": 2,
       "origin": "many",
       "corroboration": "corroborated"
     },
     {
-      "theme": "Seasonal access after the rains will decide whether any of this can be reached.",
-      "count": 1,
-      "origin": "single",
-      "corroboration": "not checked"
-    },
-    {
-      "theme": "Border raids have slowed since mid-September; the pressure is displacement, not attacks.",
-      "count": 1,
-      "origin": "single",
-      "corroboration": "not checked"
-    },
-    {
-      "theme": "I work on prices, not protection. Ask me about the market in Abeche.",
-      "count": 1,
-      "origin": "single",
-      "corroboration": "not checked"
-    },
-    {
-      "theme": "Nothing I have seen this week would move me either way.",
+      "theme": "seasonal access after rains",
       "count": 1,
       "origin": "single",
       "corroboration": "not checked"
     }
   ],
-  "abstentions": [
+  "revealed_at": "2026-11-07T10:00:00Z",
+  "integrity_notes": [
     {
-      "stance": "outside_my_expertise",
-      "count": 1
+      "kind": "coverage_gap",
+      "text": "Trigger T2 (new refugee influx) has no panel member tagged displacement.",
+      "evidence": "panel tags: conflict x5, political x3"
     },
     {
-      "stance": "not_enough_evidence",
-      "count": 1
+      "kind": "shared_origin",
+      "text": "Two 'what are we missing' entries may share an origin (near-identical wording).",
+      "evidence": "similarity 0.93"
     }
   ],
-  "revealed_at": "2026-11-07T16:10:54+00:00",
-  "verify_hash": "608c3b99b60a18e16e40f976dda4e2c24ab61eb32f41265994f772f606dc9be8",
   "served_from": "live",
-  "generated_at": "2026-11-07T16:10:54+00:00"
+  "generated_at": "2026-11-07T09:00:00Z",
+  "disagreement": [
+    {
+      "position": "lower",
+      "n": 2,
+      "summary": "Two experts expect the pressure to be displacement rather than attacks and put the chance below even."
+    }
+  ],
+  "missing_evidence": [
+    {
+      "theme": "night-time militia movements near Adré",
+      "n": 3
+    },
+    {
+      "theme": "registration backlog at Adré transit site",
+      "n": 1
+    }
+  ],
+  "verification_queue_count": 4,
+  "reveal_status": "revealed",
+  "revealed_reason": "deadline",
+  "reidentification_note": "In a panel of eight a distinctive reason may identify its author to colleagues; experts were told this before answering."
 }

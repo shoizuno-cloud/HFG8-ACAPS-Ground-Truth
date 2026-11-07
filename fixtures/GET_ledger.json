@@ -3,82 +3,77 @@
     {
       "risk_id": "R1043",
       "pulse_id": "P-0001",
-      "sealed_at": "2026-11-07T16:10:52+00:00",
-      "group_probability": 0.6583,
+      "sealed_at": "2026-11-07T09:03:12Z",
+      "group_probability": 0.78,
       "acaps_probability": "High",
       "acaps_level": "High",
-      "proposed_probability": "High",
-      "decision": "accepted",
       "outcome": null,
       "resolved_at": null,
-      "verify_hash": "608c3b99b60a18e16e40f976dda4e2c24ab61eb32f41265994f772f606dc9be8",
+      "verify_hash": "8d2f0e4c1a9b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d",
       "honesty": {
         "n": 8,
-        "agreement": 0.6583,
+        "agreement": 0.69,
         "spread": [
           0.3,
-          0.85
+          0.9
         ],
-        "coverage_gaps": [],
-        "claims_corroborated": 7,
-        "claims_total": 7,
-        "claims_in_verification_queue": 5,
+        "coverage_gaps": [
+          "no panel member tagged displacement"
+        ],
+        "claims_corroborated": 1,
+        "claims_total": 3,
+        "claims_in_verification_queue": 1,
         "panel_hit_rate": null,
         "misses": 0,
-        "caveat": "First round for this panel, so there is no track record to weigh it against. Experts are synthetic in this build. The band-to-number mapping is an assumption.",
+        "caveat": "First round for this panel; no track record yet. One raised claim is single-source.",
         "decision_use": {
-          "what_decision": "Brief the Ouaddai field office before the weekly planning call",
-          "for_whom": "ACAPS analysts and the Chad response team",
-          "by_when": "2026-12-01"
+          "what_decision": "Pre-position shelter and cash in Ouaddaï",
+          "for_whom": "NGO preparedness lead, eastern Chad",
+          "by_when": "2026-11-20"
         },
         "panel_view_rejected": false,
-        "analyst_rationale": null
+        "analyst_rationale": null,
+        "relayed_share": 0.0,
+        "reidentification_note": "In a panel of eight a distinctive reason may identify its author to colleagues; experts were told this before answering."
       }
     },
     {
-      "risk_id": "R0033",
-      "pulse_id": "P-0002",
-      "sealed_at": "2026-11-07T16:10:53+00:00",
-      "group_probability": 0.65,
+      "risk_id": "R0987",
+      "pulse_id": "P-0000",
+      "sealed_at": "2026-05-02T08:00:00Z",
+      "group_probability": 0.72,
       "acaps_probability": "Medium",
       "acaps_level": "Medium",
-      "proposed_probability": "High",
-      "decision": "rejected",
       "outcome": "materialised",
-      "resolved_at": "2026-10-20T09:00:00+00:00",
-      "verify_hash": "19bf85a87ea1578c5e40c7c944d1cb94146a642e2722739e3e6df421f894aff5",
+      "resolved_at": "2026-10-20T00:00:00Z",
+      "verify_hash": "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
       "honesty": {
-        "n": 9,
-        "agreement": 0.65,
+        "n": 7,
+        "agreement": 0.81,
         "spread": [
-          0.15,
-          0.95
+          0.5,
+          0.85
         ],
         "coverage_gaps": [],
-        "claims_corroborated": 3,
-        "claims_total": 3,
-        "claims_in_verification_queue": 8,
-        "panel_hit_rate": 1.0,
-        "misses": 0,
-        "caveat": "First round for this panel, so there is no track record to weigh it against. Experts are synthetic in this build. The band-to-number mapping is an assumption.",
+        "claims_corroborated": 2,
+        "claims_total": 2,
+        "claims_in_verification_queue": 0,
+        "panel_hit_rate": 0.8,
+        "misses": 1,
+        "caveat": "Panel of 7; one expert paused.",
         "decision_use": {
-          "what_decision": "Flag the deterioration in the weekly note",
-          "for_whom": "Regional analysts",
-          "by_when": "2026-10-15"
+          "what_decision": "Extend food distribution contract",
+          "for_whom": "WFP country office",
+          "by_when": "2026-06-01"
         },
         "panel_view_rejected": true,
-        "analyst_rationale": "Rejected: the panel read the displacement figures as a trend, and the registration backlog at the time explains most of the jump. Published with the decision."
-      },
-      "attestation": {
-        "scheme": "ML-DSA-65",
-        "key_id": "83c1ae5ed579ac54",
-        "signature": "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",
-        "commitment_root": "e682e2a154492103a0e09c22e91b917261ea76e713664c132fedff65638c336c"
+        "analyst_rationale": "Panel mean 0.72 rejected on 2026-05-02: indicators flat; the risk later materialised. Recorded as a miss for the analyst, not the panel.",
+        "relayed_share": 0.0,
+        "reidentification_note": "In a panel of eight a distinctive reason may identify its author to colleagues; experts were told this before answering."
       }
     }
   ],
   "k_min": 5,
-  "note": "Group views only. No names, and nothing about any individual.",
   "served_from": "live",
-  "generated_at": "2026-11-07T16:10:54+00:00"
+  "generated_at": "2026-11-07T09:00:00Z"
 }
