@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./workspace-session";
 
 async function draftReady(page: Page) {
   await page.goto("/desk");
@@ -7,7 +8,9 @@ async function draftReady(page: Page) {
   ).toBeDisabled();
   await page.getByRole("button", { name: "Load synthetic answers" }).click();
   await page.getByRole("button", { name: "Reveal round 1" }).click();
-  await expect(page.getByText("Weighted panel", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Equal-weight mean", { exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Prepare draft" }).click();
 }
 test("approval gates public ledger, verification is labelled and both screens fit", async ({
@@ -29,6 +32,15 @@ test("approval gates public ledger, verification is labelled and both screens fi
   await page
     .getByLabel("Decision note")
     .fill("Panel evidence supports retaining the High rating.");
+  await page
+    .getByLabel("Decision to inform", { exact: true })
+    .fill("Pre-position shelter");
+  await page
+    .getByLabel("Decision owner", { exact: true })
+    .fill("NGO preparedness lead");
+  await page
+    .getByLabel("Decision needed by", { exact: true })
+    .fill("2026-11-20");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -71,6 +83,15 @@ test("rejection does not publish; editing preserves selected probability after n
 }) => {
   await draftReady(page);
   await page.getByLabel("Decision note").fill("More corroboration is needed.");
+  await page
+    .getByLabel("Decision to inform", { exact: true })
+    .fill("Pre-position shelter");
+  await page
+    .getByLabel("Decision owner", { exact: true })
+    .fill("NGO preparedness lead");
+  await page
+    .getByLabel("Decision needed by", { exact: true })
+    .fill("2026-11-20");
   await page.getByRole("button", { name: "Reject draft" }).click();
   await expect(
     page.getByRole("heading", { name: "Decision log" }),
@@ -90,6 +111,15 @@ test("rejection does not publish; editing preserves selected probability after n
   await page
     .getByLabel("Decision note")
     .fill("Escalating indicators warrant a higher probability.");
+  await page
+    .getByLabel("Decision to inform", { exact: true })
+    .fill("Pre-position shelter");
+  await page
+    .getByLabel("Decision owner", { exact: true })
+    .fill("NGO preparedness lead");
+  await page
+    .getByLabel("Decision needed by", { exact: true })
+    .fill("2026-11-20");
   await page.getByRole("button", { name: "Save edited decision" }).click();
   await page.getByRole("link", { name: "View public ledger" }).click();
   await expect(page.getByText("Very High", { exact: true })).toBeVisible();

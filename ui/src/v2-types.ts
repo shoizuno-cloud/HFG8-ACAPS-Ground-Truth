@@ -1,22 +1,21 @@
 export type Honesty = {
   n: number;
   agreement: number;
-  confidence_band: number[];
+  spread: number[];
   coverage_gaps: string[];
   claims_corroborated: number;
   claims_total: number;
+  claims_in_verification_queue: number;
+  misses: number;
+  decision_use: { what_decision: string; for_whom: string; by_when: string };
+  panel_view_rejected: boolean;
+  analyst_rationale: string | null;
   panel_hit_rate: number | null;
   caveat: string;
 };
 export type Integrity = {
   pulse_id?: string;
-  anchoring_shift: number;
-  herding: string;
-  collusion_pairs: number;
-  recency: string;
-  coverage_gaps: string[];
-  used_round: number;
-  evidence?: Record<string, string>;
+  integrity_notes: { kind: string; text: string; evidence: string }[];
 };
 export type Match = {
   risk_id: string;

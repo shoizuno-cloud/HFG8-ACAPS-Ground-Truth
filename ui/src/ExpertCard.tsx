@@ -3,7 +3,6 @@ import * as Slider from "@radix-ui/react-slider";
 import {
   BadgeCheck,
   Check,
-  Clock3,
   Fingerprint,
   LockKeyhole,
   ShieldCheck,
@@ -18,7 +17,7 @@ import {
   type Answer,
 } from "./api";
 import { CopyButton } from "./LiveWorkspace";
-import { safeUrl } from "./service";
+import { safeUrl, validResult } from "./service";
 import { en } from "./locales/en";
 
 function Probability({
@@ -80,10 +79,9 @@ export function ExpertCard({ token }: { token: string }) {
     [source, setSource] = useState<Answer["source_tag"]>(null),
     [missing, setMissing] = useState(""),
     [mask, setMask] = useState<Mask>("anonymous"),
-    [agree, setAgree] = useState(true),
+    [stance, setStance] = useState<Answer["stance"]>("estimate"),
     [changed, setChanged] = useState(false);
-  const [seconds, setSeconds] = useState(60),
-    [busy, setBusy] = useState(false),
+  const [busy, setBusy] = useState(false),
     [receipt, setReceipt] = useState<Awaited<
       ReturnType<typeof sealAnswer>
     > | null>(null),
@@ -96,7 +94,6 @@ export function ExpertCard({ token }: { token: string }) {
       .then((value) => {
         if (active) {
           setCard(value);
-          setSeconds(value.seconds || 60);
         }
       })
       .catch((e) => {
@@ -107,11 +104,6 @@ export function ExpertCard({ token }: { token: string }) {
       active = false;
     };
   }, [token, reload]);
-  useEffect(() => {
-    if (!card || receipt) return;
-    const id = setInterval(() => setSeconds((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(id);
-  }, [card, receipt]);
   const blind = card?.round !== 2; // Round one remains blind even if an older API includes a rating.
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -121,10 +113,11 @@ export function ExpertCard({ token }: { token: string }) {
     try {
       setReceipt(
         await sealAnswer(token, {
-          agree: blind ? null : agree,
-          probability: probability / 100,
-          panel_guess: panel / 100,
-          confidence,
+          stance,
+          probability: stance === "estimate" ? probability / 100 : null,
+          panel_share_yes: stance === "estimate" ? panel / 100 : null,
+          confidence: stance === "estimate" ? confidence : null,
+          round: card?.round || 1,
           source_tag: source,
           mask,
           missing: missing.trim(),
@@ -157,7 +150,7 @@ export function ExpertCard({ token }: { token: string }) {
             Expert pulse{" "}
             {mock && <span className="mock-tag">Fixture demo</span>}
           </p>
-          <h1>Your independent view, first.</h1>
+          <h1>Your view, before the rating.</h1>
           <p>
             Forecast the risk before seeing the panel. Your chosen mask applies
             to this answer.
@@ -189,17 +182,18 @@ export function ExpertCard({ token }: { token: string }) {
               </span>
               <h2>{en.sealed}</h2>
               <p>
-                Your answer uses the <strong>{mask}</strong> mask. Only a group
-                view with at least five answers can be published.
+                Submitted. You’ll get the group outcome when this resolves. Your
+                answer uses the <strong>{mask}</strong> mask. Only a group view
+                with at least five answers can be published.
               </p>
               <div className="receipt-box">
                 <span>
                   {mock
                     ? "Fixture receipt · not a live seal"
-                    : "API seal receipt"}
+                    : "API commitment receipt"}
                 </span>
                 <time>
-                  {new Date(receipt.sealed_at).toLocaleString("en-GB", {
+                  {new Date(receipt.committed_at).toLocaleString("en-GB", {
                     timeZone: "UTC",
                   })}{" "}
                   UTC
@@ -211,9 +205,17 @@ export function ExpertCard({ token }: { token: string }) {
                   label="Copy commitment"
                 />
               </div>
-              <a href={`/me/${encodeURIComponent(token)}/calibration`}>
-                View your private calibration
-              </a>
+              {mask !== "anonymous" && (
+                <a href={`/me/${encodeURIComponent(token)}/calibration`}>
+                  Opt in to private calibration
+                </a>
+              )}
+              {mask === "anonymous" && (
+                <p>
+                  Anonymous answers have no identity link and cannot be claimed
+                  later. A group outcome report is sent to panel members.
+                </p>
+              )}
             </div>
           ) : (
             <>
@@ -221,19 +223,16 @@ export function ExpertCard({ token }: { token: string }) {
                 <span>
                   {card.risk.country} / {card.risk.risk_id}
                 </span>
-                <span className="timer">
-                  <Clock3 size={15} />
-                  {seconds
-                    ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
-                    : "Take your time"}
-                </span>
+                <span>Respond in your own time</span>
               </div>
               <div className="risk-context">
                 <div className="risk-meta">
                   <span>Round {card.round}</span>
                   <span>Next {card.risk.horizon_months} months</span>
                   {blind ? (
-                    <span className="blind-badge">Independent first round</span>
+                    <span className="blind-badge">
+                      Rating hidden until after submission
+                    </span>
                   ) : (
                     <span className="rating">
                       ACAPS probability:{" "}
@@ -263,15 +262,12 @@ export function ExpertCard({ token }: { token: string }) {
                 <section className="group-view">
                   <h3>How the panel answered</h3>
                   {card.group_view_if_round2 &&
-                  card.group_view_if_round2.n >= 5 ? (
+                  validResult(card.group_view_if_round2) ? (
                     <>
                       <p>
                         {card.group_view_if_round2.n} synthetic answers ·
-                        Weighted probability{" "}
-                        {Math.round(
-                          card.group_view_if_round2.weighted_probability * 100,
-                        )}
-                        %
+                        Equal-weight mean{" "}
+                        {Math.round(card.group_view_if_round2.mean * 100)}%
                       </p>
                       <div
                         className="distribution"
@@ -308,70 +304,77 @@ export function ExpertCard({ token }: { token: string }) {
               )}
               <form onSubmit={submit}>
                 <fieldset disabled={busy}>
-                  {!blind && (
-                    <div className="agree-row">
-                      <span className="field-label">
-                        Still {card.risk.probability_acaps || "the same rating"}
-                        ?
-                      </span>
-                      <div
-                        className="segmented"
-                        role="group"
-                        aria-label="Do you agree with the ACAPS rating?"
+                  <div
+                    className="question stance-picker"
+                    role="group"
+                    aria-label="Your response"
+                  >
+                    <span className="field-label">Your response</span>
+                    {(
+                      [
+                        ["estimate", "Give an estimate"],
+                        ["outside_my_expertise", "Outside my expertise"],
+                        ["not_enough_evidence", "Not enough evidence"],
+                      ] as const
+                    ).map(([value, label]) => (
+                      <button
+                        type="button"
+                        key={value}
+                        aria-pressed={stance === value}
+                        onClick={() => setStance(value)}
                       >
-                        <button
-                          type="button"
-                          aria-pressed={agree}
-                          onClick={() => setAgree(true)}
-                        >
-                          Yes
-                        </button>
-                        <button
-                          type="button"
-                          aria-pressed={!agree}
-                          onClick={() => setAgree(false)}
-                        >
-                          No
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <Probability
-                    id="probability"
-                    label={en.probability}
-                    help="Give your own estimate before considering anyone else’s."
-                    value={probability}
-                    change={setProbability}
-                  />
-                  <div className="question confidence-field">
-                    <label htmlFor="confidence">
-                      How confident are you in this estimate?
-                    </label>
-                    <select
-                      id="confidence"
-                      value={confidence}
-                      onChange={(e) => setConfidence(Number(e.target.value))}
-                    >
-                      {[
-                        "Very uncertain",
-                        "Somewhat uncertain",
-                        "Moderately confident",
-                        "Confident",
-                        "Very confident",
-                      ].map((label, i) => (
-                        <option key={label} value={i + 1}>
-                          {i + 1} · {label}
-                        </option>
-                      ))}
-                    </select>
+                        {label}
+                      </button>
+                    ))}
                   </div>
-                  <Probability
-                    id="panel"
-                    label={en.panel}
-                    help="What share of experts will say this risk is more likely than not to materialise?"
-                    value={panel}
-                    change={setPanel}
-                  />
+                  {stance === "estimate" && (
+                    <>
+                      <Probability
+                        id="probability"
+                        label={en.probability}
+                        help="Give your own estimate before considering anyone else’s."
+                        value={probability}
+                        change={setProbability}
+                      />
+                      <div className="question confidence-field">
+                        <label htmlFor="confidence">
+                          How confident are you in this estimate?
+                        </label>
+                        <select
+                          id="confidence"
+                          value={confidence}
+                          onChange={(e) =>
+                            setConfidence(Number(e.target.value))
+                          }
+                        >
+                          {[
+                            "Very uncertain",
+                            "Somewhat uncertain",
+                            "Moderately confident",
+                            "Confident",
+                            "Very confident",
+                          ].map((label, i) => (
+                            <option key={label} value={i + 1}>
+                              {i + 1} · {label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <Probability
+                        id="panel"
+                        label={en.panel}
+                        help="What share of this panel will put the probability above 0.5?"
+                        value={panel}
+                        change={setPanel}
+                      />
+                    </>
+                  )}
+                  {stance !== "estimate" && (
+                    <p className="abstention-note">
+                      Your response will be recorded without a probability or
+                      confidence score. Abstentions are never scored.
+                    </p>
+                  )}
                   <div className="question">
                     <label htmlFor="missing">
                       What are we missing?{" "}
@@ -460,8 +463,11 @@ export function ExpertCard({ token }: { token: string }) {
                         : mask === "pseudonym"
                           ? "Peers see a nickname, not your identity."
                           : "No pseudonym is shown. Your answer counts only in the aggregate."}{" "}
-                      Public output is group-only.
+                      Public output is group-only. Distinctive wording can be
+                      recognised by peers, even under a pseudonym. Anonymous
+                      answers cannot be claimed later.
                     </p>
+                    <details className="privacy-detail"><summary>Who can see what?</summary><p>Peers do not see answers before the round opens. After reveal, peers may see pseudonymous reasons only when that mask was chosen. Public output contains aggregates, never individual answers or reasons.</p><p>The pilot uses a restricted identity registry with logged access. Anonymous answers have no identity link. The server stores the committed value; access controls, rather than cryptography, restrict early staff access. A commitment does not hide the answer from the operator.</p><p>At least five contributions is a disclosure rule, not an anonymity guarantee. Distinctive reasons may still identify a contributor to peers.</p></details>
                   </div>
                   {submitError && (
                     <p role="alert" className="error-box">
@@ -470,12 +476,12 @@ export function ExpertCard({ token }: { token: string }) {
                   )}
                   <button type="submit" className="seal-button">
                     <LockKeyhole size={18} />
-                    {busy ? "Sealing your answer…" : "Seal my answer"}
+                    {busy ? "Submitting…" : "Submit"}
                   </button>
                   <p className="seal-note">
-                    {seconds
-                      ? "Opened together, after the panel responds."
-                      : "Take the time you need. Your answer is still open."}
+                    A commitment records timing and consistency. The operator
+                    can access the stored answer; it does not provide
+                    confidentiality from the server.
                   </p>
                 </fieldset>
               </form>

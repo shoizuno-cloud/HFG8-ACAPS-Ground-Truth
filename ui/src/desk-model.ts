@@ -10,6 +10,7 @@ export { risk, pulse, result, draft, board };
 export type Decision = {
   action: "accept" | "edit" | "reject";
   probability: string;
+  decision_use?: import("./service").DecisionUse;
   note: string;
   at: string;
 };

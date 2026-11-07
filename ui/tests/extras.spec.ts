@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./workspace-session";
 import AxeBuilder from "@axe-core/playwright";
 test("jury QR, private calibration, reduced motion and keyboard access", async ({
   page,
@@ -43,6 +44,9 @@ test("jury QR, private calibration, reduced motion and keyboard access", async (
     ).violations,
   ).toEqual([]);
   await page.goto("/me/demo/calibration");
+  await page
+    .getByRole("button", { name: "View my private calibration" })
+    .click();
   await expect(page.getByText("0.12", { exact: true })).toBeVisible();
   await expect(
     page.getByText(
@@ -52,9 +56,7 @@ test("jury QR, private calibration, reduced motion and keyboard access", async (
 });
 test("expert card accessibility and text scaling", async ({ page }) => {
   await page.goto("/e/demo");
-  await expect(
-    page.getByRole("button", { name: "Seal my answer" }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Submit" })).toBeVisible();
   expect(
     (
       await new AxeBuilder({ page })
@@ -68,9 +70,12 @@ test("expert card accessibility and text scaling", async ({ page }) => {
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page.getByRole("button", { name: "Seal my answer" }).click();
   await page
-    .getByRole("link", { name: "View your private calibration" })
+    .getByRole("button", { name: "Pseudonym Nickname to peers" })
+    .click();
+  await page.getByRole("button", { name: "Submit" }).click();
+  await page
+    .getByRole("link", { name: "Opt in to private calibration" })
     .click();
   await expect(page).toHaveURL(/\/me\/demo\/calibration$/);
   await expect(

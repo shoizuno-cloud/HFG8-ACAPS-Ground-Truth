@@ -1,0 +1,95 @@
+import { test, expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+test("public entry exposes research and Login opens the workspace without credentials", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "See the crisis.Change the outcome.",
+  );
+  await expect(
+    page.getByRole("link", { name: "Countries", exact: true }),
+  ).toHaveAttribute("href", "https://www.acaps.org/en/countries");
+  await expect(
+    page.getByText("Equal-weight mean", { exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator('input[type="password"]')).toHaveCount(0);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.screenshot({
+    path: test.info().outputPath("public-home.png"),
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Login", exact: true })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/workspace$/);
+  await page
+    .getByRole("link", { name: "Risk Radar & metrics", exact: false })
+    .click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Risk Radar",
+  );
+  await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/desk");
+  await expect(page).toHaveURL(/\/\?next=%2Fdesk$/);
+  await expect(page.getByRole("button", { name: "Ask panel" })).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Login", exact: true })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/desk$/);
+});
+
+test("expired sessions return to the public page and unsafe destinations are ignored", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    !sessionStorage.getItem("sealed-signals-demo-session") && sessionStorage.setItem(
+      "sealed-signals-demo-session",
+      JSON.stringify({ kind: "demo", expiresAt: 0 }),
+    ),
+  );
+  await page.goto("/ledger");
+  await expect(page).toHaveURL(/\/\?next=%2Fledger$/);
+  await page.goto("/?next=https%3A%2F%2Fexample.com");
+  await page
+    .getByRole("button", { name: "Login", exact: true })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/workspace$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Your workspace",
+  );
+});
+
+test("expert invitations stay no-login, accept abstentions and explain limits", async ({
+  page,
+}) => {
+  await page.goto("/e/demo");
+  await expect(
+    page.getByText("Rating hidden until after submission", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".timer")).toHaveCount(0);
+  await expect(
+    page.getByText("Distinctive wording can be recognised", { exact: false }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Outside my expertise", exact: true })
+    .click();
+  await expect(page.getByRole("slider")).toHaveCount(0);
+  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Submitted. You’ll get the group outcome.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Opt in to private calibration" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Anonymous answers have no identity link", { exact: false }),
+  ).toBeVisible();
+});

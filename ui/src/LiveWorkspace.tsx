@@ -1,3 +1,10 @@
+import {
+  DecisionUseFields,
+  emptyDecisionUse,
+  completeDecisionUse,
+  QuestionContractPanel,
+  OutcomeReportPanel,
+} from "./V3Workflow";
 import { PortalHeader } from "./PortalHeader";
 import { DraftNarrative, pendingClaims } from "./Grounding";
 import { HonestyBox, IntegrityPanel, PanelMatch } from "./V2Panels";
@@ -14,6 +21,7 @@ import {
   type Pulse,
   type Result,
   type Risk,
+  type QuestionContract,
 } from "./service";
 import { date, percent } from "./desk-model";
 import "./workspace.css";
@@ -95,7 +103,7 @@ export function CopyButton({
     </span>
   );
 }
-function GroupChart({
+export function GroupChart({
   result,
   reference,
 }: {
@@ -121,17 +129,17 @@ function GroupChart({
     <>
       <div className="stat-row">
         <div>
-          <span>Weighted panel</span>
-          <strong>{percent(result.weighted_probability)}</strong>
+          <span>Equal-weight mean</span>
+          <strong>{percent(result.mean)}</strong>
         </div>
         <div>
           <span>Contributions</span>
           <strong>{result.n}</strong>
         </div>
         <div>
-          <span>Surprisingly popular</span>
+          <span>SP experiment · experimental</span>
           <strong className="small-stat">
-            {result.surprisingly_popular === "yes" ? "Yes" : "No"}
+            {result.sp_experiment.answer === "yes" ? "Yes" : "No"}
           </strong>
         </div>
       </div>
@@ -139,7 +147,7 @@ function GroupChart({
         className="probability-chart"
         viewBox="0 0 560 185"
         role="img"
-        aria-label={`Panel probability ${percent(result.weighted_probability)}, ${result.n} answers. ACAPS ${reference}.`}
+        aria-label={`Panel probability ${percent(result.mean)}, ${result.n} answers. ACAPS ${reference}.`}
       >
         <line x1="40" y1="134" x2="520" y2="134" className="chart-axis" />
         {[0, 20, 40, 60, 80, 100].map((v) => (
@@ -184,6 +192,17 @@ function GroupChart({
             );
           }),
         )}
+        <g stroke="var(--accent)" strokeWidth="2">
+          <line
+            x1={40 + result.spread.min * 480}
+            x2={40 + result.spread.max * 480}
+            y1="42"
+            y2="42"
+          />
+          {[result.spread.min, result.spread.max].map((v) => (
+            <line key={v} x1={40 + v * 480} x2={40 + v * 480} y1="36" y2="48" />
+          ))}
+        </g>
         {result.confidence_interval && (
           <g stroke="var(--accent)" strokeWidth="2">
             <line
@@ -207,7 +226,7 @@ function GroupChart({
           </g>
         )}
         <circle
-          cx={40 + result.weighted_probability * 480}
+          cx={40 + result.mean * 480}
           cy="42"
           r="7"
           className="weighted-dot"
@@ -218,10 +237,29 @@ function GroupChart({
       </svg>
       <p className="panel-caption">
         Dots show bucket counts. Dashed line: ACAPS scale mapped to probability.
-        Upper marker: weighted panel.
+        Upper marker: equal-weight mean. Whisker: minimum to maximum forecast.
+        ACAPS Probability bands are mapped to numbers by assumption, not
+        official numeric thresholds.
         {!result.confidence_interval &&
           " Confidence intervals are unavailable."}
       </p>
+      <div className="aggregate-detail">
+        <p>
+          Forecast spread: {percent(result.spread.min)}–
+          {percent(result.spread.max)} · IQR {percent(result.spread.iqr)}.
+          Secondary weighted mean: {percent(result.weighted_mean)}.
+        </p>
+        <h3>Minority reasons</h3>
+        {result.minority_rationales.length ? (
+          result.minority_rationales.map((reason, i) => <p key={i}>{reason}</p>)
+        ) : (
+          <p>No minority reasons supplied.</p>
+        )}
+        <p className="panel-caption">
+          SP is experimental and does not replace the equal-weight mean. Method:{" "}
+          {result.sp_experiment.method}.
+        </p>
+      </div>
       <details>
         <summary>Distribution data</summary>
         <table>
@@ -310,7 +348,6 @@ export function Verification({ draft }: { draft: Draft }) {
 }
 function LiveDesk() {
   const [risks, setRisks] = useState<Risk[]>([]),
-    [board, setBoard] = useState<Board | null>(null),
     [selected, setSelected] = useState(
       new URLSearchParams(location.search).get("risk_id") || "",
     );
@@ -321,6 +358,10 @@ function LiveDesk() {
     [busy, setBusy] = useState("Loading risks"),
     [message, setMessage] = useState(""),
     [connection, setConnection] = useState("Connecting");
+  const [decisionUse, setDecisionUse] = useState(emptyDecisionUse);
+  const [frozenContract, setFrozenContract] = useState<QuestionContract | null>(
+    null,
+  );
   const [note, setNote] = useState(""),
     [edit, setEdit] = useState(false),
     [probability, setProbability] = useState("High"),
@@ -348,13 +389,6 @@ function LiveDesk() {
           ? previous
           : response.risks[0]?.risk_id || "",
       );
-      try {
-        setBoard(await endpoint.board());
-      } catch {
-        setMessage(
-          "Reliability board unavailable. Other controls remain available.",
-        );
-      }
     });
   }
   useEffect(() => {
@@ -404,12 +438,8 @@ function LiveDesk() {
           );
         if (event.type === "risk_resolved") {
           setMessage(
-            "Risk resolved. Calibration reports are ready to refresh.",
+            "Risk resolved. Refresh the group outcome report. Private calibration is opt-in after five resolutions.",
           );
-          void endpoint
-            .board()
-            .then(setBoard)
-            .catch(() => {});
         }
       } catch {
         setMessage(
@@ -449,12 +479,19 @@ function LiveDesk() {
       document.getElementById("live-note")?.focus();
       return;
     }
+    if (!completeDecisionUse(decisionUse)) {
+      setError(
+        "Add the decision, decision owner and deadline before continuing.",
+      );
+      return;
+    }
     await run("Saving analyst decision", async () => {
       const value = await endpoint.decision(
         draft.id,
         action,
         note.trim(),
         probability,
+        decisionUse,
       );
       setDraft(value);
       setMessage(`Draft ${value.status}. The ledger follows the API decision.`);
@@ -504,23 +541,25 @@ function LiveDesk() {
         >
           Ask panel
         </button>
-        <button
-          disabled={!!busy}
-          onClick={() =>
-            void run("Checking indicators", async () => {
-              const value = await endpoint.doorbell();
-              setMessage(
-                `${value.shifts.length} shifts detected; ${value.pulses_fired.length} pulses fired.`,
-              );
-              if (value.pulses_fired[0]) {
-                setPulseId(value.pulses_fired[0]);
-                clearRound(await endpoint.pulse(value.pulses_fired[0]));
-              }
-            })
-          }
-        >
-          Run doorbell
-        </button>
+        {import.meta.env.VITE_FF_DOORBELL === "1" && (
+          <button
+            disabled={!!busy}
+            onClick={() =>
+              void run("Checking indicators", async () => {
+                const value = await endpoint.doorbell();
+                setMessage(
+                  `${value.shifts.length} shifts detected; ${value.pulses_fired.length} pulses fired.`,
+                );
+                if (value.pulses_fired[0]) {
+                  setPulseId(value.pulses_fired[0]);
+                  clearRound(await endpoint.pulse(value.pulses_fired[0]));
+                }
+              })
+            }
+          >
+            Run phase-2 doorbell
+          </button>
+        )}
       </div>
       {error && (
         <div className="error-box" role="alert">
@@ -688,6 +727,7 @@ function LiveDesk() {
                     <DraftNarrative
                       draft={draft}
                       themes={group?.missing_themes}
+                      result={group || undefined}
                     />
                     <div className="citations">
                       {draft.citations
@@ -706,8 +746,11 @@ function LiveDesk() {
                     <Verification draft={draft} />
                     {draft.status === "draft" ? (
                       <div className="decision-form">
-                        {pendingClaims(draft, group?.missing_themes).length >
-                          0 && (
+                        {pendingClaims(
+                          draft,
+                          group?.missing_themes,
+                          group || undefined,
+                        ).length > 0 && (
                           <button
                             disabled={!!busy}
                             onClick={() =>
@@ -719,6 +762,10 @@ function LiveDesk() {
                             Request refreshed draft
                           </button>
                         )}
+                        <DecisionUseFields
+                          value={decisionUse}
+                          onChange={setDecisionUse}
+                        />
                         <label htmlFor="live-note">Decision note</label>
                         <textarea
                           id="live-note"
@@ -752,8 +799,11 @@ function LiveDesk() {
                           <button
                             disabled={
                               !!busy ||
-                              pendingClaims(draft, group?.missing_themes)
-                                .length > 0
+                              pendingClaims(
+                                draft,
+                                group?.missing_themes,
+                                group || undefined,
+                              ).length > 0
                             }
                             className="primary"
                             onClick={() =>
@@ -794,62 +844,93 @@ function LiveDesk() {
                 )}
               </Section>
               {draft && ["accepted", "edited"].includes(draft.status) && (
-                <Section title="Resolve and score">
-                  <p>
-                    Record the observed outcome when this forecast resolves.
-                  </p>
-                  <div className="resolution-form">
-                    <label htmlFor="outcome">Observed outcome</label>
-                    <select
-                      id="outcome"
-                      value={outcome}
-                      onChange={(e) => setOutcome(e.target.value)}
-                    >
-                      <option value="materialised">Materialised</option>
-                      <option value="not_materialised">Not materialised</option>
-                    </select>
-                    <label htmlFor="resolved-at">Resolution date (UTC)</label>
-                    <input
-                      id="resolved-at"
-                      type="date"
-                      max={new Date().toISOString().slice(0, 10)}
-                      value={resolvedAt}
-                      onChange={(e) => setResolvedAt(e.target.value)}
-                    />
-                    <label className="changed">
+                <>
+                  <QuestionContractPanel
+                    key={selected}
+                    riskId={selected}
+                    onFrozen={setFrozenContract}
+                  />
+                  <Section title="Resolve and score">
+                    <p>
+                      Record the observed outcome when this forecast resolves.
+                    </p>
+                    <div className="resolution-form">
+                      <label htmlFor="outcome">Observed outcome</label>
+                      <select
+                        id="outcome"
+                        value={outcome}
+                        onChange={(e) => setOutcome(e.target.value)}
+                      >
+                        <option value="materialised">Materialised</option>
+                        <option value="not_materialised">
+                          Not materialised
+                        </option>
+                      </select>
+                      <label htmlFor="resolved-at">Resolution date (UTC)</label>
                       <input
-                        type="checkbox"
-                        checked={confirmResolve}
-                        onChange={(e) => setConfirmResolve(e.target.checked)}
-                      />{" "}
-                      I confirm this is an observed outcome.
-                    </label>
-                    <button
-                      disabled={!!busy || !confirmResolve || !resolvedAt}
-                      onClick={() =>
-                        void run("Resolving and scoring", async () => {
-                          const value = await endpoint.resolve(
-                            selected,
-                            outcome,
-                            `${resolvedAt}T00:00:00Z`,
-                          );
-                          setMessage(
-                            `${value.scores_written} scores written; ${value.weights_updated} reliability weights updated.`,
-                          );
-                          setConfirmResolve(false);
-                        })
-                      }
-                    >
-                      Resolve risk and score forecasts
-                    </button>
-                  </div>
-                </Section>
+                        id="resolved-at"
+                        type="date"
+                        max={new Date().toISOString().slice(0, 10)}
+                        value={resolvedAt}
+                        onChange={(e) => setResolvedAt(e.target.value)}
+                      />
+                      <label className="changed">
+                        <input
+                          type="checkbox"
+                          checked={confirmResolve}
+                          onChange={(e) => setConfirmResolve(e.target.checked)}
+                        />{" "}
+                        I confirm this is an observed outcome.
+                      </label>
+                      <button
+                        disabled={
+                          !!busy ||
+                          !confirmResolve ||
+                          !resolvedAt ||
+                          frozenContract?.risk_id !== selected
+                        }
+                        onClick={() =>
+                          void run("Resolving and scoring", async () => {
+                            if (
+                              !frozenContract ||
+                              frozenContract.risk_id !== selected
+                            )
+                              throw new Error(
+                                "Freeze the question contract before scoring.",
+                              );
+                            const value = await endpoint.resolve(
+                              selected,
+                              outcome,
+                              `${resolvedAt}T00:00:00Z`,
+                            );
+                            setMessage(
+                              `${value.scores_written} scores written; ${value.weights_updated} reliability weights updated.`,
+                            );
+                            setConfirmResolve(false);
+                          })
+                        }
+                      >
+                        Resolve risk and score forecasts
+                      </button>
+                      {!frozenContract && (
+                        <p className="panel-caption">
+                          Scoring is disabled until the API confirms a frozen
+                          question contract. Abstentions and free text are never
+                          scored.
+                        </p>
+                      )}
+                    </div>
+                  </Section>
+                  {pulse && (
+                    <OutcomeReportPanel key={pulse.id} pulseId={pulse.id} />
+                  )}
+                </>
               )}
             </div>
             <aside className="desk-side">
               <PanelMatch riskId={selected} />
               {pulse && group && <IntegrityPanel pulseId={pulse.id} />}
-              <Section title="Doorbell evidence">
+              <Section title="Indicator evidence · phase-2 replay">
                 {pulse?.evidence.length ? (
                   pulse.evidence.map((e) => (
                     <div className="indicator-row" key={e.indicator}>
@@ -905,57 +986,6 @@ function LiveDesk() {
                   </ul>
                 ) : (
                   <p>Themes open after reveal.</p>
-                )}
-              </Section>
-              <Section title="Super-estimator board">
-                {board ? (
-                  <>
-                    <div className="table-wrap">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Pseudonym</th>
-                            <th>Resolved</th>
-                            <th>Brier</th>
-                            <th>Weight</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {board.super_estimators.map((e) => (
-                            <tr key={e.pseudonym}>
-                              <td>{e.pseudonym}</td>
-                              <td>{e.n}</td>
-                              <td>{e.mean_brier.toFixed(2)}</td>
-                              <td>{e.weight.toFixed(1)}×</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <p className="panel-caption">
-                      Lower Brier scores are better. Reliability weights affect
-                      the group probability.
-                    </p>
-                    <h3 className="subheading">Panel divergence</h3>
-                    {board.divergence
-                      .filter(
-                        (d) =>
-                          group && validResult(group) && d.risk_id === selected,
-                      )
-                      .map((d) => (
-                        <p className="divergence-line" key={d.risk_id}>
-                          <span>{d.risk_id}</span>
-                          <span>Panel {percent(d.panel)}</span>
-                          <span>ACAPS {percent(d.acaps)}</span>
-                        </p>
-                      ))}
-                    <p className="panel-caption">
-                      Panel comparisons are shown only for the selected,
-                      revealed group with at least five contributions.
-                    </p>
-                  </>
-                ) : (
-                  <p>Reliability data unavailable.</p>
                 )}
               </Section>
             </aside>

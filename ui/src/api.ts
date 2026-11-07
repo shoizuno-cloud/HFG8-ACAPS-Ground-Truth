@@ -3,7 +3,7 @@ import cardFixture from "../../fixtures/GET_e_token.json";
 import resultFixture from "../../fixtures/GET_pulses_result.json";
 import sealFixture from "../../fixtures/POST_e_token_answer_response.json";
 export type Mask = "known" | "pseudonym" | "anonymous";
-export type Result = Omit<typeof resultFixture, "integrity">;
+export type Result = Omit<typeof resultFixture, "integrity_notes">;
 export type Card = Omit<typeof cardFixture, "group_view_if_round2" | "risk"> & {
   risk: typeof cardFixture.risk & {
     probability_acaps?: string;
@@ -13,11 +13,12 @@ export type Card = Omit<typeof cardFixture, "group_view_if_round2" | "risk"> & {
 };
 export type Answer = {
   mask: Mask;
-  agree: boolean | null;
-  confidence: number;
+  stance: "estimate" | "outside_my_expertise" | "not_enough_evidence";
+  confidence: number | null;
   source_tag: "saw" | "read" | "heard" | null;
-  probability: number;
-  panel_guess: number;
+  probability: number | null;
+  panel_share_yes: number | null;
+  round: number;
   missing: string;
   changed_mind: boolean;
 };
@@ -39,7 +40,9 @@ export async function getCard(token: string): Promise<Card> {
     round: token === "round2" ? 2 : 1,
     group_view_if_round2:
       token === "round2"
-        ? (({ integrity, ...publicResult }) => publicResult)(resultFixture)
+        ? (({ integrity_notes, ...publicResult }) => publicResult)(
+            resultFixture,
+          )
         : null,
   });
 }

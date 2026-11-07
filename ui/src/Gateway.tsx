@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CommitteeScoring } from "./V3Workflow";
 import { mock } from "./api";
 import { Frame, Section } from "./LiveWorkspace";
 import { endpoint } from "./service";
@@ -326,6 +327,7 @@ export function Committee() {
         This UI never treats two clicks by the same admin as two independent
         approvals. No credential or approval count is invented in API mode.
       </p>
+      <CommitteeScoring />
     </Frame>
   );
 }
