@@ -707,17 +707,16 @@ Professional, minimal, modern. The jury should think "this already exists in pro
 - README: paragraph from section 0, architecture diagram, run instructions, what is synthetic vs live, limits, team.
 - Pitch rehearsed twice with the QR step (jury becomes the panel); fallback `make demo` pre-loads 8 synthetic answers.
 
-## 9a. The three minutes (Lane C owns demo-script.md; these beats are fixed)
+## 9a. The three minutes (Lane C owns demo-script.md; deck in pitch/sealed-signals-slides.html; these beats are fixed)
 
-0:00 the gap, in one sentence (section 0); 0:15 the alert engine diffs April 2026 live, TCD005 rank 1 of 123, the analyst
-approves the pulse; 0:40 the pulse leaves the Reach module as an email, a WhatsApp message and an SMS at once (delivery
-counts only); the jury scans the QR and answers on the one-screen card (60-second exercise timer, product has none);
-1:45 reveal at the deadline: four columns, spread, unattributed disagreement, coverage gap; 2:10 cited draft, Skeptic
-marks, analyst accepts with "what decision, for whom, by when"; 2:30 ledger entry with the honesty box; one click on
-Verify: "matches: these answers existed at this time and were not changed; it proves timing, not truth"; 2:45 the
-outcome report that every expert receives; 2:50 "easier to contribute to, easier to scrutinise, easier to trace; ready
-for a supervised pilot of this workflow". Crypto gets the Verify click and nothing else; the stack is on the repo page
-and in Q&A. Personas slide directly after the spine line.
+Slide order is the story: 1 the gap (47 %, the exact sentence) · 2 who needs the check (the four ACAPS personas) · 3 the
+whole system on one screen · 4 the Alerts page, April 2026 live · 5 the Reach page, the pulse leaving by email, WhatsApp
+and SMS · 6 the expert screen and the confirm screen · 7 scan, the jury is the Chad panel (60 s for the room), then the
+live desk: reveal at the deadline, four columns, draft with Skeptic marks, accept with "what decision, for whom, by
+when", ledger entry, one click on Verify ("matches: existed at this time, unchanged; timing, not truth") · 8 who can
+learn what, each mechanism with the one thing it proves · 9 pilot and team · close on the spine line. Fallback slides
+B1 and B2 (reveal view, draft and ledger) replace the live desk if it fails; B3 is the sensitivity test for Q&A. Crypto
+gets the Verify click and the chips on slides 3 and 8, nothing more. Nothing is said on stage about a path that is off.
 
 ## 10. Lanes
 
