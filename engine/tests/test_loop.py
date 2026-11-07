@@ -204,7 +204,13 @@ def test_ledger_entry_verifies_against_its_own_commitments(seeded):
     entry = client.get("/api/ledger").json()["entries"][0]
     verified = client.post("/api/ledger/verify", json={"verify_hash": entry["verify_hash"]}).json()
     assert verified["valid"] is True and verified["n_commitments"] == 8
-    assert verified["anchor"] is None
+    # Since v3.2 Verify reports three checks, each with its own meaning. The hash check is the one
+    # that is valid here; the attestation does not exist until the risk resolves, and the anchor is
+    # pending, which the response has to say rather than imply the round is externally timestamped.
+    assert verified["attestation"] is None and "not resolved" in verified["attestation_means"]
+    assert verified["anchor"]["status"] == "pending"
+    assert "proves nothing" in verified["anchor_means"]
+    assert "not submitted yet" in verified["anchor_means"]
     assert client.post("/api/ledger/verify", json={"verify_hash": "0" * 64}).status_code == 404
 
 

@@ -54,6 +54,7 @@ export function PortalHeader() {
                 ["/calibration", "Calibration"],
                 ["/stage", "Stage"],
                 ["/committee", "Committee"],
+                ["/trust", "Trust and privacy"],
                 ["/apply", "Apply as an expert"],
               ].map(([href, label]) => (
                 <a

@@ -69,6 +69,7 @@ function PortalHeader() {
         <ProductLink to="/alerts">Risk alerts</ProductLink>
         <ProductLink to="/desk">Analyst desk</ProductLink>
         <ProductLink to="/ledger">Public ledger</ProductLink>
+        <ProductLink to="/trust">Trust</ProductLink>
         <a href="/e/demo">Expert card</a>
       </nav>
       <DemoLoginButton />

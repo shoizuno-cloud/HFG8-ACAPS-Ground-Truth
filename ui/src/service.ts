@@ -90,6 +90,98 @@ export type OutcomeReport = {
   analyst_decision_summary: string;
   n?: number;
 };
+export type Mechanism = {
+  number: number;
+  id: string;
+  name: string;
+  flag: string | null;
+  enabled: boolean;
+  build: string;
+  where_it_shows: string;
+  guarantees: string;
+  does_not: string;
+};
+export type TrustStatus = {
+  flags: Record<string, boolean>;
+  mechanisms: Mechanism[];
+  registry: {
+    encryption: string;
+    suite: string;
+    key_id: string | null;
+    key_holder: string;
+    n_identities: number;
+    access_log_count: number;
+    lock_line: string;
+    guarantees: string;
+    does_not: string;
+  };
+  attestation_key: { scheme: string; key_id: string; public_key: string | null; note: string };
+  credentials: CredentialStatus;
+  anchors: { days: number; anchored: number; pending: number };
+  zk: {
+    enabled: boolean;
+    scheme: string;
+    groups: { panel_id: string; root: string; size: number }[];
+    n_nullifiers_used: number;
+    proof_verifier: string;
+    guarantees: string;
+    does_not: string;
+  };
+};
+export type CredentialStatus = {
+  scheme: string;
+  n_batches: number;
+  n_issued: number;
+  n_spent: number;
+  n_unlinkable_issued: number;
+  linked: boolean;
+  linkage_note: string;
+  guarantees?: string;
+  does_not?: string;
+};
+export type AccessEntry = { who: string; why: string; expert_id: string; at: string };
+export type AnchorRoot = {
+  day: string;
+  merkle_root: string;
+  n_commitments: number;
+  status: string;
+  submitted_at: string | null;
+  anchored_at: string | null;
+  receipt: string | null;
+  calendar: string | null;
+  note: string;
+  means: string;
+};
+export type Attestation = {
+  risk_id: string;
+  outcome: string;
+  resolved_at: string;
+  commitment_root: string;
+  scheme: string;
+  key_id: string;
+  signature: string;
+  does_not: string;
+};
+export type PatternReport = {
+  pseudonym: string;
+  available: boolean;
+  n_pulses: number;
+  calibration: {
+    mean_brier: number | null;
+    n_resolved: number;
+    mean_confidence_1_5: number | null;
+    scale_note: string;
+  };
+  overconfidence: number | null;
+  extremity: number | null;
+  agreement_with_acaps: number | null;
+  round2_shift: number | null;
+  source_mix: Record<string, number>;
+  abstention_rate: number;
+  sentences: string[];
+  never: string;
+  note: string;
+};
 export const apiBase = (import.meta.env.VITE_API_URL || "/api").replace(
   /\/$/,
   "",
@@ -194,6 +286,27 @@ export const endpoint = {
     ),
   calibration: (token: string) =>
     api<Calibration>(`/me/${encodeURIComponent(token)}/calibration`),
+  // MASTER_PROMPT 6c and 6d. Typed loosely on purpose: the payloads carry their own guarantee and
+  // does-not wording, and the Trust page renders whatever the engine states rather than a copy of
+  // it held here, so the two cannot drift.
+  trust: () => api<TrustStatus>("/trust/status"),
+  accessLog: () =>
+    api<{ entries: AccessEntry[]; n: number; guarantees: string; does_not: string }>(
+      "/committee/access-log",
+    ),
+  anchors: () => api<{ roots: AnchorRoot[]; enabled: boolean }>("/anchors"),
+  credentialStatus: () => api<CredentialStatus>("/credentials/status"),
+  patterns: () =>
+    api<{ reports: PatternReport[]; not_yet: { pseudonym: string; n_pulses: number }[]; never: string }>(
+      "/committee/patterns",
+    ),
+  attestation: (id: string) =>
+    api<{
+      attestation: Attestation;
+      verification: { valid: boolean; checked: string; meaning: string };
+      public_key: { scheme: string; key_id: string };
+      anchor: AnchorRoot | null;
+    }>(`/ledger/${encodeURIComponent(id)}/attestation`),
   card: (token: string) => api<Card>(`/e/${encodeURIComponent(token)}`),
   answer: (token: string, body: Answer) =>
     api<{

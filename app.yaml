@@ -25,6 +25,12 @@ env:
     generate: hex
   PSEUDONYM_KEY:
     generate: hex
+  # Committee key material for the hardening stack (MASTER_PROMPT 6c): the ML-KEM-768 registry
+  # key and the ML-DSA-65 attestation key are derived from this one secret under separate labels,
+  # so the published key ids survive a restart. Without it the engine derives them from
+  # PSEUDONYM_KEY and says so in GET /api/registry/status.
+  COMMITTEE_KEY:
+    generate: hex
 
 healthcheck:
   path: /health

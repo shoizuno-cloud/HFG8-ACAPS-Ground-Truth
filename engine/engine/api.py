@@ -24,6 +24,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import acaps, alerts as alert_engine, data, draft as draft_builder, logging_conf, settings as settings_mod
+from . import hardening as hardening_mod
+from .hardening import anchors as anchor_lib, flags as ff, patterns as pattern_lib
 from .store import Expert, Store, TooFew, now, pseudonym_for, round_verify_hash
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -34,6 +36,7 @@ log = logging.getLogger("sealed_signals")
 SETTINGS = settings_mod.load()
 STORE = Store(k_min=SETTINGS.k_min)
 ALERTS = alert_engine.new_store()
+HARD = hardening_mod.new()
 _subscribers: set[asyncio.Queue] = set()
 
 
@@ -62,6 +65,18 @@ async def lifespan(app: FastAPI):
         logging_conf.log(log, "info", "seeded synthetic panel", pulse_id=pulse_id,
                          n_experts=len(STORE.experts), n_answers=STORE.n_answers(pulse_id),
                          n_alerts=len(replay["events"]), replay=f"{replay['month_from']}->{replay['month_to']}")
+        # Sections 6c and 6d: identities in the encrypted registry, one membership group, and five
+        # resolved pulses of history so the pattern reports describe something real. Deliberately
+        # separate from seed_demo, so the core loop and its tests never depend on it.
+        if os.environ.get("SEED_HARDENING", "true").lower() == "true":
+            from .seeding_hardening import seed_all
+            hardening_seed = seed_all(HARD, STORE, SETTINGS)
+            logging_conf.log(log, "info", "seeded hardening stack",
+                             identities=hardening_seed["identities"],
+                             history_pulses=len(hardening_seed["pulses"]),
+                             scores=hardening_seed["scores_written"],
+                             group_root=hardening_seed["group"]["root"][:12],
+                             flags=ff.flags())
     yield
     logging_conf.log(log, "info", "shutting down")
 
@@ -398,8 +413,19 @@ def experts_apply(body: dict = Body(default_factory=dict)):
         region=body.get("region") or "",
         synthetic=bool(body.get("synthetic", True)),
     ))
+    # Identity details never sit in the expert record. They go into the encrypted registry, and
+    # the only way back out is POST /committee/registry/read, which logs the read.
+    identity = body.get("identity") or {}
+    if identity:
+        HARD.registry.put(expert.id, {
+            key: str(value)[:200] for key, value in identity.items()
+            if key in ("name", "email", "phone", "organisation", "country")
+        })
     return envelope({"expert_id": expert.id, "status": expert.status,
                      "approvals_required": 2,
+                     "identity_stored": bool(identity),
+                     "identity_note": HARD.registry.status()["lock_line"] if identity else
+                     "No identity details were sent, so none are held.",
                      "note": "Approval needs two admins before this expert can be matched to a panel."})
 
 
@@ -419,14 +445,22 @@ def approve_expert(expert_id: str, body: dict = Body(default_factory=dict)):
         raise HTTPException(409, f"{admin} has already approved this expert; a second admin is needed")
     approvals.append(admin)
 
+    credential_batch = None
     if len(approvals) >= 2 and expert.status != "approved":
         expert.status = "approved"
+        # Section 6c item 3: the credential batch is minted on approval, not on answering, so the
+        # committee never sees issuance and spending in the same moment.
+        batch = HARD.credentials.issue(expert_id, body.get("panel_id") or "", None,
+                                       int(body.get("allowance") or 3))
+        credential_batch = {key: batch[key] for key in
+                            ("batch_id", "n_issued", "scheme", "unlinkable", "note")}
     return envelope({
         "expert_id": expert_id,
         "status": expert.status,
         "approvals": approvals,
         "approvals_required": 2,
         "credential_issued": expert.status == "approved",
+        "credential_batch": credential_batch,
         "note": "Approved experts can be matched to a panel."
         if expert.status == "approved"
         else f"{2 - len(approvals)} more approval(s) needed, from a different admin.",
@@ -645,6 +679,55 @@ def card(token: str):
     })
 
 
+def _spend_credential(body: dict, pulse_id: str, expert_id: str) -> dict:
+    """Section 6c item 3 on the answering side.
+
+    A card that presents a credential spends it, and a second spend of the same token is refused.
+    A card that presents none still answers -- the magic link already gates this round -- and when
+    the mask is anonymous the server mints and spends one itself so the flow is complete on stage.
+    That fallback is linkable by construction, and the response says so rather than borrowing the
+    unlinkability claim it has not earned."""
+    presented = body.get("credential") or {}
+    mask = body.get("mask", "pseudonym")
+    if not ff.enabled("FF_BLIND"):
+        return {"spent": False, "scheme": "hmac",
+                "line": "FF_BLIND is off: no credential was involved in this answer."}
+    if presented:
+        try:
+            record = HARD.credentials.spend(presented.get("token_id") or "",
+                                            presented.get("signature") or "", pulse_id)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        return {"spent": True, "unlinkable": True, "scheme": record["scheme"],
+                "line": "Answered with a one-time vetted credential. The committee can check it "
+                        "was issued to an approved expert and cannot tell which one."}
+    if mask != "anonymous":
+        return {"spent": False,
+                "line": "No credential on this answer: the magic link identified the round, and "
+                        "this mask does not ask for unlinkability."}
+    batch = HARD.credentials.issue(expert_id, "", None, 1)
+    token = batch["credentials"][0]
+    HARD.credentials.spend(token["token_id"], token["signature"], pulse_id)
+    return {"spent": True, "unlinkable": False, "scheme": batch["scheme"],
+            "line": "Answered with a one-time vetted credential, minted here because the card did "
+                    "not bring its own. Single-use holds; unlinkability does not on this path."}
+
+
+def _check_zk(body: dict, pulse_id: str) -> dict | None:
+    """Section 6c item 4. Off by default, and when it is on the verdict says what went unchecked."""
+    proof = body.get("zk_proof")
+    if not proof:
+        return None
+    if not ff.enabled("FF_ZK"):
+        raise HTTPException(409, "FF_ZK is off on this build, so no membership proof is accepted. "
+                                 "The reason is in GET /api/zk/status: the Groth16 verifier is not "
+                                 "implemented here.")
+    verdict = HARD.membership.verify(proof, pulse_id)
+    if not verdict["accepted"]:
+        raise HTTPException(409, {"message": "this membership proof was not accepted", **verdict})
+    return verdict
+
+
 @api.post("/e/{token}/answer", status_code=201, tags=["expert"])
 async def answer(token: str, body: dict = Body(default_factory=dict)):
     resolved = STORE.resolve_token(token)
@@ -653,11 +736,14 @@ async def answer(token: str, body: dict = Body(default_factory=dict)):
     pulse_id, expert_id = resolved
     if pulse_id in STORE.results and int(body.get("round", 1)) == 1:
         raise HTTPException(409, "round 1 is closed on this pulse; this link now opens round 2")
+    credential_result = _spend_credential(body, pulse_id, expert_id)
+    zk_result = _check_zk(body, pulse_id)
     try:
         sealed = STORE.seal(pulse_id, expert_id, body, SETTINGS.commitment_salt, SETTINGS.pseudonym_key)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     STORE.mark_used(token)
+    _record_day_roots()
     await publish("answer_sealed", {"pulse_id": pulse_id, "n_answers": STORE.n_answers(pulse_id)})
     logging_conf.log(log, "info", "answer sealed", pulse_id=pulse_id, mask=sealed.mask,
                      n_answers=STORE.n_answers(pulse_id))
@@ -672,6 +758,9 @@ async def answer(token: str, body: dict = Body(default_factory=dict)):
                         "It does not hide your answer from the operator of this service.",
         "acaps_rating_now_visible": {"probability_acaps": risk.get("probability_acaps"),
                                      "level": risk.get("level")},
+        "credential": credential_result,
+        "zk": zk_result,
+        "anchor": HARD.anchors.for_day(sealed.committed_at[:10]),
     })
 
 
@@ -803,14 +892,33 @@ def verify(body: dict = Body(default_factory=dict)):
         if entry["verify_hash"].lower() == wanted:
             answers = STORE.answers.get(entry["pulse_id"], [])
             recomputed = round_verify_hash([a.commitment for a in answers])
+            _record_day_roots()
+            attestation = HARD.attestations.latest(entry["risk_id"])
+            day = answers[0].committed_at[:10] if answers else None
+            anchor = HARD.anchors.for_day(day) if day else None
             return envelope({
                 "valid": recomputed == entry["verify_hash"],
                 "sealed_at": entry["sealed_at"],
-                "anchor": None,
                 "checked": "sha256 of this round's sorted answer commitments, recomputed now",
+                "checked_means": "The sealed set has not changed since it was published.",
                 "n_commitments": len(answers),
-                "note": "This proves the sealed set has not changed since it was published. "
-                        "It is not an external timestamp: no public chain is anchored in this build.",
+                "attestation": attestation,
+                "attestation_verification": (
+                    HARD.attestations.verify(attestation) if attestation else None
+                ),
+                "attestation_means": (
+                    "The outcome record was issued by the committee key and has not been altered."
+                    if attestation else
+                    "No attestation yet: this risk is not resolved, so there is no outcome to sign."
+                ),
+                "anchor": anchor,
+                "anchor_means": (
+                    (anchor or {}).get("means")
+                    if anchor else "No daily root recorded for this round."
+                ),
+                "note": "Three separate checks, three separate meanings. The hash proves the set "
+                        "is unchanged. The signature proves who issued the outcome record. The "
+                        "anchor proves timing, and only once its status reads anchored.",
             })
     raise HTTPException(404, "no ledger entry carries that hash")
 
@@ -850,9 +958,20 @@ async def resolve(risk_id: str, body: dict = Body(default_factory=dict)):
                 # Weights move slowly and stay capped; one round never makes a super-estimator.
                 expert.weight = max(0.5, min(2.0, expert.weight + (0.25 - brier)))
                 written += 1
+    # Section 6c item 2: sign the record, not the truth. The commitment root ties the signature to
+    # the exact set of sealed answers this outcome settles.
+    commitment_root = anchor_lib.merkle_root(
+        [a.commitment for entry in entries for a in STORE.answers.get(entry["pulse_id"], [])]
+    )
+    attestation = HARD.attestations.attest(risk_id.upper(), outcome, resolved_at, commitment_root)
+    for entry in entries:
+        entry["attestation"] = {key: attestation[key] for key in
+                                ("scheme", "key_id", "signature", "commitment_root")}
     await publish("risk_resolved", {"risk_id": risk_id, "outcome": outcome})
     return envelope({"scores_written": written, "weights_updated": written,
                      "outcome": outcome, "resolved_at": resolved_at,
+                     "attestation": attestation,
+                     "attestation_public_key": HARD.attestations.public_key(),
                      "scored_against": "the export's Probability band, never Risk Level"})
 
 
@@ -969,6 +1088,223 @@ def demo_links():
                      "card_url": f"/e/{token}"})
     return envelope({"links": rows, "synthetic": True,
                      "note": "Synthetic experts. Real panels get these by email magic link."})
+
+
+# -- hardening stack: sections 6c and 6d ---------------------------------------
+def _commitments_by_day() -> dict[str, list[str]]:
+    days: dict[str, list[str]] = {}
+    for answers in STORE.answers.values():
+        for answer in answers:
+            days.setdefault(answer.committed_at[:10], []).append(answer.commitment)
+    return days
+
+
+def _record_day_roots() -> None:
+    """Keep the daily Merkle roots in step with the sealed commitments. Cheap, and it means the
+    ledger can always show a root for the day a round was sealed, submitted or not."""
+    for day, commitments in _commitments_by_day().items():
+        HARD.anchors.record(day, commitments)
+
+
+def _expert_by_pseudonym(pseudonym: str) -> str | None:
+    wanted = (pseudonym or "").strip().lower()
+    for expert_id in STORE.experts:
+        if pseudonym_for(expert_id, SETTINGS.pseudonym_key).lower() == wanted:
+            return expert_id
+    return None
+
+
+def _acaps_probability(risk_id: str) -> float | None:
+    risk = data.get_risk(risk_id) or {}
+    return risk.get("probability_assumed_number")
+
+
+def _pattern_report(expert_id: str) -> dict:
+    return pattern_lib.report(
+        STORE, expert_id, pseudonym_for(expert_id, SETTINGS.pseudonym_key),
+        acaps_probability=_acaps_probability,
+        pseudonym_of=lambda other: pseudonym_for(other, SETTINGS.pseudonym_key),
+    )
+
+
+@api.get("/trust/status", tags=["trust"])
+def trust_status():
+    """Everything the product needs to describe the hardening stack, including the exact
+    guarantee / does-not wording. One source, so the UI and the slides cannot drift."""
+    return envelope(HARD.status())
+
+
+@api.get("/registry/status", tags=["trust"])
+def registry_status():
+    return envelope(HARD.registry.status())
+
+
+@api.get("/committee/access-log", tags=["trust"])
+def committee_access_log():
+    """Mechanism 6. Reading an identity is allowed and logged; the log is the control."""
+    return envelope({
+        "entries": list(reversed(HARD.registry.log())),
+        "n": len(HARD.registry.access_log),
+        "guarantees": (ff.mechanism("access_log") or {}).get("guarantees"),
+        "does_not": (ff.mechanism("access_log") or {}).get("does_not"),
+    })
+
+
+@api.post("/committee/registry/read", tags=["trust"])
+def committee_registry_read(body: dict = Body(default_factory=dict)):
+    """The only way to open an identity. Refuses an unattributed read, and logs every one."""
+    expert_id = (body.get("expert_id") or "").strip()
+    if expert_id not in STORE.experts:
+        raise HTTPException(404, f"no expert {expert_id}")
+    try:
+        identity = HARD.registry.read(expert_id, body.get("who") or "", body.get("why") or "")
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    if identity is None:
+        raise HTTPException(404, f"no identity on file for {expert_id}")
+    return envelope({"expert_id": expert_id, "identity": identity,
+                     "logged": HARD.registry.log()[-1],
+                     "note": "This read is now in the committee access log, permanently."})
+
+
+@api.get("/credentials/issuer", tags=["trust"])
+def credential_issuer():
+    """The issuer public key, so a client can blind its own tokens and keep them unlinkable."""
+    return envelope({
+        **HARD.credentials.public_key(),
+        "how": "Encode the message 'sealed-signals/credential/v1:<token_id>' with EMSA-PSS "
+               "(SHA-384, zero salt), blind it with r^e mod n, send the hex to "
+               "POST /api/credentials/issue as `blinded`, then unblind with r^-1.",
+    })
+
+
+@api.post("/credentials/issue", status_code=201, tags=["trust"])
+def credentials_issue(body: dict = Body(default_factory=dict)):
+    """Mechanism 3. Committee-side blind signing of a batch for an approved expert."""
+    expert_id = (body.get("expert_id") or "").strip()
+    expert = STORE.experts.get(expert_id)
+    if not expert:
+        raise HTTPException(404, f"no expert {expert_id}")
+    if expert.status != "approved":
+        raise HTTPException(409, "credentials are issued on approval; this expert is "
+                                 f"{expert.status}")
+    blinded = body.get("blinded") or None
+    count = int(body.get("count") or 0)
+    if not blinded and count <= 0:
+        raise HTTPException(422, "send `blinded` (preferred: you keep the unlinkability) or "
+                                 "`count` for the demo path")
+    if count > 32:
+        raise HTTPException(422, "32 tokens is the ceiling on one batch")
+    issued = HARD.credentials.issue(expert_id, body.get("panel_id") or "", blinded, count)
+    logging_conf.log(log, "info", "credentials issued", expert_id=expert_id,
+                     n=issued["n_issued"], unlinkable=issued["unlinkable"])
+    return envelope({**issued,
+                     "guarantees": (ff.mechanism("blind_credentials") or {}).get("guarantees"),
+                     "does_not": (ff.mechanism("blind_credentials") or {}).get("does_not")})
+
+
+@api.get("/credentials/status", tags=["trust"])
+def credentials_status():
+    """Counts only: issued, spent, and the fact that nothing joins the two."""
+    return envelope(HARD.credentials.summary())
+
+
+@api.get("/ledger/{risk_id}/attestation", tags=["trust"])
+def ledger_attestation(risk_id: str):
+    """Mechanism 2. The signature over the resolved outcome record, and its verification."""
+    record = HARD.attestations.latest(risk_id)
+    if not record:
+        raise HTTPException(404, f"{risk_id.upper()} has no attestation: it is not resolved yet")
+    anchor = HARD.anchors.receipt_for_commitment(record.get("commitment_root") or "")
+    return envelope({
+        "attestation": record,
+        "verification": HARD.attestations.verify(record),
+        "public_key": HARD.attestations.public_key(),
+        "anchor": anchor,
+        "history": HARD.attestations.for_risk(risk_id),
+    })
+
+
+@api.get("/anchors", tags=["trust"])
+def anchors_list():
+    """Mechanism 5. Daily commitment roots, with status anchored or pending, and the receipt."""
+    _record_day_roots()
+    return envelope({
+        "roots": HARD.anchors.all(),
+        "calendars": list(anchor_lib.CALENDARS),
+        "enabled": ff.enabled("FF_ANCHOR"),
+        "guarantees": (ff.mechanism("anchoring") or {}).get("guarantees"),
+        "does_not": (ff.mechanism("anchoring") or {}).get("does_not"),
+    })
+
+
+@api.post("/anchors/{day}/submit", tags=["trust"])
+def anchor_submit(day: str):
+    _record_day_roots()
+    try:
+        root = HARD.anchors.submit(day)
+    except KeyError as exc:
+        raise HTTPException(404, f"no commitments recorded on {day}") from exc
+    logging_conf.log(log, "info", "anchor submitted", day=day, status=root.status)
+    return envelope(root.as_dict())
+
+
+@api.post("/anchors/{day}/upgrade", tags=["trust"])
+def anchor_upgrade(day: str):
+    """Ask the calendar whether the root has made it into a block yet. Usually: not yet."""
+    try:
+        root = HARD.anchors.upgrade(day)
+    except KeyError as exc:
+        raise HTTPException(404, f"no root recorded on {day}") from exc
+    return envelope(root.as_dict())
+
+
+@api.get("/zk/status", tags=["trust"])
+def zk_status():
+    """Mechanism 4, including the part this build does not do. Read `proof_verifier`."""
+    return envelope(HARD.membership.status())
+
+
+@api.get("/committee/patterns/{pseudonym}", tags=["trust"])
+def committee_patterns(pseudonym: str):
+    """Section 6d, committee side. Pseudonyms in, pseudonyms out: no names anywhere in here."""
+    expert_id = _expert_by_pseudonym(pseudonym)
+    if not expert_id:
+        raise HTTPException(404, f"no panel member answers to {pseudonym}")
+    return envelope(_pattern_report(expert_id))
+
+
+@api.get("/committee/patterns", tags=["trust"])
+def committee_patterns_all():
+    """Every report that has opened. Experts below the floor are listed as not available, with
+    their count, so the committee sees the floor working rather than an empty page."""
+    reports, waiting = [], []
+    for expert_id in STORE.experts:
+        found = _pattern_report(expert_id)
+        (reports if found["available"] else waiting).append(found)
+    return envelope({
+        "reports": sorted(reports, key=lambda r: r["pseudonym"]),
+        "not_yet": sorted(({"pseudonym": r["pseudonym"], "n_pulses": r["n_pulses"]}
+                           for r in waiting), key=lambda r: r["pseudonym"]),
+        "min_pulses": pattern_lib.MIN_PULSES,
+        "never": pattern_lib.NEVER,
+    })
+
+
+@api.get("/me/{token}/patterns", tags=["trust"])
+def my_patterns(token: str, opt_in: bool = False):
+    """Section 6d, expert side. Opt-in, so nobody is handed a reading of themselves unasked."""
+    resolved = STORE.resolve_token(token)
+    if not resolved:
+        raise HTTPException(404, "this link is not valid")
+    _, expert_id = resolved
+    if not opt_in:
+        raise HTTPException(409, "this report is opt-in. Add ?opt_in=true to ask for it. It is "
+                                 "never shown to anyone else as a score and never affects your "
+                                 "place on a panel.")
+    return envelope({**_pattern_report(expert_id), "private": True,
+                     "note_to_you": "Yours alone. The committee sees the same sentences under "
+                                    "your pseudonym, and nothing else."})
 
 
 # -- the built UI --------------------------------------------------------------

@@ -18,6 +18,9 @@ const Calibration = lazy(() =>
   import("./Extras").then((m) => ({ default: m.Calibration })),
 );
 const Radar = lazy(() => import("./Radar").then((m) => ({ default: m.Radar })));
+// MASTER_PROMPT 6c/6d: the hardening stack has to be visible with its own wording, so it gets a
+// page rather than a footnote. Lazy, because it reads five endpoints and nothing else needs them.
+const Trust = lazy(() => import("./Trust").then((m) => ({ default: m.Trust })));
 import { Apply, Committee } from "./Gateway";
 import "./theme.css";
 import "./styles.css";
@@ -109,6 +112,7 @@ function Router() {
   if (path === "/stage") return <Stage />;
   if (path === "/apply") return <Apply />;
   if (path === "/committee") return <Committee />;
+  if (path === "/trust") return <Trust />;
   return (
     <Frame
       title="Page not found"
