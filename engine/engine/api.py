@@ -28,6 +28,7 @@ from . import (acaps, alerts as alert_engine, data, draft as draft_builder, logg
 from . import hardening as hardening_mod
 from .hardening import (anchors as anchor_lib, calibration as calibration_lib,
                         flags as ff, patterns as pattern_lib)
+from . import scan as scan_lib
 from . import store
 from .store import Expert, Store, TooFew, now, pseudonym_for, round_verify_hash
 
@@ -40,6 +41,7 @@ SETTINGS = settings_mod.load()
 STORE = Store(k_min=SETTINGS.k_min)
 ALERTS = alert_engine.new_store()
 HARD = hardening_mod.new()
+SCANS = scan_lib.ScanStore()
 _subscribers: set[asyncio.Queue] = set()
 
 
@@ -66,6 +68,10 @@ async def deadline_watch(tick: float = 15.0) -> None:
     while True:
         try:
             await asyncio.sleep(tick)
+            for scan in list(SCANS.scans.values()):
+                if scan.get("reveal_status") == "open" and store.past(scan["expires_at"]):
+                    scan_lib.reveal(SCANS, STORE, scan["id"], "deadline")
+                    await publish("scan_revealed", {"scan_id": scan["id"]})
             for pulse in list(STORE.pulses.values()):
                 if pulse.get("reveal_status") not in (None, "open"):
                     continue
@@ -102,6 +108,9 @@ async def lifespan(app: FastAPI):
         from .seeding import seed_alerts, seed_demo
         pulse_id = seed_demo(STORE, SETTINGS)
         replay = seed_alerts(ALERTS)
+        scan_id = scan_lib.seed_demo(SCANS, STORE, SETTINGS, ALERTS)
+        logging_conf.log(log, "info", "seeded country scan", scan_id=scan_id,
+                         n_answers=len(SCANS.answers.get(scan_id, [])))
         logging_conf.log(log, "info", "seeded synthetic panel", pulse_id=pulse_id,
                          n_experts=len(STORE.experts), n_answers=STORE.n_answers(pulse_id),
                          n_alerts=len(replay["events"]), replay=f"{replay['month_from']}->{replay['month_to']}")
@@ -1909,6 +1918,136 @@ def committee_calibration():
 
 
 # -- the built UI --------------------------------------------------------------
+
+# -- country scan: "the three biggest risks in <country>" (second pulse kind) -----
+
+def _scan_or_404(scan_id: str) -> dict:
+    found = SCANS.scans.get(scan_id)
+    if not found:
+        raise HTTPException(404, f"no scan {scan_id}")
+    return found
+
+
+@api.post("/scans", status_code=201, tags=["scan"])
+def create_scan(body: dict = Body(default_factory=dict)):
+    """Open a country scan. The deadline is fixed now and printed on every card."""
+    iso3 = (body.get("iso3") or "TCD").upper()
+    expires_at = body.get("expires_at") or (
+        datetime.now(timezone.utc) + timedelta(hours=float(body.get("window_hours", 48)))
+    ).isoformat(timespec="seconds")
+    try:
+        scan = scan_lib.create(SCANS, STORE, iso3, expires_at, ALERTS)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    return envelope({**_scan_public(scan), "links": [
+        {"expert_id": e, "token": t} for t, (s, e) in SCANS.tokens.items() if s == scan["id"]]})
+
+
+def _scan_public(scan: dict) -> dict:
+    # Before the reveal the desk sees the question, the candidates and the count of answers, never
+    # an answer and never the order anyone ranked in.
+    return {k: scan[k] for k in ("id", "kind", "iso3", "country", "question", "max_picks",
+                                 "created_at", "expires_at", "reveal_status")} | {
+        "candidates": [{"id": c["id"], "title": c["title"], "kind": c["kind"],
+                        "acaps_view": c["acaps_view"]} for c in scan["candidates"]],
+        "panel_size": len(scan["panel"]),
+        "n_answers": len(SCANS.answers.get(scan["id"], [])),
+    }
+
+
+@api.get("/scans", tags=["scan"])
+def list_scans():
+    return envelope({"scans": [_scan_public(s) for s in SCANS.scans.values()]})
+
+
+@api.get("/scans/{scan_id}", tags=["scan"])
+def get_scan(scan_id: str):
+    return envelope(_scan_public(_scan_or_404(scan_id)))
+
+
+@api.get("/s/{token}", tags=["scan", "expert"])
+def scan_card(token: str):
+    try:
+        return envelope(scan_lib.card(SCANS, token, SETTINGS.pseudonym_key))
+    except KeyError:
+        raise HTTPException(404, "this link is not valid")
+
+
+@api.post("/s/{token}/answer", tags=["scan", "expert"])
+def scan_answer(token: str, body: dict = Body(default_factory=dict)):
+    """Draft only. Nothing is committed until /confirm; a link click never commits."""
+    try:
+        return envelope(scan_lib.draft(SCANS, token, body))
+    except KeyError:
+        raise HTTPException(404, "this link is not valid")
+    except PermissionError as exc:
+        raise HTTPException(409, str(exc))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+
+
+@api.post("/s/{token}/confirm", status_code=201, tags=["scan", "expert"])
+async def scan_confirm(token: str, body: dict = Body(default_factory=dict)):
+    try:
+        sealed = scan_lib.confirm(SCANS, STORE, token, body.get("confirm_token") or "",
+                                  SETTINGS.commitment_salt, SETTINGS.pseudonym_key)
+    except KeyError as exc:
+        raise HTTPException(404, str(exc))
+    except PermissionError as exc:
+        raise HTTPException(409, str(exc))
+    await publish("scan_answer_sealed", {"scan_id": SCANS.tokens[token][0]})
+    return envelope(sealed)
+
+
+@api.post("/scans/{scan_id}/reveal", tags=["scan"])
+async def scan_reveal(scan_id: str, body: dict = Body(default_factory=dict)):
+    _scan_or_404(scan_id)
+    reason = body.get("reason") or "deadline"
+    try:
+        result = scan_lib.reveal(SCANS, STORE, scan_id, reason)
+    except store.TooEarly as exc:
+        raise HTTPException(409, str(exc))
+    await publish("scan_revealed", {"scan_id": scan_id})
+    return envelope(result)
+
+
+@api.get("/scans/{scan_id}/result", tags=["scan"])
+def scan_result(scan_id: str, audience: str = "analyst"):
+    _scan_or_404(scan_id)
+    result = SCANS.results.get(scan_id)
+    if not result:
+        raise HTTPException(409, "not revealed yet; the scan reveals at its deadline")
+    return envelope(scan_lib.public(result) if audience == "public" else result)
+
+
+@api.get("/scans/{scan_id}/verification-queue", tags=["scan"])
+def scan_queue(scan_id: str, who: str = "", why: str = ""):
+    _scan_or_404(scan_id)
+    try:
+        return envelope({"scan_id": scan_id,
+                         "entries": STORE.read_verification_queue(scan_id, who, why)})
+    except ValueError as exc:
+        raise HTTPException(403, str(exc))
+
+
+@api.post("/scans/{scan_id}/verify", tags=["scan"])
+def scan_verify(scan_id: str, body: dict = Body(default_factory=dict)):
+    """Recomputes the round root from the stored commitments. Proves these answers existed at
+    their commit times and were not changed since; it does not prove the ranking is right."""
+    _scan_or_404(scan_id)
+    recomputed = store.round_verify_hash([a.commitment for a in SCANS.answers.get(scan_id, [])])
+    claimed = body.get("verify_hash") or (SCANS.results.get(scan_id) or {}).get("verify_hash")
+    return envelope({"scan_id": scan_id, "valid": bool(claimed) and claimed == recomputed,
+                     "recomputed": recomputed,
+                     "means": "these answers existed at this time and were not changed; timing, not truth"})
+
+
+@api.get("/demo/scan-links", tags=["scan", "demo"])
+def scan_demo_links():
+    return envelope({"links": [{"scan_id": s, "expert_id": e, "token": t,
+                                "path": f"/s/{t}", "used": t in SCANS.used}
+                               for t, (s, e) in SCANS.tokens.items()]})
+
 app.include_router(api, prefix="/api")
 
 
