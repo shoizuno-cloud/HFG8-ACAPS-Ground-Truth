@@ -174,7 +174,8 @@ def ready():
 
 @app.get("/version", tags=["platform"])
 def version():
-    return {"sha": SETTINGS.git_sha, "built": SETTINGS.built_at, "app": "sealed-signals",
+    return {"sha": SETTINGS.git_sha, "branch": SETTINGS.branch, "built": SETTINGS.built_at,
+            "started_at": SETTINGS.started_at, "app": "sealed-signals",
             "api": app.version, "env": SETTINGS.app_env}
 
 

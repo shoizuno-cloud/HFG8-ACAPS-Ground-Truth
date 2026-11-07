@@ -488,7 +488,22 @@ def test_ready_and_version(seeded):
     client, _ = seeded
     assert client.get("/ready").json()["status"] == "ready"
     version = client.get("/version").json()
-    assert set(version) >= {"sha", "built"}
+    assert set(version) >= {"sha", "branch", "built", "started_at"}
+    # The platform's SOURCE_COMMIT wins over a hand-set GIT_SHA, because `redeploy` reuses the
+    # env config and leaves GIT_SHA pointing at whichever commit `deploy` last saw.
+    import os
+
+    from engine import settings as settings_mod
+
+    os.environ["SOURCE_COMMIT"] = "abcdef1234567890"
+    os.environ["GIT_SHA"] = "staleaa"
+    try:
+        assert settings_mod.load().git_sha == "abcdef1"
+        del os.environ["SOURCE_COMMIT"]
+        assert settings_mod.load().git_sha == "staleaa"
+    finally:
+        os.environ.pop("SOURCE_COMMIT", None)
+        os.environ.pop("GIT_SHA", None)
 
 
 def test_openapi_is_served(seeded):
