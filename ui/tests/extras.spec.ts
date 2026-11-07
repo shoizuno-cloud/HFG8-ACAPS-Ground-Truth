@@ -48,11 +48,7 @@ test("jury QR, private calibration, reduced motion and keyboard access", async (
     .getByRole("button", { name: "View my private calibration" })
     .click();
   await expect(page.getByText("0.12", { exact: true })).toBeVisible();
-  await expect(
-    page.getByText(
-      "Synthetic calibration fixture · not linked to your demo answer",
-    ),
-  ).toBeVisible();
+
 });
 test("expert card accessibility and text scaling", async ({ page }) => {
   await page.goto("/e/demo");

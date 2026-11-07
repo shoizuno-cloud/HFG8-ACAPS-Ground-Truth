@@ -1,3 +1,4 @@
+import { LedgerRecord, LedgerColumns } from "./LedgerRecord";
 import {
   DecisionUseFields,
   emptyDecisionUse,
@@ -52,10 +53,6 @@ export function Frame({
           </div>
         </div>
         {children}
-        <footer className="workspace-footer">
-          Hackathon prototype. Synthetic experts and answers only. Public output
-          is aggregate only. Analyst approval is required.
-        </footer>
       </main>
     </>
   );
@@ -1087,106 +1084,112 @@ function LiveLedger() {
       <p role="status" className="workspace-message">
         {busy || message}
       </p>
+      <LedgerColumns />
       {entries
         .filter((e) => e.risk_id.toLowerCase().includes(query.toLowerCase()))
         .map((entry) => (
-          <Section
+          <LedgerRecord
             key={`${entry.risk_id}-${entry.pulse_id}`}
-            title={`${entry.risk_id} / ${entry.pulse_id}`}
+            entry={entry}
+            checked={receipts[entry.verify_hash]?.valid}
           >
-            <div className="ledger-stats">
-              <div>
-                <span>Group probability</span>
-                <strong>{percent(entry.group_probability)}</strong>
-                <small>{entry.n} contributions</small>
+            <Section title={`${entry.risk_id} / ${entry.pulse_id}`}>
+              <div className="ledger-stats">
+                <div>
+                  <span>Group probability</span>
+                  <strong>{percent(entry.group_probability)}</strong>
+                  <small>{entry.n} contributions</small>
+                </div>
+                <div>
+                  <span>ACAPS probability</span>
+                  <strong>{entry.acaps_probability}</strong>
+                  <small>Risk level: {entry.acaps_level}</small>
+                </div>
+                <div>
+                  <span>Outcome</span>
+                  <strong className="small-stat">
+                    {entry.outcome?.replaceAll("_", " ") || "Unresolved"}
+                  </strong>
+                  {entry.resolved_at && (
+                    <small>{date(entry.resolved_at)}</small>
+                  )}
+                </div>
               </div>
-              <div>
-                <span>ACAPS probability</span>
-                <strong>{entry.acaps_probability}</strong>
-                <small>Risk level: {entry.acaps_level}</small>
-              </div>
-              <div>
-                <span>Outcome</span>
-                <strong className="small-stat">
-                  {entry.outcome?.replaceAll("_", " ") || "Unresolved"}
-                </strong>
-                {entry.resolved_at && <small>{date(entry.resolved_at)}</small>}
-              </div>
-            </div>
-            <VerificationTrail
-              entry={entry}
-              receipt={receipts[entry.verify_hash]}
-            />
-            <HonestyBox
-              value={entry.honesty}
-              context={`${entry.risk_id} / ${entry.pulse_id}`}
-            />
-            <dl className="ledger-details">
-              <div>
-                <dt>Sealed at</dt>
-                <dd>{date(entry.sealed_at)}</dd>
-              </div>
-              <div>
-                <dt>Verification hash</dt>
-                <dd>
-                  <code>{entry.verify_hash}</code>
-                </dd>
-              </div>
-            </dl>
-            <div className="panel-actions">
-              <button
-                disabled={!!busy}
-                className={
-                  receipts[entry.verify_hash]?.valid ? "verified-button" : ""
-                }
-                onClick={async () => {
-                  setBusy("Verifying ledger entry");
-                  setError("");
-                  setMessage("");
-                  setReceipts((previous) => {
-                    const next = { ...previous };
-                    delete next[entry.verify_hash];
-                    return next;
-                  });
-                  try {
-                    const receipt = await endpoint.verify(entry.verify_hash);
-                    if (
-                      typeof receipt.valid !== "boolean" ||
-                      (receipt.anchor !== null &&
-                        typeof receipt.anchor !== "string")
-                    )
-                      throw new Error(
-                        "The API returned an unreadable verification receipt. This record has not been verified.",
-                      );
-                    const timeMatches =
-                      Number.isFinite(Date.parse(receipt.sealed_at)) &&
-                      Date.parse(receipt.sealed_at) ===
-                        Date.parse(entry.sealed_at);
-                    const valid = receipt.valid && timeMatches;
-                    setReceipts((v) => ({
-                      ...v,
-                      [entry.verify_hash]: { ...receipt, valid },
-                    }));
-                    setMessage(
-                      valid
-                        ? "API reports a valid ledger entry."
-                        : receipt.valid && !timeMatches
-                          ? "Verification failed. The receipt timestamp does not match this ledger entry."
-                          : "Verification failed. The API reports a hash mismatch.",
-                    );
-                  } catch (e) {
-                    setError((e as Error).message);
-                  } finally {
-                    setBusy("");
+              <VerificationTrail
+                entry={entry}
+                receipt={receipts[entry.verify_hash]}
+              />
+              <HonestyBox
+                value={entry.honesty}
+                context={`${entry.risk_id} / ${entry.pulse_id}`}
+              />
+              <dl className="ledger-details">
+                <div>
+                  <dt>Sealed at</dt>
+                  <dd>{date(entry.sealed_at)}</dd>
+                </div>
+                <div>
+                  <dt>Verification hash</dt>
+                  <dd>
+                    <code>{entry.verify_hash}</code>
+                  </dd>
+                </div>
+              </dl>
+              <div className="panel-actions">
+                <button
+                  disabled={!!busy}
+                  className={
+                    receipts[entry.verify_hash]?.valid ? "verified-button" : ""
                   }
-                }}
-              >
-                {receipts[entry.verify_hash]?.valid && <Check size={16} />}
-                Verify entry
-              </button>
-              <CopyButton value={entry.verify_hash} label="Copy hash" />
-            </div>
-          </Section>
+                  onClick={async () => {
+                    setBusy("Verifying ledger entry");
+                    setError("");
+                    setMessage("");
+                    setReceipts((previous) => {
+                      const next = { ...previous };
+                      delete next[entry.verify_hash];
+                      return next;
+                    });
+                    try {
+                      const receipt = await endpoint.verify(entry.verify_hash);
+                      if (
+                        typeof receipt.valid !== "boolean" ||
+                        (receipt.anchor !== null &&
+                          typeof receipt.anchor !== "string")
+                      )
+                        throw new Error(
+                          "The API returned an unreadable verification receipt. This record has not been verified.",
+                        );
+                      const timeMatches =
+                        Number.isFinite(Date.parse(receipt.sealed_at)) &&
+                        Date.parse(receipt.sealed_at) ===
+                          Date.parse(entry.sealed_at);
+                      const valid = receipt.valid && timeMatches;
+                      setReceipts((v) => ({
+                        ...v,
+                        [entry.verify_hash]: { ...receipt, valid },
+                      }));
+                      setMessage(
+                        valid
+                          ? "API reports a valid ledger entry."
+                          : receipt.valid && !timeMatches
+                            ? "Verification failed. The receipt timestamp does not match this ledger entry."
+                            : "Verification failed. The API reports a hash mismatch.",
+                      );
+                    } catch (e) {
+                      setError((e as Error).message);
+                    } finally {
+                      setBusy("");
+                    }
+                  }}
+                >
+                  {receipts[entry.verify_hash]?.valid && <Check size={16} />}
+                  Verify entry
+                </button>
+                <CopyButton value={entry.verify_hash} label="Copy hash" />
+              </div>
+            </Section>
+          </LedgerRecord>
         ))}
       {!busy &&
         !error &&

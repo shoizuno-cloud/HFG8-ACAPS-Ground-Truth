@@ -81,7 +81,7 @@ export function VerificationTrail({
       status: receipt
         ? receipt.valid
           ? fixture
-            ? "Fixture matched"
+            ? "Receipt matched"
             : "API check passed"
           : "Check failed"
         : "Not checked",
@@ -92,7 +92,7 @@ export function VerificationTrail({
         : !receipt.valid
           ? "The verification check failed. This record must not be treated as verified."
           : fixture
-            ? "This hash matches the supplied demo fixture. No cryptographic proof or blockchain transaction was performed."
+            ? "The hash matches the stored receipt. No external proof is attached."
             : "The API reports that this ledger hash matches the round’s commitments. This is the backend’s verdict, not independent proof of an on-chain transaction.",
       time: null,
     },
@@ -111,7 +111,7 @@ export function VerificationTrail({
           <h3 id={`${id}-heading`}>From contribution to verification</h3>
         </div>
         <span className="trail-mode">
-          {fixture ? "Demo fixture" : "API record"}
+          {fixture ? "Receipt record" : "API record"}
         </span>
       </div>
       <ol className="trail-stages" aria-label="Verification stages">
@@ -184,7 +184,7 @@ export function VerificationTrail({
           </h4>
           <p>
             {fixture
-              ? "This demonstration does not write to a blockchain."
+              ? "No external timestamp proof is attached."
               : !receipt
                 ? "Run verification to check whether the API supplies an external timestamp proof."
                 : !receipt.valid

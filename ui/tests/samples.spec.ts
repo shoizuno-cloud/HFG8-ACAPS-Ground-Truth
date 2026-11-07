@@ -27,6 +27,7 @@ test("populated samples connect every main page and align content with the heade
   await expect(page.locator("tbody tr")).toHaveCount(6);
   await page.getByLabel("Country", { exact: true }).selectOption("Haiti");
   await page.getByRole("link", { name: "View ledger history" }).click();
+  await page.locator(".ledger-record > summary").first().click();
   await expect(
     page.getByRole("heading", { name: "Resolved history / R0105" }),
   ).toBeVisible();
@@ -34,17 +35,13 @@ test("populated samples connect every main page and align content with the heade
     page.getByRole("heading", { name: "No matching risks" }),
   ).toHaveCount(0);
   await page.goto("/ledger");
-  await expect(
-    page.getByRole("region", { name: "Public honesty box" }),
-  ).toHaveCount(6);
+  await expect(page.locator(".honesty-box")).toHaveCount(6);
   await expect(
     page.locator(".ledger-entry .ledger-stats strong").first(),
   ).toHaveText("69%");
   await expect(page.getByText("river-ibis", { exact: true })).toHaveCount(0);
   await page.getByLabel("Find a risk").fill("Haiti");
-  await expect(
-    page.getByRole("region", { name: "Public honesty box" }),
-  ).toHaveCount(1);
+  await expect(page.locator(".honesty-box")).toHaveCount(1);
   await page.goto("/calibration");
   await page
     .getByRole("button", { name: "View my private calibration" })
@@ -58,7 +55,7 @@ test("populated samples connect every main page and align content with the heade
   await page.goto("/committee");
   const applications = page.locator(".workspace-panel").filter({
     has: page.getByRole("heading", {
-      name: "Sample applications",
+      name: "Applications",
       exact: true,
     }),
   });
@@ -83,7 +80,7 @@ test("populated samples connect every main page and align content with the heade
   await expect(page.getByLabel("Application ID")).toHaveValue("X-SAMPLE-004");
   await page.goto("/stage");
   await expect(
-    page.getByRole("heading", { name: "Sample invitations" }),
+    page.getByRole("heading", { name: "Invitations" }),
   ).toBeVisible();
   await page
     .getByRole("link", { name: "Open optional round-two card" })
@@ -128,13 +125,11 @@ test("sample reset opens a fresh analyst round without losing history", async ({
     .fill("2026-11-20");
   await page.getByRole("button", { name: "Accept draft", exact: true }).click();
   await page.getByRole("link", { name: "View public ledger" }).click();
-  await expect(
-    page.getByRole("region", { name: "Public honesty box" }),
-  ).toHaveCount(6);
+  await expect(page.locator(".honesty-box")).toHaveCount(6);
   await page.goto("/workspace");
-  await page.getByRole("button", { name: "Clear sample data" }).click();
+  await page.getByRole("button", { name: "Clear records" }).click();
   await expect(
-    page.getByRole("button", { name: "Load sample workspace", exact: true }),
+    page.getByRole("button", { name: "Load records", exact: true }),
   ).toBeVisible();
   await page.goto("/radar");
   await expect(page.locator("tbody tr")).toHaveCount(1);

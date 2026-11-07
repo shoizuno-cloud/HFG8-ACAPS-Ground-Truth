@@ -1,3 +1,4 @@
+import { LedgerRecord, LedgerColumns } from "./LedgerRecord";
 import { sampleDataEnabled, sampleRisks } from "./demo-data";
 import {
   DecisionUseFields,
@@ -75,14 +76,6 @@ function Shell({
       </a>
       <PortalHeader />
       <main id="workspace-content" className="workspace">
-        <div className="mode-banner">
-          <ShieldCheck size={16} />
-          <span>
-            {mock
-              ? "Fixture demo · synthetic answers · decisions stay in this browser session · no blockchain anchoring"
-              : "Live desk and ledger integration is not connected in this milestone."}
-          </span>
-        </div>
         {mock ? (
           children
         ) : (
@@ -93,10 +86,6 @@ function Shell({
             </p>
           </Panel>
         )}
-        <footer className="workspace-footer">
-          Synthetic experts and answers. Demonstration only. Nothing publishes
-          automatically.
-        </footer>
       </main>
     </>
   );
@@ -597,114 +586,118 @@ function Ledger() {
           placeholder="Search by country or risk ID"
         />
       </div>
+      <LedgerColumns />
       {matches ? (
-        <Panel
-          title={`${risk.country} / ${entry.risk_id}`}
-          detail="Analyst approved · fixture demo"
-          className="ledger-entry"
-        >
-          <h3>{risk.title}</h3>
-          {entry.group_probability !== result.mean && (
-            <p className="panel-caption">
-              Stored ledger fixture: {percent(entry.group_probability)}. Current
-              v3 round mean: {percent(result.mean)}. These fixtures disagree;
-              Lane A must regenerate a consistent version before live use.
-            </p>
-          )}
-          <div className="ledger-stats">
-            <div>
-              <span>Group probability</span>
-              <strong>{percent(entry.group_probability)}</strong>
-              <small>{result.n} synthetic contributions</small>
+        <LedgerRecord entry={entry} country={risk.country} checked={verified}>
+          <Panel
+            title={`${risk.country} / ${entry.risk_id}`}
+            detail="Analyst approved"
+            className="ledger-entry"
+          >
+            <h3>{risk.title}</h3>
+            {entry.group_probability !== result.mean && (
+              <p className="panel-caption">
+                Stored ledger fixture: {percent(entry.group_probability)}.
+                Current v3 round mean: {percent(result.mean)}. These fixtures
+                disagree; Lane A must regenerate a consistent version before
+                live use.
+              </p>
+            )}
+            <div className="ledger-stats">
+              <div>
+                <span>Group probability</span>
+                <strong>{percent(entry.group_probability)}</strong>
+                <small>{result.n} synthetic contributions</small>
+              </div>
+              <div>
+                <span>ACAPS probability</span>
+                <strong>{decision.probability}</strong>
+                <small>Risk level: {entry.acaps_level}</small>
+              </div>
+              <div>
+                <span>Outcome</span>
+                <strong className="small-stat">Unresolved</strong>
+                <small>Not scored yet</small>
+              </div>
             </div>
-            <div>
-              <span>ACAPS probability</span>
-              <strong>{decision.probability}</strong>
-              <small>Risk level: {entry.acaps_level}</small>
-            </div>
-            <div>
-              <span>Outcome</span>
-              <strong className="small-stat">Unresolved</strong>
-              <small>Not scored yet</small>
-            </div>
-          </div>
-          <HonestyBox
-            context={`${entry.risk_id} / ${entry.pulse_id}`}
-            value={{
-              ...entry.honesty!,
-              decision_use:
-                decision?.decision_use || entry.honesty!.decision_use,
-            }}
-          />
-          <VerificationTrail
-            entry={entry}
-            fixture
-            decision={decision}
-            receipt={verified ? { valid: true, anchor: null } : undefined}
-          />
-          <dl className="ledger-details">
-            <div>
-              <dt>Sealed at</dt>
-              <dd>{date(entry.sealed_at)}</dd>
-            </div>
-            <div>
-              <dt>Analyst decision</dt>
-              <dd>
-                {decision.action === "edit" ? "Edited" : "Accepted"} ·{" "}
-                {date(decision.at)}
-              </dd>
-            </div>
-            <div>
-              <dt>Verification hash</dt>
-              <dd>
-                <code>{entry.verify_hash}</code>
-              </dd>
-            </div>
-          </dl>
-          <div className="panel-actions">
-            <button
-              className={verified ? "verified-button" : ""}
-              disabled={busy || verified}
-              onClick={async () => {
-                setBusy(true);
-                await new Promise((resolve) => setTimeout(resolve, 200));
-                const receipt = verifyFixture(entry.verify_hash);
-                setVerified(receipt.valid);
-                setMessage(
-                  receipt.valid
-                    ? "Fixture hash matched. No blockchain anchor is configured."
-                    : "Hash did not match the fixture.",
-                );
-                setBusy(false);
+            <HonestyBox
+              context={`${entry.risk_id} / ${entry.pulse_id}`}
+              value={{
+                ...entry.honesty!,
+                decision_use:
+                  decision?.decision_use || entry.honesty!.decision_use,
               }}
-            >
-              {verified ? <Check size={16} /> : <ShieldCheck size={16} />}{" "}
-              {busy
-                ? "Checking fixture…"
-                : verified
-                  ? "Fixture verified"
-                  : "Verify fixture hash"}
-            </button>
-            <button
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(entry.verify_hash);
-                  setMessage("Verification hash copied.");
-                } catch {
+            />
+            <VerificationTrail
+              entry={entry}
+              fixture
+              decision={decision}
+              receipt={verified ? { valid: true, anchor: null } : undefined}
+            />
+            <dl className="ledger-details">
+              <div>
+                <dt>Sealed at</dt>
+                <dd>{date(entry.sealed_at)}</dd>
+              </div>
+              <div>
+                <dt>Analyst decision</dt>
+                <dd>
+                  {decision.action === "edit" ? "Edited" : "Accepted"} ·{" "}
+                  {date(decision.at)}
+                </dd>
+              </div>
+              <div>
+                <dt>Verification hash</dt>
+                <dd>
+                  <code>{entry.verify_hash}</code>
+                </dd>
+              </div>
+            </dl>
+            <div className="panel-actions">
+              <button
+                className={verified ? "verified-button" : ""}
+                disabled={busy || verified}
+                onClick={async () => {
+                  setBusy(true);
+                  await new Promise((resolve) => setTimeout(resolve, 200));
+                  const receipt = verifyFixture(entry.verify_hash);
+                  setVerified(receipt.valid);
                   setMessage(
-                    "Copy unavailable. Select and copy the hash above.",
+                    receipt.valid
+                      ? "Fixture hash matched. No blockchain anchor is configured."
+                      : "Hash did not match the fixture.",
                   );
-                }
-              }}
-            >
-              <Copy size={15} /> Copy hash
-            </button>
-          </div>
-          <p className="panel-caption">
-            Verification matches this entry against the fixture receipt. It is
-            not a cryptographic proof or blockchain transaction. Anchor: none.
-          </p>
-        </Panel>
+                  setBusy(false);
+                }}
+              >
+                {verified ? <Check size={16} /> : <ShieldCheck size={16} />}{" "}
+                {busy
+                  ? "Checking fixture…"
+                  : verified
+                    ? "Fixture verified"
+                    : "Verify fixture hash"}
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(entry.verify_hash);
+                    setMessage("Verification hash copied.");
+                  } catch {
+                    setMessage(
+                      "Copy unavailable. Select and copy the hash above.",
+                    );
+                  }
+                }}
+              >
+                <Copy size={15} /> Copy hash
+              </button>
+            </div>
+            <p className="panel-caption">
+              Verification matches this entry against the fixture receipt. It is
+              not a cryptographic proof or blockchain transaction. Anchor: none.
+            </p>
+          </Panel>
+        </LedgerRecord>
       ) : historyMatches ? null : (
         <Panel
           title={

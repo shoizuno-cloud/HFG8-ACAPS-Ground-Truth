@@ -135,13 +135,12 @@ test("integrity is desk-only and the public ledger includes honesty and resolved
     .fill("2026-11-20");
   await page.getByRole("button", { name: "Accept draft" }).click();
   await page.getByRole("link", { name: "View public ledger" }).click();
-  await expect(
-    page.getByRole("region", { name: "Public honesty box" }),
-  ).toHaveCount(2);
+  await expect(page.locator(".honesty-box")).toHaveCount(2);
   await expect(
     page.getByRole("heading", { name: "Integrity notes" }),
   ).toHaveCount(0);
   await expect(page.getByText("quiet-heron")).toHaveCount(0);
+  await page.locator(".ledger-record > summary").last().click();
   await expect(
     page.getByRole("heading", { name: "Resolved history / R0987" }),
   ).toBeVisible();
