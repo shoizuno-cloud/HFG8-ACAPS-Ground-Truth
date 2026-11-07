@@ -546,11 +546,16 @@ The analyst's address book is the registry. The expert's first contact is a ques
   when five answers are in, so fast responders are not privileged; late responders stay blind until they submit; under
   five at the deadline: "insufficient panel", the analyst is told, answers are kept for the record and nothing is
   revealed. The analyst sees who has not answered and may write a personal message; the system never sends a third.
-- **Closing the loop** (automatic, in the expert's language and channel): within 24 h of the reveal, "Most of the panel
-  answered; the group view is around 0.7; you said 0.8; ACAPS rates this High; the analyst kept High." Attribution ("your
-  note on Adré was added to the triggers") only when the analyst explicitly recorded it. On resolution, the outcome
-  report. Yearly, a private thank-you with early access to the global risk analysis. No ranking anywhere. This feedback
-  message is where the expert first sees ACAPS's band; the card never shows it.
+- **Closing the loop: what your minute changed** (built: `engine/engine/impact.py`, page `/e/:token/feedback`). After the
+  reveal and again on resolution, every expert who answered receives a thank-you built from the record only: that the
+  panel's input counted; what the analyst decided and changed (the decision note); which decision it informed, for
+  whom, by when; ACAPS's own expected-exposure figure for the risk ("more than 500,000 people", Risk List) and the
+  crisis's INFORM severity with its month; reach only when ACAPS reports it (`POST /pulses/{id}/reach`); a line the
+  analyst wrote (`POST /pulses/{id}/thanks`, never generated); on resolution, what happened and, for a miss, what is now
+  monitored because of it. Never: a personal score, the expert's own answer beside the result (shown only if they ask,
+  `show_mine=true`), a ranking, or a claim about lives saved; INFORM's "people in need" is a 0-10 sub-score and is never
+  printed as a headcount. "Stop outcome reports" is one tap or one word (`POST /e/{token}/reports-off`), separate
+  from STOP. Anonymous answers receive the same group message through their own link.
 - **Honesty box** records the channel mix and the share of relayed answers.
 - **Language**: English and French parsed in the MVP; numbers are language-agnostic; free text is kept in the original
   and translated for the analyst with the original attached.

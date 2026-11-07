@@ -24,7 +24,7 @@ Start with `README.md`. This file says where each part lives and which test or c
 | --- | --- |
 | The test suite passes | `make check`; committed output in `docs/evidence/make-check.txt` |
 | The full loop runs offline from a clean clone in under 60 s | `make demo`; transcript in `docs/evidence/make-demo.txt` |
-| The alert engine reproduces the April 2026 Chad move (TCD005, 6.1 → 6.9, rank 1 of 123) | `engine/tests/test_alerts.py`; `POST /api/alerts/replay` with `{"month_from":"Mar2026","month_to":"Apr2026"}`; fixture `fixtures/POST_alerts_replay_response.json` |
+| The alert engine reproduces the April 2026 Chad move (TCD005, 6.1 → 6.9, the largest deterioration of 123) | `engine/tests/test_alerts.py`; `POST /api/alerts/replay` with `{"month_from":"Mar2026","month_to":"Apr2026"}`; fixture `fixtures/POST_alerts_replay_response.json` |
 | Answers are committed before reveal and a link click never commits | `engine/tests/test_loop.py` (confirm step, correction before deadline, reveal refused before the deadline, n < 5 never revealed) |
 | Masks are chosen per answer; the public ledger never returns an individual | `engine/tests/test_loop.py`; `scripts/validate_fixtures.py` fails on any aggregate with n < 5 |
 | The draft checker rejects a number not in a record and holds unsourced claims | `engine/engine/draft.py`; `engine/tests/test_loop.py` |

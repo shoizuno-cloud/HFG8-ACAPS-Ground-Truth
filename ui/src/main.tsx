@@ -5,6 +5,8 @@ import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import { mock } from "./api";
 import { ExpertCard } from "./ExpertCard";
+import { ScanCard, ScanResultView } from "./CountryScan";
+import { ThankYou } from "./ThankYou";
 import { LiveWorkspace, Frame } from "./LiveWorkspace";
 import { PublicHome, LoginRequired, WorkspaceHome } from "./Entry";
 import { hasWorkspaceSession } from "./workspace-session";
@@ -66,8 +68,13 @@ function Router() {
   if (path === "/") return <PublicHome />;
   if (path === "/login") return <PublicHome />;
   // V3 expert invitations remain no-login links. Team tools use the demo entry gate.
+  const thanks = /^\/e\/([^/]+)\/feedback\/?$/.exec(path);
+  if (thanks) return <ThankYou token={thanks[1]} />;
   const expert = /^\/e\/([^/]+)\/?$/.exec(path);
   if (expert) return <ExpertCard token={expert[1]} />;
+  // Country scan: "the three biggest risks in <country>", also a no-login link.
+  const scanLink = /^\/s\/([^/]+)\/?$/.exec(path);
+  if (scanLink) return <ScanCard token={scanLink[1]} />;
   const calibration = /^\/me\/([^/]+)\/calibration\/?$/.exec(path);
   if (calibration) return <Calibration token={calibration[1]} />;
   if (!hasWorkspaceSession()) return <LoginRequired />;
@@ -75,6 +82,8 @@ function Router() {
     return <WorkspaceRedirect />;
   if (path === "/workspace") return <WorkspaceHome />;
   if (path === "/alerts") return <Alerts />;
+  const scanResult = /^\/scans\/([^/]+)\/?$/.exec(path);
+  if (scanResult) return <ScanResultView scanId={scanResult[1]} />;
   if (path === "/radar") return <Radar />;
   if (path === "/expert")
     return mock ? (

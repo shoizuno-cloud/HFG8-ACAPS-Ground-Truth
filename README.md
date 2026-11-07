@@ -20,12 +20,12 @@ not sign up to a portal to change that; and nobody can see the bias in a panel o
 
 | Step | What happens | Which problem it answers |
 | --- | --- | --- |
-| 1 Alert | A deterministic diff of ACAPS's monthly INFORM severity and humanitarian-access editions finds the moves and ranks them across all crises. No model. It proposes; the analyst approves or dismisses. | Ratings go stale between reviews |
+| 1 Alert | A deterministic diff of ACAPS's monthly INFORM severity and humanitarian-access editions finds the moves and ranks them across all crises, within each metric and direction. No model. It proposes; the analyst approves or dismisses. | Ratings go stale between reviews |
 | 2 Ask | The analyst freezes a question contract (event, place, threshold, deadline) and the eight best-matched vetted experts receive it by email, WhatsApp, Signal, SMS, Teams or a scheduled call. No sign-up, one magic link. | Experts never sign up |
 | 3 Answer | One screen, one required tap, mask chosen per answer. ACAPS's rating is hidden. The answer is committed with a salted SHA-256 hash and a timestamp on confirmation, and all answers are revealed together at the deadline. | Anchoring, herding, social pressure |
 | 4 Check | Equal-weight mean, spread, unattributed disagreement, missing evidence, descriptive bias notes. An Investigator, Skeptic and Judge turn the panel view into a cited draft; a checker rejects any number not exactly in a versioned record. | Bias nobody could see |
 | Country scan | The brief's own example, "What are the three biggest risks in Chad that might worsen humanitarian outcomes in the next six months?": experts tap up to three of the country's ACAPS risks and tracked crises, ACAPS's view hidden and the list shuffled per link; at the deadline the panel's ranking is drawn beside ACAPS's own, and a crisis with no Risk List entry that the panel ranks high is flagged for the analyst. | Knowledge that sits in people before it shows up in a report |
-| 5 Decide and record | The analyst accepts, edits or rejects, with "what decision, for whom, by when". The public ledger keeps the group view, an honesty box, a Verify action and the misses. Scored at panel level when the risk resolves; every expert receives the outcome report. | No trail, no feedback, no misses |
+| 5 Decide and record | The analyst accepts, edits or rejects, with "what decision, for whom, by when". The public ledger keeps the group view, an honesty box, a Verify action and the misses. Scored at panel level when the risk resolves; every expert receives a thank-you saying what their minute changed: the decision it informed, for whom, and ACAPS's own exposure figure, never a personal score. | No trail, no feedback, no misses |
 
 Nothing publishes itself. Sealed Signals is one validation layer among others inside ACAPS's own analysis workflow.
 
@@ -112,7 +112,7 @@ loop transcript), `docs/evidence/screens/` (expert screen, desk, ledger at phone
 
 Real: the ACAPS Risk Radar export (139 risks, 104 resolved) and the ACAPS API editions (risk list, crises, countries,
 monthly INFORM severity and humanitarian access, cached for the demo). The April 2026 move for crisis TCD005,
-"Displacement from Sudan to Chad" (index 6.1 → 6.9, the largest of 123 crises that month), is real and drives the demo.
+"Displacement from Sudan to Chad" (index 6.1 → 6.9, the largest deterioration of 123 crises that month), is real and drives the demo.
 Synthetic: every expert, panel and answer, labelled as synthetic in the UI. No real expert data is used anywhere.
 
 ## 8. What we do not claim
