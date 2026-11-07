@@ -1,6 +1,6 @@
 """The hardening stack of MASTER_PROMPT sections 6c and 6d.
 
-One object, `Hardening`, holds the five stateful pieces so the API has a single thing to reset
+One object, `Hardening`, holds the stateful pieces so the API has a single thing to reset
 between tests and a single thing to report on. Each piece keeps its own honest fallback, and the
 status payload always carries the guarantee / does-not wording, because a mechanism described
 loosely is worse than one that is switched off.
@@ -10,10 +10,11 @@ from dataclasses import dataclass, field
 
 from . import anchors as anchors_mod
 from . import attest as attest_mod
+from . import calibration as calibration_mod
 from . import credentials as credentials_mod
 from . import flags, keys, patterns, registry as registry_mod, zk as zk_mod
 
-__all__ = ["Hardening", "flags", "keys", "patterns", "new"]
+__all__ = ["Hardening", "flags", "keys", "patterns", "calibration_mod", "new"]
 
 
 @dataclass
@@ -23,6 +24,7 @@ class Hardening:
     credentials: credentials_mod.Credentials = field(default_factory=credentials_mod.Credentials)
     anchors: anchors_mod.Anchors = field(default_factory=anchors_mod.Anchors)
     membership: zk_mod.Membership = field(default_factory=zk_mod.Membership)
+    calibration: calibration_mod.Programme = field(default_factory=calibration_mod.Programme)
 
     def status(self) -> dict:
         return {
@@ -38,6 +40,7 @@ class Hardening:
                         "pending": sum(1 for r in self.anchors.roots.values()
                                        if r.status != "anchored")},
             "zk": self.membership.status(),
+            "calibration": self.calibration.counts(),
         }
 
     def reset(self) -> None:
@@ -46,6 +49,7 @@ class Hardening:
         self.credentials.reset()
         self.anchors.reset()
         self.membership.reset()
+        self.calibration.enrolments.clear()
 
 
 def new() -> Hardening:

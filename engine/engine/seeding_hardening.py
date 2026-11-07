@@ -12,7 +12,7 @@ is the output the report should produce most of the time.
 """
 from __future__ import annotations
 
-from . import data
+from . import data, draft as draft_builder
 from .store import Store
 
 IDENTITIES = {
@@ -176,6 +176,52 @@ def seed_pattern_history(store: Store, settings, hardening=None) -> dict:
                 "resolved_at": pulse["fired_at"],
             })
             scored += 1
+
+        # Close the round the way a real one closes: reveal it, draft from it, record the
+        # analyst's decision and the outcome on the ledger. Without this the history is a pile of
+        # sealed answers with no result, so the panel reports have nothing to describe and
+        # /committee/scoring has no resolved round to score a panel against. The reveal is
+        # recorded as a before-deadline analyst reveal, because that is what it is.
+        try:
+            result = store.reveal(pulse["id"], risk, "analyst_before_deadline")
+        except Exception:                                              # noqa: BLE001
+            continue
+        if result.get("reveal_status") != "revealed":
+            continue
+        built = draft_builder.build(risk, pulse, result)
+        store.drafts[built["id"]] = built
+        # Two of the five were rejected by the analyst, and one of those later materialised. A
+        # history in which the analyst agreed every time would make the ledger's own "panel view
+        # rejected" column look like a field nobody uses.
+        rejected = index in (1, 3)
+        decision = {
+            "action": "reject" if rejected else "accept",
+            "what_decision": "Weekly risk review for the country team",
+            "for_whom": f"ACAPS analyst, {risk.get('country')}",
+            "by_when": pulse["fired_at"][:10],
+            "note": ("Indicators were flat that month and the panel sat above them; recorded "
+                     "here so the miss is the analyst's, not the panel's." if rejected else None),
+        }
+        built["status"] = "rejected" if rejected else "accepted"
+        built["decided_by"] = "analyst"
+        built["decided_at"] = pulse["fired_at"]
+        built["note"] = decision["note"]
+        answers = store.answers.get(pulse["id"], [])
+        store.ledger.append({
+            "risk_id": risk_id,
+            "pulse_id": pulse["id"],
+            "sealed_at": min((a.committed_at for a in answers), default=pulse["fired_at"]),
+            "group_probability": result["mean"],
+            "acaps_probability": risk.get("probability_acaps"),
+            "acaps_level": risk.get("level"),
+            "proposed_probability": built["proposed_probability"],
+            "decision": built["status"],
+            "outcome": pulse["resolved_outcome"],
+            "resolved_at": pulse["fired_at"],
+            "verify_hash": result["verify_hash"],
+            "honesty": draft_builder.honesty_box(result, built, decision),
+            "synthetic": True,
+        })
 
     if hardening is not None:
         days: dict[str, list[str]] = {}

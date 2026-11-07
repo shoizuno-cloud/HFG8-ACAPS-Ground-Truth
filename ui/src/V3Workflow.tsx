@@ -268,7 +268,7 @@ export function CommitteeScoring() {
               mock && sampleDataEnabled()
                 ? sampleBoard
                 : mock
-                  ? (await import("../../fixtures/GET_analyst_board.json"))
+                  ? (await import("../../fixtures/GET_committee_scoring.json"))
                       .default
                   : await endpoint.board(),
             );
@@ -287,19 +287,30 @@ export function CommitteeScoring() {
           <table>
             <thead>
               <tr>
-                <th>Pseudonym</th>
-                <th>Resolved forecasts</th>
-                <th>Mean Brier score</th>
-                <th>Secondary weight</th>
+                <th>Panel</th>
+                <th>Resolved rounds</th>
+                <th>Panel Brier score</th>
+                <th>ACAPS band Brier score</th>
               </tr>
             </thead>
             <tbody>
-              {value.super_estimators.map((item) => (
-                <tr key={item.pseudonym}>
-                  <td>{item.pseudonym}</td>
-                  <td>{item.n}</td>
-                  <td>{item.mean_brier.toFixed(2)}</td>
-                  <td>{item.weight.toFixed(2)}×</td>
+              {/* Panel-level since v3.4. The table that used to be here ranked pseudonyms by
+                  Brier score, which is a leaderboard of people built from answers that never
+                  said they were being ranked. */}
+              {value.panels.map((item) => (
+                <tr key={item.panel_id}>
+                  <td>{item.panel_id}</td>
+                  <td>{item.n_resolved}</td>
+                  <td>
+                    {item.panel_brier === null
+                      ? "no resolved round yet"
+                      : item.panel_brier.toFixed(2)}
+                  </td>
+                  <td>
+                    {item.acaps_band_brier === null
+                      ? "—"
+                      : item.acaps_band_brier.toFixed(2)}
+                  </td>
                 </tr>
               ))}
             </tbody>

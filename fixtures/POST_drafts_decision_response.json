@@ -1,32 +1,32 @@
 {
-  "id": "D-5d7b3e9e",
+  "id": "D-f6ed8984",
   "risk_id": "R1043",
   "pulse_id": "P-0001",
   "proposed_probability": "High",
   "proposed_level": "High",
   "acaps_probability": "High",
   "acaps_level": "High",
-  "rationale_md": "The panel's equal-weight mean is 0.66 (n=8), which supports the current High rating. Proposed: High.\n\nAnswers range 0.30-0.85 (IQR 0.25). The weighted mean is 0.67, shown as a secondary number only.\n\nMinority view, kept in: Border raids have slowed since mid-September; the pressure is displacement, not attacks.\n\nRaised by 2: Night-time militia movement near Adre is not in any public reporting yet. (single-source).\n\nRaised by 2: Camp capacity in Ouaddai is already past what the sites were planned for. (corroborated).\n\nRaised by 1: Seasonal access after the rains will decide whether any of this can be reached. (not checked).\n\nExpansion of cross-border attacks and insecurity - 40% complete puts the trigger 'Expansion of cross-border attacks and insecurity' at 40% complete. (https://reliefweb.int/report/chad/unfpa-situation-report-chad-humanitarian-response-1-30-april-2026)\n\nAttacks on strategic infrastructure in Chad - 10% complete puts the trigger 'Attacks on strategic infrastructure in Chad' at 10% complete. (https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions)\n\nRenewed proxy mobilisation and cross-border armed group activity - 20% complete puts the trigger 'Renewed proxy mobilisation and cross-border armed group activity' at 20% complete. (https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions)\n\nIntegrity note (shared_origin): Two 'what are we missing' entries may share an origin (near-identical wording).\n\nSurprisingly-popular (experimental): yes. Actual share above 0.5 0.8333 against a predicted 0.6417.\n\nProbability band to number is an assumption of this build, not an ACAPS mapping: {'Very Low': 0.05, 'Low': 0.25, 'Medium': 0.5, 'High': 0.75, 'Very High': 0.95}.",
+  "rationale_md": "The panel's equal-weight mean is 0.65 (n=8), which supports the current High rating. Proposed: High.\n\nAnswers range 0.30-0.85 (IQR 0.28). The weighted mean is 0.67, shown as a secondary number only.\n\nDisagreement, kept in: Two experts put the chance below the panel mean; their notes are about access and conflict.\n\nDisagreement, kept in: One expert puts the chance above the panel mean; the subject of their note is not summarised here, because in a panel of eight it would name them.\n\nRaised by 2: Night-time militia movement near Adre is not in any public reporting yet. (single-source).\n\nRaised by 2: Camp capacity in Ouaddai is already past what the sites were planned for. (corroborated).\n\nRaised by 1: held in the verification queue (one expert) (not checked).\n\nExpansion of cross-border attacks and insecurity - 40% complete puts the trigger 'Expansion of cross-border attacks and insecurity' at 40% complete. (https://reliefweb.int/report/chad/unfpa-situation-report-chad-humanitarian-response-1-30-april-2026)\n\nAttacks on strategic infrastructure in Chad - 10% complete puts the trigger 'Attacks on strategic infrastructure in Chad' at 10% complete. (https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions)\n\nRenewed proxy mobilisation and cross-border armed group activity - 20% complete puts the trigger 'Renewed proxy mobilisation and cross-border armed group activity' at 20% complete. (https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions)\n\nIntegrity note (shared_origin): Two 'what are we missing' entries may share an origin (near-identical wording).\n\nSurprisingly-popular (experimental): yes. Actual share above 0.5 0.6667 against a predicted 0.6417.\n\nProbability band to number is an assumption of this build, not an ACAPS mapping: {'Very Low': 0.05, 'Low': 0.25, 'Medium': 0.5, 'High': 0.75, 'Very High': 0.95}.",
   "claims": [
     {
       "claim_id": "C1",
-      "text": "The panel's equal-weight mean probability is 0.66 (n=8), against the current ACAPS rating of High.",
+      "text": "The panel's equal-weight mean probability is 0.65 (n=8), against the current ACAPS rating of High.",
       "evidence_kind": "panel",
       "evidence_ref": "P-0001:mean",
       "numbers": [
-        0.6583,
+        0.6517,
         8.0
       ]
     },
     {
       "claim_id": "C2",
-      "text": "Panel answers run from 0.30 to 0.85 (IQR 0.25), so the group is genuinely split.",
+      "text": "Panel answers run from 0.30 to 0.85 (IQR 0.28), so the group is genuinely split.",
       "evidence_kind": "panel",
       "evidence_ref": "P-0001:spread",
       "numbers": [
         0.3,
         0.85,
-        0.25
+        0.28
       ]
     },
     {
@@ -143,19 +143,19 @@
       "status": "corroborated"
     },
     {
-      "theme": "Seasonal access after the rains will decide whether any of this can be reached.",
+      "theme": "held in the verification queue (one expert)",
       "status": "not checked"
     },
     {
-      "theme": "Border raids have slowed since mid-September; the pressure is displacement, not attacks.",
+      "theme": "held in the verification queue (one expert)",
       "status": "not checked"
     },
     {
-      "theme": "I work on prices, not protection. Ask me about the market in Abeche.",
+      "theme": "held in the verification queue (one expert)",
       "status": "not checked"
     },
     {
-      "theme": "Nothing I have seen this week would move me either way.",
+      "theme": "held in the verification queue (one expert)",
       "status": "not checked"
     }
   ],
@@ -190,26 +190,26 @@
   ],
   "status": "accepted",
   "decided_by": "analyst",
-  "decided_at": "2026-11-07T16:10:54+00:00",
+  "decided_at": "2026-11-07T17:56:29+00:00",
   "note": "Accepted. The panel and the export agree on direction; the spread is in the ledger with the minority reasons.",
   "generator": "deterministic-template",
-  "generated_at": "2026-11-07T16:10:54+00:00",
+  "generated_at": "2026-11-07T17:56:29+00:00",
   "served_from": "live",
   "ledger_entry": {
     "risk_id": "R1043",
     "pulse_id": "P-0001",
-    "sealed_at": "2026-11-07T16:10:52+00:00",
-    "group_probability": 0.6583,
+    "sealed_at": "2026-11-07T17:56:27+00:00",
+    "group_probability": 0.6517,
     "acaps_probability": "High",
     "acaps_level": "High",
     "proposed_probability": "High",
     "decision": "accepted",
     "outcome": null,
     "resolved_at": null,
-    "verify_hash": "608c3b99b60a18e16e40f976dda4e2c24ab61eb32f41265994f772f606dc9be8",
+    "verify_hash": "6f25f50ef53b1e86a08214be941df7ad9446144c22f25648a166f4e01d20f0b4",
     "honesty": {
       "n": 8,
-      "agreement": 0.6583,
+      "agreement": 0.6517,
       "spread": [
         0.3,
         0.85
@@ -227,7 +227,10 @@
         "by_when": "2026-12-01"
       },
       "panel_view_rejected": false,
-      "analyst_rationale": null
+      "analyst_rationale": null,
+      "relayed_share": 0.125,
+      "corrections": 1,
+      "reidentification_note": "In a panel of eight a distinctive reason may identify its author to colleagues; experts were told this before answering."
     }
   }
 }

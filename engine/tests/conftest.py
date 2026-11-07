@@ -2,6 +2,12 @@
 development values before anything imports the app."""
 from __future__ import annotations
 import os
+import sys
+from pathlib import Path
+
+# So `from helpers import ...` works however pytest was invoked. tests/ is not a package (there
+# is no __init__.py) and pytest's rootdir insertion puts the repo on the path, not this folder.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 os.environ.setdefault("COMMITMENT_SALT", "test-salt")
 os.environ.setdefault("PSEUDONYM_KEY", "test-pseudonym-key")

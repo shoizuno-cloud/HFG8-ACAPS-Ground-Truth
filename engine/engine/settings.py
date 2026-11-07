@@ -29,6 +29,7 @@ class Settings:
     git_sha: str
     built_at: str
     k_min: int
+    asked_by: str
 
     @property
     def is_prod(self) -> bool:
@@ -44,4 +45,7 @@ def load() -> Settings:
         git_sha=os.environ.get("GIT_SHA", "unknown"),
         built_at=os.environ.get("BUILT_AT", "unknown"),
         k_min=int(os.environ.get("K_MIN", "5")),
+        # Who the card says is asking. The card is meant to read like a note from a colleague
+        # (section 8), and a note from nobody is a survey.
+        asked_by=os.environ.get("ASKED_BY", "Alex, ACAPS Risk Radar"),
     )

@@ -127,13 +127,17 @@ test("expert invitations stay no-login, accept abstentions and explain limits", 
   ).toBeVisible();
   await expect(page.locator(".timer")).toHaveCount(0);
   await expect(
-    page.getByText("Distinctive wording can be recognised", { exact: false }),
+    page.getByText("may identify its author to colleagues", { exact: false }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Outside my expertise", exact: true })
     .click();
   await expect(page.getByRole("slider")).toHaveCount(0);
   await page.getByRole("button", { name: "Submit", exact: true }).click();
+  // v3.4: Submit opens a confirmation screen and commits nothing. A link click, a mail scanner
+  // or a link preview can reach the draft; only Confirm records an answer.
+  await expect(page.getByRole("heading", { name: "Is this right?" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(
     page.getByRole("heading", {
       name: "Submitted. You’ll get the group outcome.",

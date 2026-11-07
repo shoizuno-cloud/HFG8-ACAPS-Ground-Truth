@@ -248,11 +248,44 @@ export function GroupChart({
           {percent(result.spread.max)} · IQR {percent(result.spread.iqr)}.
           Secondary weighted mean: {percent(result.weighted_mean)}.
         </p>
-        <h3>Minority reasons</h3>
-        {result.minority_rationales.length ? (
-          result.minority_rationales.map((reason, i) => <p key={i}>{reason}</p>)
+        <h3>Disagreement</h3>
+        {/* Unattributed, and written from themes rather than quoted. In a panel of eight a
+            quoted line identifies its author to the colleagues who sat on it, so the sentences
+            themselves live in the access-logged verification queue. */}
+        {result.disagreement?.length ? (
+          result.disagreement.map((item, i) => (
+            <p key={i}>
+              <strong>
+                {item.n} {item.position === "lower" ? "below" : "above"} the
+                mean:
+              </strong>{" "}
+              {item.summary}
+            </p>
+          ))
         ) : (
-          <p>No minority reasons supplied.</p>
+          <p>No answer sat far enough from the mean to count as disagreement.</p>
+        )}
+        <h3>Missing evidence</h3>
+        {result.missing_evidence?.length ? (
+          <ul>
+            {result.missing_evidence.map((item, i) => (
+              <li key={i}>
+                {item.theme} <span className="panel-caption">({item.n})</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Nobody named missing evidence on this round.</p>
+        )}
+        {typeof result.verification_queue_count === "number" && (
+          <p className="panel-caption">
+            {result.verification_queue_count} distinctive lines are in the
+            verification queue, which is read with a who and a why and logs
+            every read.
+          </p>
+        )}
+        {result.number_note && (
+          <p className="panel-caption">{result.number_note}</p>
         )}
         <p className="panel-caption">
           SP is experimental and does not replace the equal-weight mean. Method:{" "}
@@ -935,7 +968,7 @@ function LiveDesk() {
             </div>
             <aside className="desk-side">
               <Section title="ACAPS edition evidence">
-                {pulse?.evidence.length ? (
+                {pulse?.evidence?.length ? (
                   pulse.evidence.map((e, i) => (
                     <EvidenceLine key={i} value={e} />
                   ))

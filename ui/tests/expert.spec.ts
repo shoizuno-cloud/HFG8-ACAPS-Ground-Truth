@@ -1,5 +1,10 @@
 import { expect } from "@playwright/test";
 import { test } from "./workspace-session";
+import result from "../../fixtures/GET_pulses_result.json" with { type: "json" };
+// Read from the fixture, never retyped: the last set of hard-coded percentages in
+// these specs still said 69 % long after the engine had stopped producing it.
+const meanPercent = `${Math.round(result.mean * 100)}%`;
+const meanTwoDp = result.mean.toFixed(2);
 test("expert card fits, supports keyboard sliders and seals selected mask", async ({
   page,
 }, info) => {
@@ -27,6 +32,10 @@ test("expert card fits, supports keyboard sliders and seals selected mask", asyn
     fullPage: true,
   });
   await page.getByRole("button", { name: "Submit" }).click();
+  // v3.4: Submit opens a confirmation screen and commits nothing. A link click, a mail scanner
+  // or a link preview can reach the draft; only Confirm records an answer.
+  await expect(page.getByRole("heading", { name: "Is this right?" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(
     page.getByRole("heading", {
       name: "Submitted. You’ll get the group outcome.",
@@ -45,7 +54,7 @@ test("round two and empty invitation render meaningful states", async ({
     page.getByRole("heading", { name: "How the panel answered" }),
   ).toBeVisible();
   await expect(
-    page.getByText("8 synthetic answers · Equal-weight mean 66%"),
+    page.getByText(`8 synthetic answers · Equal-weight mean ${meanPercent}`),
   ).toBeVisible();
   await page.getByLabel("I changed my mind after seeing the panel").check();
   await page.goto("/e/empty");

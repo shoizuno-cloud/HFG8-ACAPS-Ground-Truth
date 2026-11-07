@@ -1,6 +1,6 @@
 """The section 5 routes added in v3.2, on the product surface.
 
-/credentials, /registry, /committee, /ledger/{id}/attestation, /anchors, /me/{token}/patterns --
+/credentials, /registry, /committee, /ledger/{id}/attestation, /anchors, /committee/patterns --
 plus the two changes to existing routes: an answer may carry a credential or a proof, and a resolve
 signs an outcome attestation.
 """
@@ -96,9 +96,17 @@ def test_credentials_issue_signs_blinded_values_and_never_sees_the_token(seeded)
     # Spend it on a real answer, then try to spend it again.
     link = next(row for row in client.get("/api/demo/links").json()["links"]
                 if not row["answered"])
-    answered = client.post(f"/api/e/{link['token']}/answer", json={
-        "mask": "anonymous", "probability": 0.6, "confidence": 3, "source_tag": "read",
+    # The credential is spent by the confirmation, never by the draft: a token burned on an
+    # answer nobody confirmed would be this expert's one chance at the pulse, spent by a link
+    # preview.
+    drafted = client.post(f"/api/e/{link['token']}/answer", json={
+        "mask": "anonymous", "stance": "estimate", "likelihood_word": "even",
+        "probability": 0.6, "confidence": "fairly sure", "source_tag": "read",
         "missing": "Spent a blind credential.", "round": 1,
+    })
+    assert drafted.status_code == 200
+    answered = client.post(f"/api/e/{link['token']}/confirm", json={
+        "confirm_token": drafted.json()["confirm_token"],
         "credential": {"token_id": token_id, "signature": signature},
     })
     assert answered.status_code == 201
@@ -107,8 +115,13 @@ def test_credentials_issue_signs_blinded_values_and_never_sees_the_token(seeded)
         "line": answered.json()["credential"]["line"],
     }
 
-    second = client.post(f"/api/e/{link['token']}/answer", json={
-        "mask": "anonymous", "probability": 0.6, "round": 1,
+    other = next(row for row in client.get("/api/demo/links").json()["links"]
+                 if not row["answered"] and row["token"] != link["token"])
+    again = client.post(f"/api/e/{other['token']}/answer", json={
+        "mask": "anonymous", "stance": "estimate", "likelihood_word": "likely", "round": 1,
+    })
+    second = client.post(f"/api/e/{other['token']}/confirm", json={
+        "confirm_token": again.json()["confirm_token"],
         "credential": {"token_id": token_id, "signature": signature},
     })
     assert second.status_code == 409
@@ -127,10 +140,12 @@ def test_an_anonymous_answer_without_a_credential_says_which_path_ran(seeded):
     client, _ = seeded
     link = next(row for row in client.get("/api/demo/links").json()["links"]
                 if not row["answered"])
-    body = client.post(f"/api/e/{link['token']}/answer", json={
-        "mask": "anonymous", "probability": 0.5, "confidence": 3, "round": 1,
-        "missing": "No credential presented.",
+    drafted = client.post(f"/api/e/{link['token']}/answer", json={
+        "mask": "anonymous", "stance": "estimate", "likelihood_word": "even",
+        "confidence": "not sure", "round": 1, "missing": "No credential presented.",
     }).json()
+    body = client.post(f"/api/e/{link['token']}/confirm",
+                       json={"confirm_token": drafted["confirm_token"]}).json()
     assert body["credential"]["spent"] is True
     assert body["credential"]["unlinkable"] is False
     assert "did not bring its own" in body["credential"]["line"]
@@ -140,8 +155,11 @@ def test_a_membership_proof_is_refused_while_the_flag_is_off(seeded):
     client, _ = seeded
     link = next(row for row in client.get("/api/demo/links").json()["links"]
                 if not row["answered"])
-    refused = client.post(f"/api/e/{link['token']}/answer", json={
-        "mask": "pseudonym", "probability": 0.5, "round": 1,
+    drafted = client.post(f"/api/e/{link['token']}/answer", json={
+        "mask": "pseudonym", "stance": "estimate", "likelihood_word": "even", "round": 1,
+    })
+    refused = client.post(f"/api/e/{link['token']}/confirm", json={
+        "confirm_token": drafted.json()["confirm_token"],
         "zk_proof": {"panel_id": "PAN-TCD", "group_root": "00" * 32,
                      "nullifier": "11" * 32, "points": list(range(8))},
     })
@@ -162,7 +180,7 @@ def test_anchors_lists_a_root_for_the_sealed_day(seeded):
 
 def test_resolving_signs_an_outcome_attestation(seeded):
     client, pulse_id = seeded
-    client.post(f"/api/pulses/{pulse_id}/reveal")
+    client.post(f"/api/pulses/{pulse_id}/reveal", json={"force": True})
     draft = client.post(f"/api/pulses/{pulse_id}/draft").json()
     client.post(f"/api/drafts/{draft['id']}/decision", json={
         "action": "accept", "note": "Accepted for the attestation test.",
@@ -192,7 +210,7 @@ def test_an_unresolved_risk_has_no_attestation(seeded):
 
 def test_ledger_verify_reports_three_separate_checks(seeded):
     client, pulse_id = seeded
-    client.post(f"/api/pulses/{pulse_id}/reveal")
+    client.post(f"/api/pulses/{pulse_id}/reveal", json={"force": True})
     draft = client.post(f"/api/pulses/{pulse_id}/draft").json()
     client.post(f"/api/drafts/{draft['id']}/decision", json={
         "action": "accept", "note": "Accepted so the ledger has an entry.",
@@ -210,42 +228,102 @@ def test_ledger_verify_reports_three_separate_checks(seeded):
     assert "proves nothing" in body["anchor_means"]
 
 
-def test_committee_patterns_are_pseudonymous_and_gated(seeded):
+def test_committee_patterns_are_panel_level_and_name_nobody(seeded):
+    """v3.4: the committee reads about panels, not people. The per-pseudonym report that used to
+    live at this path is gone, and nothing replaced it on the committee side."""
     client, _ = seeded
     from engine.api import HARD, SETTINGS, STORE
     from engine.seeding_hardening import seed_all
-    from engine.store import pseudonym_for
 
     seed_all(HARD, STORE, SETTINGS)
     listed = client.get("/api/committee/patterns").json()
-    assert listed["reports"], "the seeded history opens several reports"
-    assert "X-syn-" not in client.get("/api/committee/patterns").text
+    assert listed["min_pulses"] == 3 and listed["min_per_affiliation"] == 3
+    assert "reports" not in listed, "the per-expert listing is gone"
 
-    pseudonym = listed["reports"][0]["pseudonym"]
-    one = client.get(f"/api/committee/patterns/{pseudonym}").json()
-    assert one["pseudonym"] == pseudonym
-    assert "Never a score" in one["never"]
-    assert client.get("/api/committee/patterns/nobody-here").status_code == 404
+    # The seeded history gives one panel three revealed rounds; the demo panel has one.
+    with_sentences = {panel["panel_id"] for panel in listed["panels"]}
+    assert with_sentences, "the seeded history should open at least one panel report"
+    below = {panel["panel_id"] for panel in listed["not_yet"]}
+    assert "PAN-TCD" in below, "one revealed round is below the floor"
 
-    # The pseudonym has to resolve back to a real panel member, or the route is answering about
-    # nobody; it must never be the internal id that resolution goes through.
-    expert_id = next(e for e in STORE.experts if
-                     pseudonym_for(e, SETTINGS.pseudonym_key) == pseudonym)
-    assert expert_id in STORE.experts and expert_id != pseudonym
+    panel_id = sorted(with_sentences)[0]
+    one = client.get(f"/api/committee/patterns/{panel_id}").json()
+    assert one["never_per_person"] is True
+    assert one["sentences"], "an open report says something"
+    for group in one["by_affiliation"]:
+        assert group["n"] >= 3 or group["affiliation_tag"] == "merged"
+
+    # No internal id and no pseudonym anywhere in any of it.
+    flat = client.get("/api/committee/patterns").text + client.get(
+        f"/api/committee/patterns/{panel_id}").text
+    assert "X-syn-" not in flat
+    for adjective in ("quiet-", "tall-", "dry-", "long-", "early-"):
+        assert adjective not in flat
+    assert client.get("/api/committee/patterns/PAN-NOWHERE").status_code == 404
 
 
-def test_my_own_pattern_report_is_opt_in(seeded):
-    client, _ = seeded
-    from engine.api import HARD, SETTINGS, STORE
-    from engine.seeding_hardening import seed_all
+def test_the_calibration_programme_is_off_and_says_what_it_would_measure(seeded):
+    """Section 6d: the only mechanism here that measures a person ships off, and the disclosure
+    is readable anyway -- what we would measure is not a secret, it is what consent is given
+    against."""
+    client, pulse_id = seeded
+    from engine.api import STORE
 
-    seed_all(HARD, STORE, SETTINGS)
-    token = next(iter(STORE.tokens))
-    refused = client.get(f"/api/me/{token}/patterns")
+    token = next(t for t, (p, _) in STORE.tokens.items() if p == pulse_id)
+    disclosure = client.get("/api/calibration/disclosure").json()
+    assert disclosure["enabled"] is False
+    assert disclosure["min_items"] == 20
+    assert "50 to 100" in disclosure["confidence_prompt"]
+    assert "STOP" in disclosure["disclosure"]
+    assert "deception" in disclosure["not_built"]
+
+    refused = client.post(f"/api/me/{token}/calibration/opt-in",
+                          json={"consent": True, "disclosure_version": disclosure[
+                              "disclosure_version"]})
     assert refused.status_code == 409
-    assert "opt-in" in refused.json()["detail"]
+    assert "nothing about any individual" in refused.json()["detail"]["message"]
+    assert client.get("/api/committee/calibration").json()["enrolled"] == 0
 
-    mine = client.get(f"/api/me/{token}/patterns?opt_in=true")
-    assert mine.status_code == 200
-    assert mine.json()["private"] is True
-    assert client.get("/api/me/not-a-token/patterns?opt_in=true").status_code == 404
+
+def test_the_calibration_programme_needs_consent_against_the_current_disclosure(seeded):
+    client, pulse_id = seeded
+    import os
+
+    from engine.api import HARD, STORE
+    from engine.hardening import calibration as calibration_lib
+
+    token = next(t for t, (p, _) in STORE.tokens.items() if p == pulse_id)
+    os.environ["FF_CALIBRATION"] = "true"
+    try:
+        silent = client.post(f"/api/me/{token}/calibration/opt-in", json={"consent": False})
+        assert silent.status_code == 422 and "explicit yes" in silent.json()["detail"]
+
+        stale = client.post(f"/api/me/{token}/calibration/opt-in",
+                            json={"consent": True, "disclosure_version": "2020-01-01.1"})
+        assert stale.status_code == 422
+        assert "does not carry across" in stale.json()["detail"]
+
+        joined = client.post(f"/api/me/{token}/calibration/opt-in", json={
+            "consent": True, "disclosure_version": calibration_lib.DISCLOSURE_VERSION})
+        assert joined.status_code == 201
+        assert joined.json()["items_still_needed"] == 20
+
+        items = client.get(f"/api/me/{token}/calibration/items").json()
+        assert len(items["items"]) <= 2
+        assert items["items"][0]["source_record"].startswith("ACAPS Risk List export")
+        assert items["items"][0]["source_record"].endswith("Status column")
+        assert items["items"][0]["known_answer"] in ("yes", "no")
+
+        # No report before the floor, and the committee sees a count and nothing else.
+        assert client.get(f"/api/me/{token}/calibration/report").status_code == 404
+        counts = client.get("/api/committee/calibration").json()
+        assert counts["enrolled"] == 1 and counts["reports_available"] == 0
+        assert "belongs to the expert" in counts["means"]
+
+        off = client.post(f"/api/me/{token}/calibration/off").json()
+        assert off["report_off"] is True
+    finally:
+        os.environ.pop("FF_CALIBRATION", None)
+        HARD.calibration.enrolments.clear()
+
+

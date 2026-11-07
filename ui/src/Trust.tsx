@@ -22,7 +22,7 @@ type Loaded = {
   log: AccessEntry[];
   anchors: AnchorRoot[];
   patterns: PatternReport[];
-  waiting: { pseudonym: string; n_pulses: number }[];
+  waiting: { panel_id: string; n_pulses_revealed: number }[];
   never: string;
 };
 
@@ -82,7 +82,7 @@ export function Trust() {
         trust,
         log: log.entries,
         anchors: anchors.roots,
-        patterns: patterns.reports,
+        patterns: patterns.panels,
         waiting: patterns.not_yet,
         never: patterns.never,
       });
@@ -104,7 +104,7 @@ export function Trust() {
   return (
     <Frame
       title="Trust and privacy engineering"
-      subtitle="What each mechanism guarantees, and what it does not. Six mechanisms, and the response-pattern reports."
+      subtitle="What each mechanism guarantees, and what it does not. Six mechanisms, and the panel-level pattern reports."
     >
       {error && (
         <section className="workspace-panel">
@@ -262,20 +262,23 @@ export function Trust() {
             <p className="panel-note">{state.trust.attestation_key.note}</p>
           </Section>
 
-          <Section title="Response-pattern reports">
+          <Section title="Pattern reports (panel-level)">
             <p className="panel-note">{state.never}</p>
             {state.patterns.length === 0 ? (
               <p>
-                No report has opened yet. A report needs at least three pulses from the same panel
-                member.
+                No report has opened yet. A report needs at least three revealed rounds on the
+                same panel.
               </p>
             ) : (
               <div className="pattern-grid">
                 {state.patterns.map((report) => (
-                  <article className="pattern-report" key={report.pseudonym}>
+                  <article className="pattern-report" key={report.panel_id}>
                     <header>
-                      <h3>{report.pseudonym}</h3>
-                      <span>{report.n_pulses} pulses</span>
+                      <h3>{report.panel_id}</h3>
+                      <span>
+                        {report.n_pulses_revealed} revealed ·{" "}
+                        {report.n_experts} members
+                      </span>
                     </header>
                     {report.sentences.length === 0 ? (
                       <p className="pattern-quiet">Nothing here stands out.</p>
@@ -286,27 +289,18 @@ export function Trust() {
                         ))}
                       </ul>
                     )}
-                    <dl className="pattern-figures">
-                      <div>
-                        <dt>Mean Brier</dt>
-                        <dd>{report.calibration.mean_brier ?? "not yet"}</dd>
-                      </div>
-                      <div>
-                        <dt>Extremity</dt>
-                        <dd>{report.extremity ?? "not yet"}</dd>
-                      </div>
-                      <div>
-                        <dt>Abstains</dt>
-                        <dd>{Math.round(report.abstention_rate * 100)}%</dd>
-                      </div>
-                      <div>
-                        <dt>saw / read / heard</dt>
-                        <dd>
-                          {report.source_mix.saw} / {report.source_mix.read} /{" "}
-                          {report.source_mix.heard}
-                        </dd>
-                      </div>
-                    </dl>
+                    {report.by_affiliation.length > 0 && (
+                      <ul className="pattern-affiliations">
+                        {report.by_affiliation.map((group) => (
+                          <li key={group.affiliation_tag}>
+                            <strong>
+                              {group.affiliation_tag} (n = {group.n})
+                            </strong>{" "}
+                            {group.sentence}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </article>
                 ))}
               </div>
@@ -315,7 +309,9 @@ export function Trust() {
               <p className="panel-note">
                 Below the floor, so no report:{" "}
                 {state.waiting
-                  .map((row) => `${row.pseudonym} (${row.n_pulses})`)
+                  .map(
+                    (row) => `${row.panel_id} (${row.n_pulses_revealed} revealed)`,
+                  )
                   .join(", ")}
                 .
               </p>

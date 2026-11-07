@@ -3,7 +3,8 @@
     "FF_PQ": true,
     "FF_BLIND": true,
     "FF_ZK": false,
-    "FF_ANCHOR": true
+    "FF_ANCHOR": true,
+    "FF_CALIBRATION": false
   },
   "mechanisms": [
     {
@@ -12,7 +13,7 @@
       "name": "Post-quantum registry encryption",
       "flag": "FF_PQ",
       "enabled": true,
-      "build": "ML-KEM-768 hybrid (ML-KEM-768 + X25519) wraps the AES-256-GCM key that encrypts the expert-id to identity map at rest; the key is held by the committee service",
+      "build": "ML-KEM-768 for key establishment, hybrid with X25519; AES-256-GCM at rest over the expert-id to identity map; the key is held by the committee service",
       "where_it_shows": "Registry page: the lock line",
       "guarantees": "Long-horizon confidentiality of the identity map against harvest-now-decrypt-later",
       "does_not": "Confidentiality from an administrator with the key; anything about answers"
@@ -94,7 +95,7 @@
   "credentials": {
     "scheme": "rsa-blind-rfc9474",
     "issuer": {
-      "key_id": "a6dfdbe502b5b2e9",
+      "key_id": "ee92bafb718acc3d",
       "bits": 2048,
       "hash": "sha384",
       "salt_length": 0,
@@ -129,6 +130,15 @@
     "guarantees": "Double-answer prevention by nullifier, enforced server-side",
     "does_not": "Membership without identity -- that needs the proof verifier this build does not have; reputation portability; not required for the pilot design"
   },
+  "calibration": {
+    "enrolled": 0,
+    "reports_available": 0,
+    "switched_off": 0,
+    "shared_with_committee": 0,
+    "disclosure_version": "2026-11-07.1",
+    "min_items": 20,
+    "means": "Counts only. A report belongs to the expert, and reaches the committee only if that expert says yes a second time."
+  },
   "served_from": "live",
-  "generated_at": "2026-11-07T16:10:54+00:00"
+  "generated_at": "2026-11-07T17:56:29+00:00"
 }

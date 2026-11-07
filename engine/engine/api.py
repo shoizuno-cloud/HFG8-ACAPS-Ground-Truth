@@ -23,9 +23,12 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Stre
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from . import acaps, alerts as alert_engine, data, draft as draft_builder, logging_conf, settings as settings_mod
+from . import (acaps, alerts as alert_engine, data, draft as draft_builder, logging_conf,
+               probes as probe_lib, settings as settings_mod)
 from . import hardening as hardening_mod
-from .hardening import anchors as anchor_lib, flags as ff, patterns as pattern_lib
+from .hardening import (anchors as anchor_lib, calibration as calibration_lib,
+                        flags as ff, patterns as pattern_lib)
+from . import store
 from .store import Expert, Store, TooFew, now, pseudonym_for, round_verify_hash
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -53,6 +56,43 @@ async def publish(event: str, payload: dict) -> None:
             _subscribers.discard(queue)
 
 
+async def deadline_watch(tick: float = 15.0) -> None:
+    """The scheduler that makes "reveal at the deadline" a mechanism rather than a button label.
+
+    Every tick, any open round whose `expires_at` has passed is revealed, exactly as if the
+    analyst had pressed the button at that moment -- including the insufficient-panel path, which
+    is what happens to a round the deadline closed with four answers in it. Nothing here can
+    reveal a round early: it calls the same `Store.reveal`, which refuses."""
+    while True:
+        try:
+            await asyncio.sleep(tick)
+            for pulse in list(STORE.pulses.values()):
+                if pulse.get("reveal_status") not in (None, "open"):
+                    continue
+                if not store.past(pulse.get("expires_at") or ""):
+                    continue
+                risk = data.get_risk(pulse["risk_id"]) or {}
+                try:
+                    result = STORE.reveal(pulse["id"], risk, "deadline")
+                except store.TooEarly:
+                    continue
+                if result.get("reveal_status") == "insufficient_panel":
+                    await publish("round_insufficient",
+                                  {"pulse_id": pulse["id"], "n": result["n"]})
+                    logging_conf.log(log, "info", "deadline closed an insufficient round",
+                                     pulse_id=pulse["id"], n=result["n"])
+                else:
+                    await publish("round_revealed", {"pulse_id": pulse["id"]})
+                    logging_conf.log(log, "info", "deadline revealed a round",
+                                     pulse_id=pulse["id"], n=result["n"])
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:                                  # noqa: BLE001
+            # A scheduler that dies on one bad pulse stops revealing every other round, which is
+            # a worse failure than the one it just hit.
+            logging_conf.log(log, "error", "deadline watch error", error=str(exc))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logging_conf.configure(SETTINGS.log_level)
@@ -77,7 +117,12 @@ async def lifespan(app: FastAPI):
                              scores=hardening_seed["scores_written"],
                              group_root=hardening_seed["group"]["root"][:12],
                              flags=ff.flags())
+    watcher = None
+    if os.environ.get("DEADLINE_WATCH", "true").lower() == "true":
+        watcher = asyncio.create_task(deadline_watch())
     yield
+    if watcher:
+        watcher.cancel()
     logging_conf.log(log, "info", "shutting down")
 
 
@@ -396,6 +441,13 @@ def freeze_contract(risk_id: str, body: dict = Body(default_factory=dict)):
     if missing:
         raise HTTPException(422, f"a question contract needs: {', '.join(missing)}")
     contract = {**{field: body[field] for field in required}, "risk_id": risk_id, "frozen_at": now()}
+    # Optional, and both only ever copied, never composed from the risk: the threshold is the line
+    # the adjudication rule will be read against, and the text is the sentence the card prints.
+    # If the analyst wrote them here they are frozen with the rest; if not, the card falls back to
+    # a sentence built from the event, which is clumsier but cannot drift from the contract.
+    for extra in ("threshold", "text"):
+        if body.get(extra):
+            contract[extra] = body[extra]
     STORE.contracts[risk_id] = contract
     return envelope(contract)
 
@@ -531,15 +583,66 @@ def _theme(trigger: dict) -> str | None:
 
 
 # -- pulses --------------------------------------------------------------------
-def _build_pulse(risk: dict, reason: str, question: str | None, evidence: list[dict]) -> dict:
+def _human_date(iso: str | None) -> str:
+    if not iso:
+        return "the end of the horizon"
+    try:
+        return datetime.fromisoformat(str(iso)[:10]).strftime("%-d %B %Y")
+    except ValueError:
+        try:
+            parsed = datetime.fromisoformat(str(iso)[:10])
+        except ValueError:
+            return str(iso)
+        return f"{parsed.day} {parsed.strftime('%B %Y')}"
+
+
+def _question_object(risk: dict, override: str | dict | None) -> dict:
+    """The question{} object the card shows first (section 4, v3.4).
+
+    It comes from the frozen QuestionContract when one exists, because that is the text the answer
+    will be adjudicated against; a card that asks something looser than the contract collects
+    answers to a question nobody scored. With no contract the pulse falls back to an open question
+    and says so, and the deadline is the risk's own horizon.
+
+    The fallback never names the ACAPS band: the card promises the rating is hidden until after
+    submission, and a question that quotes it would anchor the answer it exists to collect."""
+    if isinstance(override, dict):
+        return {**override, "source": override.get("source", "analyst")}
+    contract = STORE.contracts.get(risk["risk_id"])
+    if contract:
+        deadline = str(contract["horizon_deadline"])[:10]
+        text = contract.get("text") or (
+            f"Will {contract['event'][0].lower()}{contract['event'][1:]} "
+            f"by {_human_date(deadline)}?")
+        return {
+            "event": contract["event"],
+            "location": contract["location"],
+            "threshold": contract.get("threshold") or contract["adjudication_rule"],
+            "deadline": deadline,
+            "text": text,
+            "source": "question_contract",
+            "frozen_at": contract["frozen_at"],
+            "resolution_source": contract["resolution_source"],
+        }
+    deadline = (datetime.now(timezone.utc)
+                + timedelta(days=30 * int(risk.get("horizon_months") or 6))).date().isoformat()
+    event = override or "the level of concern on this risk changes"
+    return {
+        "event": event,
+        "location": risk.get("country") or risk.get("country_iso") or "",
+        "threshold": None,
+        "deadline": deadline,
+        "text": (f"Is the level of concern on this risk still right by {_human_date(deadline)}, "
+                 "and what are we missing?"),
+        "source": "open_question",
+        "note": ("No question contract is frozen for this risk, so this round cannot be scored "
+                 "against an outcome. Freeze one with POST /api/risks/{risk_id}/contract."),
+    }
+
+
+def _build_pulse(risk: dict, reason: str, question: str | dict | None, evidence: list[dict],
+                 expires_at: str | None = None, asked_by: str | None = None) -> dict:
     pulse_id = f"P-{len(STORE.pulses) + 1:04d}"
-    # The default question must not name the ACAPS band. The card claims the rating is hidden until
-    # submission, and a question that quotes it would anchor the answer it is trying to collect --
-    # which is exactly what the blind round exists to prevent.
-    blind_question = (
-        "Is the level of concern on this risk still right, and what are we missing? "
-        "You will see the current ACAPS rating as soon as you submit."
-    )
     pulse = {
         "id": pulse_id,
         "risk_id": risk["risk_id"],
@@ -548,8 +651,13 @@ def _build_pulse(risk: dict, reason: str, question: str | None, evidence: list[d
         "reason": reason,
         "round": 1,
         "evidence": evidence,
-        "question": question or blind_question,
-        "expires_at": (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(timespec="seconds"),
+        "question": _question_object(risk, question),
+        "asked_by": asked_by or SETTINGS.asked_by,
+        # Fixed at send, printed on the card, and the only thing that decides when the round
+        # opens (section 6a as revised in v3.4).
+        "expires_at": expires_at or (datetime.now(timezone.utc)
+                                     + timedelta(hours=24)).isoformat(timespec="seconds"),
+        "reveal_status": "open",
         "n_answers": 0,
     }
     STORE.pulses[pulse_id] = pulse
@@ -562,8 +670,14 @@ async def create_pulse(body: dict = Body(default_factory=dict)):
     found = data.get_risk(risk_id)
     if not found:
         raise HTTPException(404, f"no risk {risk_id} in the export")
+    expires_at = body.get("expires_at")
+    if not expires_at and body.get("expires_in_minutes") is not None:
+        expires_at = (datetime.now(timezone.utc)
+                      + timedelta(minutes=int(body["expires_in_minutes"]))).isoformat(
+                          timespec="seconds")
     pulse = _build_pulse(found, body.get("reason") or "analyst", body.get("question"),
-                         body.get("evidence") or _trigger_evidence(found))
+                         body.get("evidence") or _trigger_evidence(found),
+                         expires_at, body.get("asked_by"))
     await publish("pulse_fired", {"pulse_id": pulse["id"], "risk_id": risk_id})
     logging_conf.log(log, "info", "pulse fired", pulse_id=pulse["id"], risk_id=risk_id,
                      reason=pulse["reason"])
@@ -640,6 +754,37 @@ def tray(pulse_id: str):
 
 
 # -- the expert card -----------------------------------------------------------
+def _panel_size(pulse_id: str) -> int:
+    return sum(1 for pid, _ in STORE.tokens.values() if pid == pulse_id)
+
+
+def _mask_options() -> list[dict]:
+    return [
+        {"id": "known", "label": "named to ACAPS"},
+        {"id": "pseudonym", "label": "nickname to peers"},
+        {"id": "anonymous", "label": "no identity kept",
+         "note": "you will not receive personal feedback on this answer"},
+    ]
+
+
+def _group_view(pulse_id: str) -> dict | None:
+    """What round 2 shows: the anonymised spread and the unattributed disagreement summary.
+    ACAPS's band is not here. The expert sees the band for the first time in the feedback message
+    after the reveal (section 8, v3.4) -- showing it in round 2 would anchor the revision the
+    round exists to collect."""
+    result = STORE.results.get(pulse_id)
+    if not result:
+        return None
+    return {
+        "n": result["n"],
+        "mean": result["mean"],
+        "spread": result["spread"],
+        "distribution": result["distribution"],
+        "disagreement": result.get("disagreement") or [],
+        "acaps_band_shown": False,
+    }
+
+
 @api.get("/e/{token}", tags=["expert"])
 def card(token: str):
     resolved = STORE.resolve_token(token)
@@ -651,45 +796,71 @@ def card(token: str):
         raise HTTPException(404, f"no pulse {pulse_id}")
     risk = data.get_risk(pulse["risk_id"]) or {}
     rnd = 2 if pulse_id in STORE.results else 1
-    group_view = None
-    if rnd == 2:
-        result = STORE.results[pulse_id]
-        group_view = {"mean": result["mean"], "distribution": result["distribution"],
-                      "spread": result["spread"], "n": result["n"]}
-    # The rating is withheld in round 1 so it cannot anchor a first, independent answer. Round 2 is
-    # the opposite by design (section 8): it is the informed round, and it shows ACAPS's rating and
-    # the group alongside it. Hiding it there would withhold the very evidence round 2 exists to add.
     answered = STORE.answered(pulse_id, expert_id)
-    blind = rnd == 1 and not answered
+    # Nothing on this card carries ACAPS's rating, in either round. The severity-change line and
+    # the alert evidence are withheld until the expert has submitted, for the same reason: ACAPS's
+    # own brief calls it the anchoring effect, and the blind round exists to avoid displaying the
+    # anchor. The band appears once, in the feedback message after the reveal.
+    show_evidence = answered or rnd == 2
     public_risk = {key: value for key, value in risk.items()
                    if key not in ("probability_acaps", "level", "probability_assumed_number")}
+    public_pulse = {key: value for key, value in pulse.items() if key != "evidence"}
+    if show_evidence:
+        public_pulse["evidence"] = pulse.get("evidence") or []
+    triggers = [{"id": t["id"], "title": t["title"]} for t in (risk.get("triggers") or [])[:3]]
     return envelope({
-        "pulse": {**pulse, "n_answers": STORE.n_answers(pulse_id)},
-        "risk": public_risk if blind else risk,
+        "pulse": {**public_pulse, "n_answers": STORE.n_answers(pulse_id)},
+        "risk": public_risk,
+        # The first line of the card, exactly as frozen in the question contract.
+        "question": pulse["question"],
+        "asked_by": pulse.get("asked_by"),
         "round": rnd,
-        "group_view_if_round2": group_view,
+        "group_view_if_round2": _group_view(pulse_id) if rnd == 2 else None,
         "already_answered": answered,
-        "mask_options": list(("known", "pseudonym", "anonymous")),
-        "mask_note": "Distinctive wording can be recognised by peers even under a pseudonym.",
-        "stances": ["estimate", "outside_my_expertise", "not_enough_evidence"],
-        "source_tags": ["saw", "read", "heard"],
-        "accuracy_prompt": "Is this something you saw, read, or heard?",
-        "elicitation": "What share of this panel will put the probability above 0.5?",
-        "rating_hidden_until_submission": blind,
-        "blind": blind,
+        "likelihood_words": [dict(word) for word in store.LIKELIHOOD_WORDS],
+        "stances": list(store.STANCES),
+        "mask_options": _mask_options(),
+        "mask_default": None,
+        "mask_note": store.REIDENTIFICATION_NOTE,
+        "optional": {
+            "confidence": list(store.CONFIDENCE_WORDS),
+            "confidence_note": store.CONFIDENCE_SCALE_NOTE,
+            "note_prompt": "What are we missing?",
+            "note_prompt_alternate": "What is the strongest reason this would NOT happen?",
+            "accuracy_prompt": "Is this something you saw, read, or heard?",
+            "source_tags": list(store.SOURCE_TAGS),
+            "trigger_pick_prompt": "Which trigger would move your view most?",
+            "triggers": triggers,
+            "panel_share_prompt": ("What share of this panel will say likely or very likely?"),
+        },
+        "expires_at": pulse.get("expires_at"),
+        "correction_allowed_until": pulse.get("expires_at"),
+        # The three-step card's follow-up questions, chosen on the device from the expert's own
+        # step-1 answers. They travel with the card so no partial answer leaves the phone before
+        # the confirmation, and the conditions only ever read the four numbers this expert just
+        # entered -- nothing a peer set is readable here, so the card cannot herd.
+        "probe_flow": probe_lib.build(risk, expert_id),
+        "probe_note": probe_lib.AGGREGATION_NOTE,
+        "evidence_shown": show_evidence,
+        "acaps_band_shown": False,
+        "commit_note": ("Submitting opens a confirmation screen. Nothing is recorded until you "
+                        "confirm, so a link click or a mail scanner cannot answer for you."),
+        "after_confirm_line": ("Thanks. You'll hear how the panel saw it after the deadline."),
     })
 
 
-def _spend_credential(body: dict, pulse_id: str, expert_id: str) -> dict:
-    """Section 6c item 3 on the answering side.
+def _spend_credential(body: dict, pulse_id: str, expert_id: str, mask: str) -> dict:
+    """Section 6c item 3 on the answering side, at the moment of confirmation.
+
+    The credential is spent by the confirmation, never by the draft: a token burned on an answer
+    nobody confirmed would be a vetted member's one chance at this pulse, spent by a link preview.
 
     A card that presents a credential spends it, and a second spend of the same token is refused.
     A card that presents none still answers -- the magic link already gates this round -- and when
-    the mask is anonymous the server mints and spends one itself so the flow is complete on stage.
-    That fallback is linkable by construction, and the response says so rather than borrowing the
-    unlinkability claim it has not earned."""
+    the mask is 'no identity kept' the server mints and spends one itself so the flow is complete
+    on stage. That fallback is linkable by construction, and the response says so rather than
+    borrowing the unlinkability claim it has not earned."""
     presented = body.get("credential") or {}
-    mask = body.get("mask", "pseudonym")
     if not ff.enabled("FF_BLIND"):
         return {"spent": False, "scheme": "hmac",
                 "line": "FF_BLIND is off: no credential was involved in this answer."}
@@ -729,69 +900,314 @@ def _check_zk(body: dict, pulse_id: str) -> dict | None:
     return verdict
 
 
-@api.post("/e/{token}/answer", status_code=201, tags=["expert"])
-async def answer(token: str, body: dict = Body(default_factory=dict)):
+def _open_round(token: str, round_wanted: int = 1) -> tuple[str, str, dict]:
     resolved = STORE.resolve_token(token)
     if not resolved:
         raise HTTPException(404, "this link is not valid; ask the analyst for a new one")
     pulse_id, expert_id = resolved
-    if pulse_id in STORE.results and int(body.get("round", 1)) == 1:
+    pulse = STORE.pulses.get(pulse_id)
+    if not pulse:
+        raise HTTPException(404, f"no pulse {pulse_id}")
+    if pulse_id in STORE.results and round_wanted == 1:
         raise HTTPException(409, "round 1 is closed on this pulse; this link now opens round 2")
-    credential_result = _spend_credential(body, pulse_id, expert_id)
-    zk_result = _check_zk(body, pulse_id)
+    return pulse_id, expert_id, pulse
+
+
+@api.post("/e/{token}/answer", status_code=200, tags=["expert"])
+def answer(token: str, body: dict = Body(default_factory=dict)):
+    """A draft, and only a draft (section 5, v3.4).
+
+    This is the route a link click, a mail scanner or a link preview can reach, so it commits
+    nothing: it validates the answer, prices a word into the band midpoint, and returns the one
+    line the confirmation screen repeats back with a token to confirm it."""
+    pulse_id, expert_id, pulse = _open_round(token, int(body.get("round", 1)))
+    if STORE.answered(pulse_id, expert_id):
+        raise HTTPException(409, "an answer from this link is already committed; use "
+                                 "PUT /api/e/{token}/answer to change it before the deadline")
+    if store.past(pulse.get("expires_at") or ""):
+        raise HTTPException(409, f"this round closed at {pulse.get('expires_at')}")
     try:
-        sealed = STORE.seal(pulse_id, expert_id, body, SETTINGS.commitment_salt, SETTINGS.pseudonym_key)
+        drafted = STORE.draft(pulse_id, expert_id, body)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
+    answer_view = drafted.pop("answer")
+    return envelope({
+        **drafted,
+        "probability_used": answer_view["probability"],
+        "probability_source": answer_view["probability_source"],
+        "number_note": ("You chose a word. If you confirm, the panel mean will use that band's "
+                        "midpoint; add an exact percentage if that is not what you meant."
+                        if answer_view["probability_source"] == "band_midpoint" else
+                        "Your exact percentage is what the panel mean will use."
+                        if answer_view["probability_source"] == "exact" else
+                        "This answer carries no number and is never scored."),
+        "confirm_at": f"/api/e/{token}/confirm",
+        "expires_at": pulse.get("expires_at"),
+    })
+
+
+@api.post("/e/{token}/confirm", status_code=201, tags=["expert"])
+async def confirm(token: str, body: dict = Body(default_factory=dict)):
+    """The commit. The first valid confirmation per expert per pulse counts."""
+    pulse_id, expert_id, pulse = _open_round(token)
+    confirm_token = (body.get("confirm_token") or "").strip()
+    pending = STORE.pending.get(confirm_token)
+    if not pending:
+        raise HTTPException(409, "this confirmation has expired or was already used; open your "
+                                 "link again to answer")
+    if STORE.answered(pulse_id, expert_id):
+        raise HTTPException(409, "an answer from this link is already committed; use "
+                                 "PUT /api/e/{token}/answer to change it before the deadline")
+    mask = pending["answer"]["mask"]
+    credential_result = _spend_credential(body, pulse_id, expert_id, mask)
+    zk_result = _check_zk(body, pulse_id)
+    try:
+        sealed = STORE.confirm(confirm_token, pulse_id, expert_id,
+                               SETTINGS.commitment_salt, SETTINGS.pseudonym_key)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
     STORE.mark_used(token)
     _record_day_roots()
     await publish("answer_sealed", {"pulse_id": pulse_id, "n_answers": STORE.n_answers(pulse_id)})
-    logging_conf.log(log, "info", "answer sealed", pulse_id=pulse_id, mask=sealed.mask,
+    logging_conf.log(log, "info", "answer committed", pulse_id=pulse_id, mask=sealed.mask,
                      n_answers=STORE.n_answers(pulse_id))
-    risk = data.get_risk(STORE.pulses[pulse_id]["risk_id"]) or {}
     return envelope({
         "committed_at": sealed.committed_at,
         "commitment": sealed.commitment,
+        "version": sealed.version,
         "mask": sealed.mask,
         "pseudonym": sealed.pseudonym,
-        "message": "Submitted. You will get the group outcome when this resolves.",
+        "correction_allowed_until": pulse.get("expires_at"),
+        # Handed out exactly once, here. It is how an answer under the 'no identity kept' mask can
+        # still be corrected: that answer stores no expert id, so without this key the only way to
+        # find it again would be a token-to-answer map, which would undo the mask.
+        "edit_key": STORE.take_edit_key(sealed),
+        "edit_key_note": ("Keep this with your link if you may want to change your answer. It is "
+                          "the only handle on an answer with no identity kept, and we store only "
+                          "its hash."),
+        "message": "Thanks. You'll hear how the panel saw it after the deadline.",
         "sealing_note": "The commitment proves when you answered and that you have not changed it. "
                         "It does not hide your answer from the operator of this service.",
-        "acaps_rating_now_visible": {"probability_acaps": risk.get("probability_acaps"),
-                                     "level": risk.get("level")},
+        "acaps_band_shown": False,
+        "band_note": "ACAPS's own rating is in the message you get after the deadline, not here.",
         "credential": credential_result,
         "zk": zk_result,
         "anchor": HARD.anchors.for_day(sealed.committed_at[:10]),
     })
 
 
+@api.put("/e/{token}/answer", tags=["expert"])
+def correct_answer(token: str, body: dict = Body(default_factory=dict)):
+    """A correction, allowed until the deadline printed on the card. Every version is kept and
+    the committee sees them, so a changed view is visible as a change rather than as the only
+    answer that ever existed."""
+    resolved = STORE.resolve_token(token)
+    if not resolved:
+        raise HTTPException(404, "this link is not valid; ask the analyst for a new one")
+    pulse_id, expert_id = resolved
+    pulse = STORE.pulses.get(pulse_id) or {}
+    if store.past(pulse.get("expires_at") or ""):
+        raise HTTPException(409, f"the deadline passed at {pulse.get('expires_at')}; this answer "
+                                 "can no longer be changed")
+    found = STORE.find_answer(pulse_id, expert_id, body.get("edit_key"))
+    if not found:
+        raise HTTPException(404, "no committed answer found for this link. An answer with no "
+                                 "identity kept can only be corrected with the edit key from its "
+                                 "confirmation.")
+    try:
+        updated = STORE.correct(found, body, SETTINGS.commitment_salt)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    _record_day_roots()
+    logging_conf.log(log, "info", "answer corrected", pulse_id=pulse_id, version=updated.version)
+    return envelope({
+        "committed_at": updated.committed_at,
+        "commitment": updated.commitment,
+        "version": updated.version,
+        "previous_versions_kept": len(updated.previous_versions),
+        "correction_allowed_until": pulse.get("expires_at"),
+        "message": "Changed. Your earlier answer is kept with its own timestamp.",
+    })
+
+
+@api.post("/e/{token}/relayed-confirm", tags=["expert"])
+def relayed_confirm(token: str, body: dict = Body(default_factory=dict)):
+    """An answer taken by phone, on paper or through a liaison is entered by the analyst and
+    labelled relayed. It does not count until the expert confirms it here, through their own
+    link: otherwise the panel could be filled in by the people who convene it."""
+    resolved = STORE.resolve_token(token)
+    if not resolved:
+        raise HTTPException(404, "this link is not valid; ask the analyst for a new one")
+    pulse_id, expert_id = resolved
+    found = STORE.find_answer(pulse_id, expert_id, body.get("edit_key"))
+    if not found:
+        raise HTTPException(404, "no answer found for this link")
+    try:
+        STORE.confirm_relayed(found)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    logging_conf.log(log, "info", "relayed answer confirmed", pulse_id=pulse_id)
+    return envelope({
+        "confirmed_by_expert_at": found.confirmed_by_expert_at,
+        "relayed_by": found.relayed_by,
+        "counts": found.counts(),
+        "message": "Confirmed. Your answer now counts in this round.",
+    })
+
+
+def _n_text(n: int, panel: int) -> str:
+    """Qualitative on purpose. Before the deadline no message to an expert may carry a count --
+    a count is the one piece of information that turns a reminder into a nudge toward the group.
+    After the reveal the exact n is public on the ledger; this line is simply how a note to a
+    colleague reads."""
+    if not panel:
+        return f"{n} answers came in"
+    share = n / panel
+    if share >= 0.9:
+        return "everyone on the panel answered"
+    if share >= 0.6:
+        return "most of the panel answered"
+    if share >= 0.4:
+        return "about half the panel answered"
+    return "a minority of the panel answered"
+
+
+@api.get("/e/{token}/feedback", tags=["expert"])
+def feedback(token: str):
+    """The message after the reveal, and the only place an expert sees ACAPS's band (section 8)."""
+    resolved = STORE.resolve_token(token)
+    if not resolved:
+        raise HTTPException(404, "this link is not valid; ask the analyst for a new one")
+    pulse_id, expert_id = resolved
+    pulse = STORE.pulses.get(pulse_id) or {}
+    result = STORE.results.get(pulse_id)
+    if not result:
+        attempt = STORE.reveal_attempts.get(pulse_id)
+        if attempt:
+            return envelope({
+                "pulse_id": pulse_id,
+                "reveal_status": "insufficient_panel",
+                "message": ("Too few of the panel answered, so nothing was opened -- not even to "
+                            "the analyst. Your answer is kept and was not shown to anyone."),
+                "acaps_band_shown": False,
+            })
+        raise HTTPException(404, f"this round has not opened yet; it opens at "
+                                 f"{pulse.get('expires_at')}")
+    risk = data.get_risk(pulse.get("risk_id") or "") or {}
+    mine = STORE.find_answer(pulse_id, expert_id, None)
+    entry = next((e for e in STORE.ledger if e["pulse_id"] == pulse_id), None)
+    your_answer = None
+    if mine:
+        your_answer = {"likelihood_word": mine.likelihood_word, "probability": mine.probability,
+                       "probability_source": mine.probability_source, "stance": mine.stance,
+                       "version": mine.version}
+    return envelope({
+        "pulse_id": pulse_id,
+        "reveal_status": "revealed",
+        "revealed_at": result["revealed_at"],
+        "n_text": _n_text(result["n"], _panel_size(pulse_id)),
+        "n": result["n"],
+        "group_mean": result["mean"],
+        "spread": result["spread"],
+        "disagreement": result.get("disagreement") or [],
+        "number_note": result.get("number_note"),
+        "your_answer": your_answer,
+        "your_answer_note": (None if your_answer else
+                             "You answered with no identity kept, so this service cannot tell "
+                             "which answer was yours and shows you the group view only."),
+        "acaps_band": risk.get("probability_acaps"),
+        "acaps_level": risk.get("level"),
+        "acaps_band_shown": True,
+        "analyst_decision": (entry or {}).get("decision") or "not decided yet",
+        "analyst_rationale": ((entry or {}).get("honesty") or {}).get("analyst_rationale"),
+        "attribution": (mine.pseudonym if mine and mine.mask == "pseudonym" else
+                        "named to ACAPS" if mine and mine.mask == "known" else None),
+        "outcome_report_pending": (entry or {}).get("outcome") is None,
+        "reidentification_note": store.REIDENTIFICATION_NOTE,
+    })
+
+
 # -- reveal and aggregate ------------------------------------------------------
 @api.post("/pulses/{pulse_id}/reveal", tags=["round"])
-async def reveal(pulse_id: str):
+async def reveal(pulse_id: str, body: dict = Body(default_factory=dict)):
+    """Reveal at the deadline. Before it, only with `force`, and then the result says so."""
     pulse = STORE.pulses.get(pulse_id)
     if not pulse:
         raise HTTPException(404, f"no pulse {pulse_id}")
     risk = data.get_risk(pulse["risk_id"]) or {}
+    reason = "analyst_before_deadline" if body.get("force") else "deadline"
     try:
-        result = STORE.reveal(pulse_id, risk)
-    except TooFew as exc:
-        raise HTTPException(409, str(exc)) from exc
+        result = STORE.reveal(pulse_id, risk, reason)
+    except store.TooEarly as exc:
+        raise HTTPException(409, {
+            "message": str(exc),
+            "expires_at": exc.expires_at,
+            "why": "The reveal time is fixed when the pulse is sent, so no one can open a round "
+                   "early because they like the answers that arrived first.",
+        }) from exc
+    if result.get("reveal_status") == "insufficient_panel":
+        await publish("round_insufficient", {"pulse_id": pulse_id, "n": result["n"]})
+        logging_conf.log(log, "info", "insufficient panel", pulse_id=pulse_id, n=result["n"])
+        return envelope(result)
     await publish("round_revealed", {"pulse_id": pulse_id})
-    logging_conf.log(log, "info", "round revealed", pulse_id=pulse_id, n=result["n"])
+    logging_conf.log(log, "info", "round revealed", pulse_id=pulse_id, n=result["n"],
+                     reason=reason)
     return envelope(_public_result(result))
 
 
 @api.get("/pulses/{pulse_id}/result", tags=["round"])
 def result(pulse_id: str):
     found = STORE.results.get(pulse_id)
-    if not found:
-        raise HTTPException(404, f"pulse {pulse_id} has not been revealed")
-    return envelope(_public_result(found))
+    if found:
+        return envelope(_public_result(found))
+    attempt = STORE.reveal_attempts.get(pulse_id)
+    if attempt:
+        return envelope(attempt)
+    raise HTTPException(404, f"pulse {pulse_id} has not been revealed")
+
+
+MODERATOR_ONLY = ("integrity_notes", "probe_summary")
 
 
 def _public_result(result: dict) -> dict:
-    """Integrity notes are moderator-only and are stripped here (section 4)."""
-    return {key: value for key, value in result.items() if key != "integrity_notes"}
+    """Moderator-only keys are stripped here (section 4): the integrity notes, and the counts of
+    the card's closed follow-ups, which are small enough on a panel of eight to point at a
+    person when read beside the rest of the page."""
+    return {key: value for key, value in result.items() if key not in MODERATOR_ONLY}
+
+
+# -- the verification queue ----------------------------------------------------
+@api.get("/verification-queue/{pulse_id}", tags=["round"])
+def verification_queue(pulse_id: str, who: str = "", why: str = ""):
+    """The distinctive free text, which is deliberately not in the round result. Reading it is an
+    attributed act: who and why, logged beside the entries."""
+    if pulse_id not in STORE.verification_queue:
+        raise HTTPException(404, f"no verification queue for {pulse_id}; reveal the round first")
+    try:
+        entries = STORE.read_verification_queue(pulse_id, who, why)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return envelope({
+        "pulse_id": pulse_id,
+        "entries": entries,
+        "n_entries": len(entries),
+        "read_by": who,
+        "why": why,
+        "means": ("These lines were written by one person each. They are the most worth checking "
+                  "and the most likely to identify their author in a panel of eight, which is why "
+                  "they are here and not in the published result."),
+        "corroboration_note": ("Absence from the checked databases is not evidence of falsity."),
+    })
+
+
+@api.get("/committee/verification-log", tags=["committee"])
+def verification_log():
+    log_entries = STORE.queue_access_log
+    return envelope({
+        "reads": list(reversed(log_entries)),
+        "n_reads": len(log_entries),
+        "means": "Every read of a verification queue, with who asked and why.",
+    })
 
 
 @api.get("/integrity/{pulse_id}", tags=["round"])
@@ -802,6 +1218,10 @@ def integrity(pulse_id: str):
     return envelope({
         "pulse_id": pulse_id,
         "integrity_notes": found.get("integrity_notes", []),
+        # Counts of the card's closed follow-ups. Moderator-only for the same reason as the
+        # notes: a one-of-eight option count read beside a distinctive line names a person.
+        "probe_summary": found.get("probe_summary", []),
+        "missing_themes": found.get("missing_themes", []),
         "moderator_only": True,
         "note": "Descriptions, not diagnoses. Nothing here penalises an expert automatically.",
     })
@@ -1019,31 +1439,70 @@ def calibration(token: str):
     })
 
 
-@api.get("/analyst/board", tags=["desk"])
-def board():
-    by_expert: dict[str, list[float]] = {}
-    for score in STORE.scores:
-        by_expert.setdefault(score["expert_internal_id"], []).append(score["brier"])
-    supers = []
-    for expert_id, briers in by_expert.items():
-        if len(briers) < 5:
-            continue   # no track record, no board entry
-        expert = STORE.experts.get(expert_id)
-        supers.append({
-            "pseudonym": pseudonym_for(expert_id, SETTINGS.pseudonym_key),
-            "n": len(briers),
-            "mean_brier": round(sum(briers) / len(briers), 4),
-            "weight": round(expert.weight, 4) if expert else 1.0,
+@api.get("/committee/scoring", tags=["committee"])
+def committee_scoring():
+    """Panel-level scoring, replacing the per-expert board of v3.3 and earlier (section 5, v3.4).
+
+    The old board ranked pseudonyms by Brier score. Even without names and even committee-side,
+    that is a leaderboard of people built from answers to questions that never said they were
+    being scored against each other. What the committee gets now is how each *panel* did against
+    the ACAPS band it was asked about, which is what tells them whether the loop is worth
+    running. Per-expert numbers exist only inside the consent-gated calibration programme."""
+    panels: dict[str, dict] = {}
+    for pulse in STORE.pulses.values():
+        panel_id = pulse.get("panel_id")
+        if not panel_id:
+            continue
+        row = panels.setdefault(panel_id, {
+            "panel_id": panel_id, "risk_ids": [], "n_pulses": 0, "n_answers": 0,
+            "n_resolved": 0, "panel_brier": None, "acaps_band_brier": None, "status": "open",
         })
-    supers.sort(key=lambda row: row["mean_brier"])
+        row["n_pulses"] += 1
+        row["n_answers"] += STORE.n_answers(pulse["id"])
+        if pulse["risk_id"] not in row["risk_ids"]:
+            row["risk_ids"].append(pulse["risk_id"])
+
+    # Brier of the panel's own mean against the outcome, and of the ACAPS band mapped to a number
+    # against the same outcome. The mapping is an assumption of this build and the payload says so.
+    for entry in STORE.ledger:
+        if entry.get("outcome") is None:
+            continue
+        pulse = STORE.pulses.get(entry["pulse_id"]) or {}
+        row = panels.get(pulse.get("panel_id"))
+        if not row:
+            continue
+        truth = 1.0 if entry["outcome"] == "materialised" else 0.0
+        group = entry.get("group_probability")
+        acaps = data.band_to_number(entry.get("acaps_probability"))
+        row.setdefault("_panel", []).append((group - truth) ** 2 if group is not None else None)
+        row.setdefault("_acaps", []).append((acaps - truth) ** 2 if acaps is not None else None)
+        row["n_resolved"] += 1
+        row["status"] = "resolved"
+
+    rows = []
+    for row in panels.values():
+        for key, out in (("_panel", "panel_brier"), ("_acaps", "acaps_band_brier")):
+            scores = [s for s in row.pop(key, []) if s is not None]
+            row[out] = round(sum(scores) / len(scores), 4) if scores else None
+        rows.append(row)
+    rows.sort(key=lambda r: r["panel_id"])
+
     divergence = []
     for entry in STORE.ledger:
         acaps = data.band_to_number(entry.get("acaps_probability"))
         if entry.get("group_probability") is not None and acaps is not None:
             divergence.append({"risk_id": entry["risk_id"], "panel": entry["group_probability"],
                                "acaps": acaps})
-    return envelope({"super_estimators": supers, "divergence": divergence,
-                     "note": "A board entry needs 5 resolved risks. Empty is the honest state early on."})
+    return envelope({
+        "panels": rows,
+        "divergence": divergence,
+        "note": ("Panel-level only. No per-expert scores exist outside the consent-gated "
+                 "calibration programme, and none of these numbers weights anybody's answer."),
+        "band_assumption": (f"The ACAPS band is mapped to a number by this build, not by ACAPS: "
+                            f"{data.PROBABILITY_BANDS}."),
+        "empty_note": "A panel with no resolved risk has no Brier score. Empty is the honest "
+                      "state early on.",
+    })
 
 
 @api.get("/sim/proof", tags=["desk"])
@@ -1131,14 +1590,6 @@ def _expert_by_pseudonym(pseudonym: str) -> str | None:
 def _acaps_probability(risk_id: str) -> float | None:
     risk = data.get_risk(risk_id) or {}
     return risk.get("probability_assumed_number")
-
-
-def _pattern_report(expert_id: str) -> dict:
-    return pattern_lib.report(
-        STORE, expert_id, pseudonym_for(expert_id, SETTINGS.pseudonym_key),
-        acaps_probability=_acaps_probability,
-        pseudonym_of=lambda other: pseudonym_for(other, SETTINGS.pseudonym_key),
-    )
 
 
 @api.get("/trust/status", tags=["trust"])
@@ -1282,46 +1733,178 @@ def zk_status():
     return envelope(HARD.membership.status())
 
 
-@api.get("/committee/patterns/{pseudonym}", tags=["trust"])
-def committee_patterns(pseudonym: str):
-    """Section 6d, committee side. Pseudonyms in, pseudonyms out: no names anywhere in here."""
-    expert_id = _expert_by_pseudonym(pseudonym)
-    if not expert_id:
-        raise HTTPException(404, f"no panel member answers to {pseudonym}")
-    return envelope(_pattern_report(expert_id))
+@api.get("/committee/patterns/{panel_id}", tags=["committee"])
+def committee_patterns(panel_id: str):
+    """Section 6d, committee side, panel-level only.
+
+    v3.4 removed the per-expert report that used to live at this path under a pseudonym. The
+    reason is in the section: nothing about a person is computed from a pulse, because the pulse
+    never told them it was measuring them. What the committee reads is about the panel."""
+    known = {pulse.get("panel_id") for pulse in STORE.pulses.values()}
+    if panel_id not in known:
+        raise HTTPException(404, f"no panel {panel_id} has been pulsed on this instance")
+    return envelope(pattern_lib.report(STORE, panel_id))
 
 
-@api.get("/committee/patterns", tags=["trust"])
+@api.get("/committee/patterns", tags=["committee"])
 def committee_patterns_all():
-    """Every report that has opened. Experts below the floor are listed as not available, with
-    their count, so the committee sees the floor working rather than an empty page."""
-    reports, waiting = [], []
-    for expert_id in STORE.experts:
-        found = _pattern_report(expert_id)
-        (reports if found["available"] else waiting).append(found)
+    """Every panel, with the ones below the floor shown as below the floor rather than omitted:
+    the committee should see the floor working, not an empty page."""
+    panels = sorted({pulse.get("panel_id") for pulse in STORE.pulses.values() if pulse.get("panel_id")})
+    reports = [pattern_lib.report(STORE, panel_id) for panel_id in panels]
     return envelope({
-        "reports": sorted(reports, key=lambda r: r["pseudonym"]),
-        "not_yet": sorted(({"pseudonym": r["pseudonym"], "n_pulses": r["n_pulses"]}
-                           for r in waiting), key=lambda r: r["pseudonym"]),
+        "panels": [r for r in reports if r["sentences"]],
+        "not_yet": [{"panel_id": r["panel_id"], "n_pulses_revealed": r["n_pulses_revealed"]}
+                    for r in reports if not r["sentences"]],
         "min_pulses": pattern_lib.MIN_PULSES,
+        "min_per_affiliation": pattern_lib.MIN_PER_AFFILIATION,
         "never": pattern_lib.NEVER,
     })
 
 
-@api.get("/me/{token}/patterns", tags=["trust"])
-def my_patterns(token: str, opt_in: bool = False):
-    """Section 6d, expert side. Opt-in, so nobody is handed a reading of themselves unasked."""
+# -- the consent-gated calibration programme (section 6d, FF_CALIBRATION) ------
+def _calibration_guard() -> None:
+    if not ff.enabled("FF_CALIBRATION"):
+        raise HTTPException(409, {
+            "message": "FF_CALIBRATION is off on this build, so nothing about any individual is "
+                       "being measured.",
+            "what_it_would_be": calibration_lib.DISCLOSURE,
+            "why_off": "It is the only mechanism here that measures a person. It ships off so "
+                       "that the default state of the system is one where nobody is measured.",
+        })
+
+
+def _enrolled_expert(token: str) -> str:
     resolved = STORE.resolve_token(token)
     if not resolved:
         raise HTTPException(404, "this link is not valid")
-    _, expert_id = resolved
-    if not opt_in:
-        raise HTTPException(409, "this report is opt-in. Add ?opt_in=true to ask for it. It is "
-                                 "never shown to anyone else as a score and never affects your "
-                                 "place on a panel.")
-    return envelope({**_pattern_report(expert_id), "private": True,
-                     "note_to_you": "Yours alone. The committee sees the same sentences under "
-                                    "your pseudonym, and nothing else."})
+    return resolved[1]
+
+
+@api.get("/calibration/disclosure", tags=["calibration"])
+def calibration_disclosure():
+    """The paragraph an expert reads before consenting. Readable with the flag off on purpose:
+    what we would measure is not a secret, it is the thing consent is given against."""
+    return envelope({
+        "enabled": ff.enabled("FF_CALIBRATION"),
+        "disclosure": calibration_lib.DISCLOSURE,
+        "disclosure_version": calibration_lib.DISCLOSURE_VERSION,
+        "min_items": calibration_lib.MIN_ITEMS,
+        "confidence_prompt": calibration_lib.CONFIDENCE_PROMPT,
+        "never": calibration_lib.NEVER,
+        "not_built": ("Fictitious references, response-time and edit-count measures and "
+                      "test-retest traps are deliberately not built: a participant would "
+                      "recognise any of them as deception if we explained it afterwards."),
+    })
+
+
+@api.post("/me/{token}/calibration/opt-in", status_code=201, tags=["calibration"])
+def calibration_opt_in(token: str, body: dict = Body(default_factory=dict)):
+    _calibration_guard()
+    expert_id = _enrolled_expert(token)
+    try:
+        enrolment = HARD.calibration.enrol(
+            expert_id, bool(body.get("consent")),
+            body.get("disclosure_version") or "", now())
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return envelope({**enrolment.as_dict(),
+                     "disclosure": calibration_lib.DISCLOSURE,
+                     "message": "You are in. You will see your own report first, and you can "
+                                "switch it off at any time."})
+
+
+@api.get("/me/{token}/calibration/items", tags=["calibration"])
+def calibration_items(token: str, limit: int = 2):
+    """The next items, and never more than the programme says it sends: at most two a month, on
+    their own, never inside a pulse card."""
+    _calibration_guard()
+    expert_id = _enrolled_expert(token)
+    enrolment = HARD.calibration.get(expert_id)
+    if not enrolment:
+        raise HTTPException(404, "this link is not enrolled in the calibration programme")
+    answered = {answer["item_id"] for answer in enrolment.answers}
+    pool = calibration_lib.items_from_resolved(data.resolved_risks())
+    remaining = [item for item in pool if item["id"] not in answered]
+    return envelope({
+        "items": remaining[:max(1, min(int(limit), 2))],
+        "items_answered": enrolment.items_answered,
+        "items_still_needed": enrolment.as_dict()["items_still_needed"],
+        "confidence_prompt": calibration_lib.CONFIDENCE_PROMPT,
+        "note": "Each item is something ACAPS already has a record of; the record is named on it.",
+    })
+
+
+@api.post("/me/{token}/calibration/items", status_code=201, tags=["calibration"])
+def calibration_answer(token: str, body: dict = Body(default_factory=dict)):
+    _calibration_guard()
+    expert_id = _enrolled_expert(token)
+    wanted = (body.get("item_id") or "").strip()
+    item = next((i for i in calibration_lib.items_from_resolved(data.resolved_risks())
+                 if i["id"] == wanted), None)
+    if not item:
+        raise HTTPException(404, f"no calibration item {wanted}")
+    try:
+        enrolment = HARD.calibration.record(expert_id, item, (body.get("answer") or "").strip(),
+                                            int(body.get("confidence") or 0), now())
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(422, str(exc)) from exc
+    # Whether this one was right is not returned. Item-by-item feedback would turn the programme
+    # into a quiz with a score, and the report is the only output it has.
+    return envelope({**enrolment.as_dict(),
+                     "message": ("Recorded. Nothing comes back item by item; the report comes "
+                                 f"after {calibration_lib.MIN_ITEMS} of them.")})
+
+
+@api.get("/me/{token}/calibration/report", tags=["calibration"])
+def calibration_report(token: str):
+    """The expert's own report, and the first place it exists at all."""
+    _calibration_guard()
+    expert_id = _enrolled_expert(token)
+    enrolment = HARD.calibration.get(expert_id)
+    if not enrolment:
+        raise HTTPException(404, "this link is not enrolled in the calibration programme")
+    try:
+        return envelope({**calibration_lib.report(enrolment), "private": True,
+                         "note_to_you": "Yours alone unless you say otherwise."})
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@api.post("/me/{token}/calibration/share", tags=["calibration"])
+def calibration_share(token: str, body: dict = Body(default_factory=dict)):
+    """The second, separate opt-in: the committee sees the report only after this."""
+    _calibration_guard()
+    expert_id = _enrolled_expert(token)
+    enrolment = HARD.calibration.get(expert_id)
+    if not enrolment:
+        raise HTTPException(404, "this link is not enrolled in the calibration programme")
+    if not enrolment.report_available:
+        raise HTTPException(409, "there is no report to share yet")
+    enrolment.shared_with_committee = bool(body.get("share"))
+    return envelope({**enrolment.as_dict(),
+                     "message": ("Shared with the committee as a paragraph, never as a weight."
+                                 if enrolment.shared_with_committee else
+                                 "Not shared. The committee sees only that an enrolment exists.")})
+
+
+@api.post("/me/{token}/calibration/off", tags=["calibration"])
+def calibration_off(token: str):
+    _calibration_guard()
+    expert_id = _enrolled_expert(token)
+    try:
+        enrolment = HARD.calibration.switch_off(expert_id)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    return envelope({**enrolment.as_dict(),
+                     "message": "Off. The report is no longer computed, and the committee no "
+                                "longer sees that it exists."})
+
+
+@api.get("/committee/calibration", tags=["committee"])
+def committee_calibration():
+    """Counts, flagged. No names, no reports, unless an expert shared one."""
+    return envelope({"enabled": ff.enabled("FF_CALIBRATION"), **HARD.calibration.counts()})
 
 
 # -- the built UI --------------------------------------------------------------
@@ -1345,8 +1928,16 @@ if UI_DIST.exists():
             try:
                 return await super().get_response(path, scope)
             except StarletteHTTPException as exc:
-                if exc.status_code == 404:
-                    return await super().get_response("index.html", scope)
-                raise
+                if exc.status_code != 404:
+                    raise
+                # An unknown /api path is a 404, not the app. Serving index.html there hands a
+                # caller HTML with a 200 on it, and the error they see is "unexpected token <"
+                # somewhere else entirely -- which is how a renamed route costs an afternoon.
+                # StaticFiles normalises the path with the OS separator, so on Windows this
+                # arrives as api\analyst\board and a check for "api/" silently never fires.
+                wanted = path.replace("\\", "/")
+                if wanted == "api" or wanted.startswith("api/"):
+                    raise HTTPException(404, f"no API route /{wanted}") from exc
+                return await super().get_response("index.html", scope)
 
     app.mount("/", SinglePageApp(directory=str(UI_DIST), html=True), name="ui")

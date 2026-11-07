@@ -8,11 +8,12 @@ import pulse from "../../fixtures/GET_pulses_demo.json" with { type: "json" };
 import alertPulseFixture from "../../fixtures/POST_alerts_pulse_response.json" with { type: "json" };
 import result from "../../fixtures/GET_pulses_result.json" with { type: "json" };
 import draft from "../../fixtures/POST_pulses_draft_response.json" with { type: "json" };
-import board from "../../fixtures/GET_analyst_board.json" with { type: "json" };
+import scoring from "../../fixtures/GET_committee_scoring.json" with { type: "json" };
 import ledger from "../../fixtures/GET_ledger.json" with { type: "json" };
 import calibration from "../../fixtures/GET_me_calibration.json" with { type: "json" };
 import card from "../../fixtures/GET_e_token.json" with { type: "json" };
-import seal from "../../fixtures/POST_e_token_answer_response.json" with { type: "json" };
+import answerDraft from "../../fixtures/POST_e_token_answer_response.json" with { type: "json" };
+import seal from "../../fixtures/POST_e_token_confirm_response.json" with { type: "json" };
 import integrity from "../../fixtures/GET_integrity_pulse.json" with { type: "json" };
 
 /** The group mean as the UI prints it. Derived, because a literal here went stale the moment the
@@ -135,7 +136,7 @@ async function contractApi(page: Page) {
         outcome: "materialised",
         analyst_decision_summary: "Retained High.",
       });
-    if (path === "/analyst/board") return respond(board);
+    if (path === "/committee/scoring") return respond(scoring);
     if (path === "/pulses" && body) return respond(pulse, 201);
     if (path === "/pulses/P-0001") return respond({ ...pulse, n_answers: 8 });
     if (path.endsWith("/reveal") || path.endsWith("/result"))
@@ -200,7 +201,10 @@ async function contractApi(page: Page) {
     if (path.endsWith("/resolve"))
       return respond({ scores_written: 8, weights_updated: 8 });
     if (path.endsWith("/calibration")) return respond(calibration);
+    // Two steps since v3.4: the draft commits nothing, the confirmation does.
     if (path.startsWith("/e/") && path.endsWith("/answer"))
+      return respond(answerDraft);
+    if (path.startsWith("/e/") && path.endsWith("/confirm"))
       return respond(seal, 201);
     if (path.startsWith("/e/")) return respond(card);
     if (path === "/pulses/doorbell/run")
@@ -351,6 +355,9 @@ test("network errors retry without fixture fallback and expert answers use selec
     .getByRole("button", { name: "Pseudonym Nickname to peers" })
     .click();
   await page.getByRole("button", { name: "Submit" }).click();
+  // v3.4: Submit opens the confirmation screen and commits nothing. Only Confirm writes.
+  await expect(page.getByRole("heading", { name: "Is this right?" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(
     page.getByRole("heading", {
       name: "Submitted. You’ll get the group outcome.",
@@ -532,6 +539,9 @@ test("v3 abstentions submit null estimates and calibration waits for opt-in and 
     .click();
   await expect(page.getByRole("slider")).toHaveCount(0);
   await page.getByRole("button", { name: "Submit", exact: true }).click();
+  // v3.4: Submit opens the confirmation screen and commits nothing. Only Confirm writes.
+  await expect(page.getByRole("heading", { name: "Is this right?" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(
     page.getByRole("heading", {
       name: "Submitted. You’ll get the group outcome.",
@@ -576,9 +586,12 @@ test("v3 aggregate stays primary and mismatched outcome reports are withheld", a
   page,
 }) => {
   await contractApi(page);
+  // A weighted mean deliberately far from the equal-weight one, to prove which of the two the
+  // desk leads with. Held in a const so the number below cannot drift from the number served.
+  const overriddenWeighted = 0.83;
   await page.route("**/pulses/P-0001/reveal", (route) =>
     route.fulfill({
-      json: { ...result, weighted_mean: 0.83 },
+      json: { ...result, weighted_mean: overriddenWeighted },
       headers: { "Access-Control-Allow-Origin": "*" },
     }),
   );
@@ -592,10 +605,15 @@ test("v3 aggregate stays primary and mismatched outcome reports are withheld", a
       .getByText(meanPercent, { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("Secondary weighted mean: 83%.", { exact: false }),
+    page.getByText(
+      `Secondary weighted mean: ${Math.round(overriddenWeighted * 100)}%.`,
+      { exact: false },
+    ),
   ).toBeVisible();
+  // The verbatim minority rationale is gone from the result (v3.4). What the desk shows is the
+  // unattributed summary, written from themes; the sentences live in the verification queue.
   await expect(
-    page.getByText(result.minority_rationales[0], { exact: true }),
+    page.getByText(result.disagreement[0].summary, { exact: false }),
   ).toBeVisible();
   await page
     .getByText("Question, panel and supporting details", { exact: true })

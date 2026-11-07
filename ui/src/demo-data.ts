@@ -2,7 +2,7 @@ import risk from "../../fixtures/GET_risks_R1043.json";
 import result from "../../fixtures/GET_pulses_result.json";
 import draft from "../../fixtures/POST_pulses_draft_response.json";
 import ledger from "../../fixtures/GET_ledger.json";
-import board from "../../fixtures/GET_analyst_board.json";
+import board from "../../fixtures/GET_committee_scoring.json";
 import historicalRisks from "./data/demo-risks.json";
 import integrityFixture from "../../fixtures/GET_integrity_pulse.json";
 import { hasWorkspaceSession } from "./workspace-session";
@@ -87,7 +87,23 @@ export const sampleDraft = {
           },
     ),
 } satisfies Draft;
-export const sampleRisks: Risk[] = [risk, ...historicalRisks];
+// The demo rows predate ACAPS's narrative columns, which every live row carries. They are
+// filled with null rather than invented text: a made-up rationale would end up as the help line
+// under a probe question, quoted as something ACAPS wrote.
+const withNarrative = (row: (typeof historicalRisks)[number]): Risk =>
+  ({
+  ...row,
+  risk_type: null,
+  trend: null,
+  probability_assumed_number: null,
+  rationale: null,
+  vulnerability: null,
+  expected_exposure: null,
+  expected_impact: null,
+  priority_needs: [],
+  rationale_update: null,
+}) as unknown as Risk;
+export const sampleRisks: Risk[] = [risk, ...historicalRisks.map(withNarrative)];
 const estimates = [0.8, 0.7, 0.65, 0.7, 0.4];
 export const sampleForecasts = historicalRisks.map((r, i) => ({
   risk_id: r.risk_id,
@@ -115,8 +131,11 @@ export const sampleCalibration: Calibration = {
 };
 export const sampleBoard: Board = {
   ...board,
-  super_estimators: board.super_estimators.map((e, i) =>
-    i === 0 ? { ...e, n: 5, mean_brier: meanBrier } : e,
+  // The sample shows one panel with a track record, because an all-null scoring table tells a
+  // viewer nothing about the shape. The Brier is computed from the sample forecasts above, not
+  // typed in.
+  panels: board.panels.map((row, index) =>
+    index === 0 ? { ...row, n_resolved: 5, panel_brier: meanBrier } : row,
   ),
   divergence: [{ risk_id: risk.risk_id, panel: sampleResult.mean, acaps: 0.7 }],
 };

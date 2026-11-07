@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
 import risksFixture from "../../fixtures/GET_risks.json" with { type: "json" };
+import result from "../../fixtures/GET_pulses_result.json" with { type: "json" };
+// Read from the fixture, never retyped: the last set of hard-coded percentages in
+// these specs still said 69 % long after the engine had stopped producing it.
+const meanPercent = `${Math.round(result.mean * 100)}%`;
+const meanTwoDp = result.mean.toFixed(2);
 
 test("populated samples connect every main page and align content with the header", async ({
   page,
@@ -43,7 +48,7 @@ test("populated samples connect every main page and align content with the heade
   await page.locator(".ledger-record > summary").first().click();
   await expect(
     page.locator(".ledger-entry .ledger-stats strong").first(),
-  ).toHaveText("66%");
+  ).toHaveText(meanPercent);
   await expect(page.getByText("river-ibis", { exact: true })).toHaveCount(0);
   await page.getByLabel("Find a risk").fill("Haiti");
   await expect(page.locator(".honesty-box")).toHaveCount(1);
@@ -91,7 +96,7 @@ test("populated samples connect every main page and align content with the heade
     .getByRole("link", { name: "Open optional round-two card" })
     .click();
   await expect(
-    page.getByText("8 synthetic answers · Equal-weight mean 66%", {
+    page.getByText(`8 synthetic answers · Equal-weight mean ${meanPercent}`, {
       exact: true,
     }),
   ).toBeVisible();
@@ -119,7 +124,7 @@ test("sample reset opens a fresh analyst round without losing history", async ({
   await expect(
     page
       .locator(".draft-text")
-      .getByText("The equal-weight panel mean is 0.66", { exact: false }),
+      .getByText(`The equal-weight panel mean is ${meanTwoDp}`, { exact: false }),
   ).toBeVisible();
   await page.getByLabel("Decision note").fill("Synthetic review completed.");
   await page

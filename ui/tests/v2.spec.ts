@@ -28,8 +28,14 @@ test("blind round hides all ACAPS anchors, source and confidence are selectable"
     path: `test-results/v2-expert-${info.project.name}.png`,
     fullPage: true,
   });
+  // v3.4 took the band out of round 2 as well. The expert sees it once, in the feedback
+  // message after the deadline, because showing it in round 2 anchors the revision that round
+  // exists to collect.
   await page.goto("/e/round2");
-  await expect(page.getByText("ACAPS probability: High")).toBeVisible();
+  await expect(page.getByText("ACAPS probability: High")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "How the panel answered" }),
+  ).toBeVisible();
 });
 test("Radar filters, country map, source badge and matching work", async ({
   page,
@@ -159,18 +165,29 @@ test("integrity is desk-only and the public ledger includes honesty and resolved
     .fill("2026-11-20");
   await page.getByRole("button", { name: "Accept draft" }).click();
   await page.getByRole("link", { name: "View public ledger" }).click();
-  await expect(page.locator(".honesty-box")).toHaveCount(2);
+  // One box per ledger entry, counted from the fixture: the seeded history grew from two
+  // entries to a real track record, and a number typed in here would have to be retyped every
+  // time it grows again.
+  await expect(page.locator(".honesty-box")).toHaveCount(
+    ledgerFixture.entries.length,
+  );
   await expect(
     page.getByRole("heading", { name: "Integrity notes" }),
   ).toHaveCount(0);
   await expect(page.getByText("quiet-heron")).toHaveCount(0);
-  await page.locator(".ledger-record > summary").last().click();
+  // The second record, which is the first resolved one. Addressed by position rather than with
+  // .last(), because the seeded history keeps growing and "last" stopped being entries[1].
+  await page.locator(".ledger-record > summary").nth(1).click();
   await expect(
     page.getByRole("heading", {
       name: `Resolved history / ${ledgerFixture.entries[1].risk_id}`,
     }),
   ).toBeVisible();
-  await expect(page.getByText("Includes misses")).toHaveCount(2);
+  // One per honesty box, resolved or not: the line is a standing statement about what the box
+  // reports, not a count of misses.
+  await expect(page.getByText("Includes misses")).toHaveCount(
+    ledgerFixture.entries.length,
+  );
   await expect(
     page.getByRole("heading", { name: "Panel view rejected by the analyst" }),
   ).toBeVisible();

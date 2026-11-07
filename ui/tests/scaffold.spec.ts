@@ -61,6 +61,10 @@ test("actual scaffold card stays blind, seals synthetic input and opens private 
     .getByRole("button", { name: "Pseudonym Nickname to peers" })
     .click();
   await page.getByRole("button", { name: "Submit" }).click();
+  // v3.4: Submit opens a confirmation screen and commits nothing. A link click, a mail scanner
+  // or a link preview can reach the draft; only Confirm records an answer.
+  await expect(page.getByRole("heading", { name: "Is this right?" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(
     page.getByRole("heading", {
       name: "Submitted. You’ll get the group outcome.",

@@ -86,7 +86,8 @@ def settle_a_historical_round(client) -> str | None:
         return None
     pulse_id = history[0]
     risk_id = STORE.pulses[pulse_id]["risk_id"]
-    if client.post(f"/api/pulses/{pulse_id}/reveal").status_code != 200:
+    if client.post(f"/api/pulses/{pulse_id}/reveal",
+                   json={"force": True}).status_code != 200:
         return None
     draft = client.post(f"/api/pulses/{pulse_id}/draft").json()
     client.post(f"/api/drafts/{draft['id']}/decision", json={
@@ -209,23 +210,86 @@ def main() -> int:
                                  json={"risk_id": "R1043", "reason": "analyst"}).json()
         side_token = STORE.issue_token(side_pulse["id"], "X-syn-01")
 
+        # v3.4 split answering in two. Both halves get a fixture, because the whole point of the
+        # split is that the first one commits nothing: `POST /answer` is the route a link click or
+        # a mail scanner can reach, and it returns a confirmation token and a summary line.
         answer_body = {
-            "mask": "anonymous", "stance": "estimate", "probability": 0.7, "confidence": 4,
-            "panel_share_yes": 0.65, "source_tag": "saw", "round": 1,
+            "mask": "anonymous", "stance": "estimate", "likelihood_word": "likely",
+            "probability": 0.7, "confidence": "fairly sure",
+            "panel_share_yes": 0.65, "source_tag": "saw", "round": 1, "trigger_pick": "T2",
             "missing": "Camp capacity in Ouaddai is already past what the sites were planned for.",
+            "against": "Registration could stay flat if the border stays quiet.",
             "changed_mind": False,
+            "probe_answers": {
+                "evidence_seen": "Two sites reported new arrivals last Thursday.",
+                "exposure_sanity": "250,000-500,000",
+            },
         }
-        if signature:
-            answer_body["credential"] = {"token_id": token_id, "signature": signature}
         save("POST_e_token_answer_request.json", answer_body)
-        capture("POST_e_token_answer_response.json",
-                client.post(f"/api/e/{side_token}/answer", json=answer_body), expect=201)
+        drafted = capture("POST_e_token_answer_response.json",
+                          client.post(f"/api/e/{side_token}/answer", json=answer_body))
+        confirm_body = {"confirm_token": drafted.get("confirm_token", "")}
+        if signature:
+            confirm_body["credential"] = {"token_id": token_id, "signature": signature}
+        save("POST_e_token_confirm_request.json", confirm_body)
+        confirmed = capture("POST_e_token_confirm_response.json",
+                            client.post(f"/api/e/{side_token}/confirm", json=confirm_body),
+                            expect=201)
+
+        # A correction, which is allowed until the deadline and keeps the version it replaces.
+        correction_body = {**{k: v for k, v in answer_body.items() if k != "credential"},
+                           "likelihood_word": "even", "probability": 0.55,
+                           "edit_key": confirmed.get("edit_key"),
+                           "missing": "Camp capacity in Ouaddai is past the planned site figures, "
+                                      "but the registration backlog explains part of the jump."}
+        save("PUT_e_token_answer_request.json", correction_body)
+        capture("PUT_e_token_answer_response.json",
+                client.put(f"/api/e/{side_token}/answer", json=correction_body))
+
+        # And a relayed answer: taken by phone, held until its author confirms it.
+        relay_token = STORE.issue_token(side_pulse["id"], "X-syn-02")
+        relay_body = {"mask": "known", "stance": "estimate", "likelihood_word": "likely",
+                      "round": 1, "relayed": True, "relayed_by": "analyst", "source_tag": "heard",
+                      "missing": "Taken by phone; the expert had no signal for the link."}
+        relay_draft = client.post(f"/api/e/{relay_token}/answer", json=relay_body).json()
+        client.post(f"/api/e/{relay_token}/confirm",
+                    json={"confirm_token": relay_draft.get("confirm_token", "")})
+        capture("POST_e_token_relayed_confirm_response.json",
+                client.post(f"/api/e/{relay_token}/relayed-confirm", json={}))
+
+        # The insufficient-panel path, on its own pulse with three answers on it. Lane B needs
+        # the shape: it is a 200 with a reveal_status and no aggregate, not an error.
+        thin_pulse = client.post("/api/pulses",
+                                 json={"risk_id": "R1043", "reason": "analyst"}).json()
+        for expert_id_thin in ("X-syn-03", "X-syn-04", "X-syn-05"):
+            thin_token = STORE.issue_token(thin_pulse["id"], expert_id_thin)
+            thin_draft = client.post(f"/api/e/{thin_token}/answer", json={
+                "mask": "pseudonym", "stance": "estimate", "likelihood_word": "even",
+                "round": 1}).json()
+            client.post(f"/api/e/{thin_token}/confirm",
+                        json={"confirm_token": thin_draft.get("confirm_token", "")})
+        capture("POST_pulses_reveal_insufficient_response.json",
+                client.post(f"/api/pulses/{thin_pulse['id']}/reveal", json={"force": True}))
 
         # -- reveal, draft, decision -------------------------------------------
         capture("POST_pulses_reveal_response.json",
-                client.post(f"/api/pulses/{pulse_id}/reveal"))
+                client.post(f"/api/pulses/{pulse_id}/reveal", json={"force": True}))
         capture("GET_pulses_result.json", client.get(f"/api/pulses/{pulse_id}/result"))
         capture("GET_integrity_pulse.json", client.get(f"/api/integrity/{pulse_id}"))
+        # The verification queue, read the only way it can be read: with a who and a why, which
+        # the response and the log both carry.
+        capture("GET_verification_queue.json",
+                client.get(f"/api/verification-queue/{pulse_id}",
+                           params={"who": "alex@acaps.invalid",
+                                   "why": "checking the Adre claim before the draft"}))
+        capture("GET_committee_verification_log.json",
+                client.get("/api/committee/verification-log"))
+        # The feedback message, which is where an expert first sees ACAPS's band.
+        answered_link = next((row for row in client.get("/api/demo/links").json()["links"]
+                              if row["pulse_id"] == pulse_id and row["answered"]), None)
+        if answered_link:
+            capture("GET_e_token_feedback.json",
+                    client.get(f"/api/e/{answered_link['token']}/feedback"))
         draft = capture("POST_pulses_draft_response.json",
                         client.post(f"/api/pulses/{pulse_id}/draft"))
 
@@ -277,7 +341,7 @@ def main() -> int:
                 break
         else:
             skipped.append("GET_me_calibration.json: no expert has five resolved risks yet")
-        capture("GET_analyst_board.json", client.get("/api/analyst/board"))
+        capture("GET_committee_scoring.json", client.get("/api/committee/scoring"))
         proof = client.get("/api/sim/proof")
         if proof.status_code == 200:
             capture("GET_sim_proof.json", proof)
@@ -301,13 +365,15 @@ def main() -> int:
                     client.post(f"/api/anchors/{day}/submit"))
         capture("GET_zk_status.json", client.get("/api/zk/status"))
         patterns = capture("GET_committee_patterns.json", client.get("/api/committee/patterns"))
-        reports = patterns.get("reports") or []
-        spoken = next((r for r in reports if r["sentences"]), reports[0] if reports else None)
-        if spoken:
-            capture("GET_committee_patterns_pseudonym.json",
-                    client.get(f"/api/committee/patterns/{spoken['pseudonym']}"))
-        capture("GET_me_patterns.json",
-                client.get(f"/api/me/{links[0]['token']}/patterns?opt_in=true"))
+        panels = patterns.get("panels") or []
+        if panels:
+            capture("GET_committee_patterns_panel.json",
+                    client.get(f"/api/committee/patterns/{panels[0]['panel_id']}"))
+        else:
+            skipped.append("GET_committee_patterns_panel.json: no panel has three revealed rounds")
+        # The calibration programme, with the flag off, which is the state the demo ships in.
+        capture("GET_calibration_disclosure.json", client.get("/api/calibration/disclosure"))
+        capture("GET_committee_calibration.json", client.get("/api/committee/calibration"))
 
         # Last, and on a clean store: approving the April alert is the product's opening move, so
         # the pulse it creates has to be the first one -- the round everything else points at.

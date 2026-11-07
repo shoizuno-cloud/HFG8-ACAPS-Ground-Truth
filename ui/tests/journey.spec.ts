@@ -1,6 +1,11 @@
 import { test } from "./workspace-session";
 import { expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import result from "../../fixtures/GET_pulses_result.json" with { type: "json" };
+// Read from the fixture, never retyped: the last set of hard-coded percentages in
+// these specs still said 69 % long after the engine had stopped producing it.
+const meanPercent = `${Math.round(result.mean * 100)}%`;
+const meanTwoDp = result.mean.toFixed(2);
 
 test("April alert leads to a human panel request and a readable desk", async ({
   page,
@@ -51,7 +56,7 @@ test("April alert leads to a human panel request and a readable desk", async ({
     .click();
   await expect(
     page.getByRole("region", { name: "Decision at a glance" }),
-  ).toContainText("66%");
+  ).toContainText(meanPercent);
   await expect(
     page.getByRole("region", { name: "Decision at a glance" }),
   ).toContainText("30–85%");

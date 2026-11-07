@@ -73,11 +73,19 @@ test("expert card accessibility and text scaling", async ({ page }) => {
     .getByRole("button", { name: "Pseudonym Nickname to peers" })
     .click();
   await page.getByRole("button", { name: "Submit" }).click();
-  await page
-    .getByRole("link", { name: "Opt in to private calibration" })
-    .click();
-  await expect(page).toHaveURL(/\/me\/demo\/calibration$/);
+  // v3.4: Submit opens a confirmation screen and commits nothing. A link click, a mail scanner
+  // or a link preview can reach the draft; only Confirm records an answer.
+  await expect(page.getByRole("heading", { name: "Is this right?" })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  // The receipt no longer offers a calibration link. v3.4 made calibration a separate,
+  // consent-gated programme with its own screen, so an invitation to it does not belong on the
+  // back of an answer somebody has just given.
   await expect(
-    page.getByRole("link", { name: "View your contribution" }),
+    page.getByRole("link", { name: "Opt in to private calibration" }),
   ).toHaveCount(0);
+  await expect(
+    page.getByText("in the message you get after the deadline", {
+      exact: false,
+    }),
+  ).toBeVisible();
 });

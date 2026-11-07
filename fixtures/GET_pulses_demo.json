@@ -2,7 +2,7 @@
   "id": "P-0001",
   "risk_id": "R1043",
   "panel_id": "PAN-TCD",
-  "fired_at": "2026-11-07T16:10:52+00:00",
+  "fired_at": "2026-11-07T17:56:27+00:00",
   "reason": "doorbell",
   "round": 1,
   "evidence": [
@@ -34,9 +34,20 @@
       "note": "Renewed proxy mobilisation and cross-border armed group activity"
     }
   ],
-  "question": "Is the level of concern on this risk still right, and what are we missing? You will see the current ACAPS rating as soon as you submit.",
-  "expires_at": "2026-11-08T16:10:52+00:00",
+  "question": {
+    "event": "More than 50,000 new arrivals from Sudan registered by UNHCR in Ouaddaï and Wadi Fira",
+    "location": "Ouaddaï and Wadi Fira, eastern Chad",
+    "threshold": "> 50,000 newly registered arrivals (cumulative from 1 November 2026)",
+    "deadline": "2027-03-31",
+    "text": "Will more than 50,000 new arrivals from Sudan be registered in Ouaddaï and Wadi Fira by 31 March 2027?",
+    "source": "question_contract",
+    "frozen_at": "2026-11-07T17:56:27+00:00",
+    "resolution_source": "UNHCR registration figures for eastern Chad, as reported to ACAPS"
+  },
+  "asked_by": "Alex, ACAPS Risk Radar",
+  "expires_at": "2026-11-08T17:56:27+00:00",
+  "reveal_status": "open",
   "n_answers": 8,
   "served_from": "live",
-  "generated_at": "2026-11-07T16:10:54+00:00"
+  "generated_at": "2026-11-07T17:56:29+00:00"
 }

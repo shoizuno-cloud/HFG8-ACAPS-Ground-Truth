@@ -1,8 +1,8 @@
 # Privacy engineering (repo page; not in the 3-minute pitch)
 
-Updated for master prompt v3.2. Sections 1 and 2 are the pilot design and have not changed. Section 3 is the
-hardening stack of MASTER_PROMPT 6c as **built**, with the test that backs each claim. Section 4 is section 6d.
-Section 5 is the part that is honestly not finished.
+Updated for master prompt v3.4. Sections 1 and 2 are the pilot design. Section 3 is the hardening stack of
+MASTER_PROMPT 6c as **built**, with the test that backs each claim. Section 4 is what v3.4 did to measurement, which
+is mostly to remove it. Section 5 is the part that is honestly not finished.
 
 Wording rule for all of it: every mechanism is described with the guarantee / does-not pair from
 `trust-design.md`. Those sentences live in one place in the code, `engine/engine/hardening/flags.py`, and the API
@@ -48,24 +48,76 @@ Notes that matter more than the table:
   key ids survive a restart. RSA has no seeded keygen in `cryptography`, so the credential issuer is generated per
   process and `GET /api/credentials/issuer` says so: a restart retires every token signed by the old issuer.
 
-## 4. Response-pattern reports (section 6d)
+## 4. Measurement: what v3.4 took out, and what it put behind consent
 
-`hardening/patterns.py`, surfaced at `GET /api/committee/patterns/{pseudonym}` and, opt-in,
-`GET /api/me/{token}/patterns?opt_in=true`. Computed only from numbers the expert chose knowingly: never from the
-free-text line, never below three pulses, and never for an anonymous answer, which carries no identity to attach a
-pattern to. Pseudonyms in, pseudonyms out — a committee-side report that printed an internal id would leak the
-registry key.
+The v3.2 build computed a response-pattern report per expert: calibration, overconfidence, extremity, agreement with
+ACAPS, round-2 shift, source mix, abstention rate. It was committee-side, pseudonymous and descriptive, and it is
+gone. The reason is one sentence from section 6d: **no measurement is hidden in a pulse.** Those numbers were
+computed from answers given to a question that never said it was measuring the person answering it. Pseudonymising
+the output does not fix that; it only decides who gets to read it.
 
-The thresholds are in one dict at the top of the module. A benign expert produces no sentences at all, which is the
-design: the report exists to surface something worth a conversation, and most of the time nothing is.
+What replaced it:
 
-One honest weakness: the overconfidence figure compares a 1-to-5 self-rating with realised accuracy, which is a
-rough comparison rather than a principled one. The payload says so in `calibration.scale_note`, only a large
-positive gap is ever reported as a sentence, and a negative gap is never called underconfidence.
+| v3.2 | v3.4 |
+| --- | --- |
+| `GET /committee/patterns/{pseudonym}` — one person's report | `GET /committee/patterns/{panel_id}` — sentences about the panel |
+| `GET /me/{token}/patterns?opt_in=true` | removed; individual calibration lives only in the programme below |
+| `GET /analyst/board` — pseudonyms ranked by Brier score | `GET /committee/scoring` — panels scored against the ACAPS band |
+| seed questions, knowledge-gap and timing measures on the card (v3.3) | removed from the card entirely |
 
-Test evidence: `tests/hardening/test_patterns.py` — the seeded anchoring-prone, extreme, well-calibrated,
-overconfident, abstaining and hearsay-tagging profiles each produce their expected sentence; the ordinary one
-produces none; nothing opens below the floor; no report names an expert.
+**Panel reports** (`hardening/patterns.py`). After three revealed rounds on the same panel: convergence after the
+reveal, the spread over time, the abstention share, the source mix, and which expertise the panel does not have.
+Affiliation-level sentences only where that affiliation has three members on the panel; everything smaller is merged
+and the payload says it was merged. Descriptive, never causal — "UN-affiliated answers sat above the panel mean on 3
+of 4 pulses" is allowed, "UN experts are optimistic" is not. No sentence may contain a pseudonym, and a test asserts
+that over every seeded pseudonym.
+
+**The calibration programme** (`hardening/calibration.py`, `FF_CALIBRATION`, **off**). The only mechanism in this
+build that measures a person, and it ships off, so the default state of the system is one where nobody is measured.
+Enrolment needs an explicit yes against the current disclosure version: consent does not carry across a change to
+what is measured, and the engine refuses a consent quoting an older one. Items are short factual questions whose
+answer ACAPS already holds — taken from the resolved rows of the export's own Status column, each carrying the record
+it is adjudicated against — with a numeric confidence prompt, 50 to 100 %. A report exists only after 20 items, goes
+to the expert first and alone, and is one paragraph in plain words. The committee sees it only after a second,
+separate opt-in, and never as a weight. `off` at any time, and off means the report stops being produced.
+`GET /calibration/disclosure` is readable with the flag off on purpose: what we would measure is not a secret, it is
+the thing consent is given against.
+
+Deliberately not built, and recommended against in writing: fictitious references (overclaiming foils),
+response-time and edit-count measures, test–retest traps. Nothing a participant would recognise as deception if it
+were explained to them afterwards.
+
+Test evidence: `tests/hardening/test_patterns.py` — the floor, each sentence, the affiliation merge, that no
+sentence names a person, that the module has no per-expert entry point left, and the programme's consent, floor,
+switch-off and committee-counts behaviour.
+
+## 4a. The card, and where a written line goes
+
+Three changes in v3.4 are privacy decisions as much as usability ones.
+
+* **Nothing commits on a link click.** `POST /e/{token}/answer` drafts and returns the line the confirmation screen
+  repeats back; `POST /e/{token}/confirm` commits. A mail scanner, a link preview or a mistaken tap cannot answer on
+  somebody's behalf, and the credential is spent by the confirmation rather than the draft.
+* **The mask has no default.** A default mask is a decision about someone's confidentiality taken by whoever wrote
+  the code, so the engine refuses an answer without one rather than guessing.
+* **Correction until the deadline, with every version kept.** For an answer under the "no identity kept" mask the
+  only handle is an edit key minted once with the confirmation; the server stores its hash. A token-to-answer map
+  would have been simpler and would have reconstructed exactly the link that mask exists to prevent.
+
+Where a written line ends up is now the central disclosure question, because a panel is eight people:
+
+* A theme **two or more** experts raised keeps its words and appears in `missing_evidence`.
+* A line **one** expert wrote keeps its count and loses its words: `missing_themes` reports it as held, and the text
+  goes to the verification queue, read only with a who and a why, with every read logged.
+* **Disagreement is unattributed and never verbatim** — a direction, a count, and the subject the notes were about,
+  derived from themes. A group of one does not even get its subject named, because in a panel of eight the subject
+  narrows it to a person.
+* The counts of the card's closed follow-up questions are moderator-only, for the same reason: a one-of-eight option
+  count read beside a distinctive line is the pair that identifies somebody.
+
+The honesty box carries the standing line on every entry: *in a panel of eight a distinctive reason may identify its
+author to colleagues; experts were told this before answering.* The card shows the same sentence, from the same
+constant, next to the mask picker.
 
 ## 5. What is not built, and why the flag is off
 

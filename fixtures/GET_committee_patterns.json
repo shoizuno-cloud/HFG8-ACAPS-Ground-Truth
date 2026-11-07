@@ -1,290 +1,50 @@
 {
-  "reports": [
+  "panels": [
     {
-      "pseudonym": "dry-dune",
-      "available": true,
-      "n_pulses": 6,
-      "calibration": {
-        "mean_brier": 0.0432,
-        "n_resolved": 7,
-        "mean_confidence_1_5": 4.67,
-        "scale_note": "Confidence is a 1-5 self-rating, not a probability of being right, so the gap below is a rough comparison. Only a large positive gap is reported as a sentence, and a negative one is never called underconfidence."
-      },
-      "overconfidence": -0.0393,
-      "extremity": 0.0,
-      "agreement_with_acaps": 0.3333,
-      "agreement_comparable_pulses": 6,
-      "round2_shift": null,
-      "round2_pulses": 0,
-      "round2_toward_acaps": 0,
-      "source_mix": {
-        "saw": 0,
-        "read": 6,
-        "heard": 0
-      },
-      "abstention_rate": 0.0,
-      "answer_latency_seconds": 0.0,
-      "co_movement": [],
+      "panel_id": "PAN-MLI",
+      "n_pulses": 3,
+      "n_pulses_revealed": 3,
+      "n_experts": 8,
+      "never_per_person": true,
+      "never": "Never about a person. Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Free text is counted, never quoted.",
       "sentences": [
-        "Mean Brier score of 0.0432 over 7 resolved risks, with stated confidence close to that accuracy."
+        "Round-2 answers moved toward the mean on 3 of 3 pulses; 3 of those revisions came with a new written reason.",
+        "The spread stayed close to 0.80 over the last 3 revealed rounds.",
+        "2 of 27 answers were abstentions (‘outside my area’ or ‘not enough evidence’), which are real answers here and are never scored.",
+        "14 of 25 free-text lines were tagged ‘read’."
       ],
-      "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
-      "note": "Descriptive only. Each sentence is a prompt for a conversation, not a verdict."
-    },
-    {
-      "pseudonym": "dry-kite",
-      "available": true,
-      "n_pulses": 6,
-      "calibration": {
-        "mean_brier": 0.6482,
-        "n_resolved": 7,
-        "mean_confidence_1_5": 4.5,
-        "scale_note": "Confidence is a 1-5 self-rating, not a probability of being right, so the gap below is a rough comparison. Only a large positive gap is reported as a sentence, and a negative one is never called underconfidence."
-      },
-      "overconfidence": 0.5232,
-      "extremity": 0.0,
-      "agreement_with_acaps": 0.0,
-      "agreement_comparable_pulses": 6,
-      "round2_shift": null,
-      "round2_pulses": 0,
-      "round2_toward_acaps": 0,
-      "source_mix": {
-        "saw": 0,
-        "read": 6,
-        "heard": 0
-      },
-      "abstention_rate": 0.0,
-      "answer_latency_seconds": 0.0,
-      "co_movement": [],
-      "sentences": [
-        "States more confidence than the answers earned: mean confidence 4.5 of 5 against a mean Brier score of 0.6482."
-      ],
-      "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
-      "note": "Descriptive only. Each sentence is a prompt for a conversation, not a verdict."
-    },
-    {
-      "pseudonym": "dry-oryx",
-      "available": true,
-      "n_pulses": 6,
-      "calibration": {
-        "mean_brier": 0.31,
-        "n_resolved": 4,
-        "mean_confidence_1_5": 2.67,
-        "scale_note": "Confidence is a 1-5 self-rating, not a probability of being right, so the gap below is a rough comparison. Only a large positive gap is reported as a sentence, and a negative one is never called underconfidence."
-      },
-      "overconfidence": -0.2725,
-      "extremity": 0.0,
-      "agreement_with_acaps": 0.6667,
-      "agreement_comparable_pulses": 3,
-      "round2_shift": null,
-      "round2_pulses": 0,
-      "round2_toward_acaps": 0,
-      "source_mix": {
-        "saw": 1,
-        "read": 2,
-        "heard": 0
-      },
-      "abstention_rate": 0.5,
-      "answer_latency_seconds": 0.0,
-      "co_movement": [],
-      "sentences": [
-        "Abstains on 3 of 6 pulses, choosing 'outside my expertise' or 'not enough evidence'."
-      ],
-      "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
-      "note": "Descriptive only. Each sentence is a prompt for a conversation, not a verdict."
-    },
-    {
-      "pseudonym": "long-ibis",
-      "available": true,
-      "n_pulses": 6,
-      "calibration": {
-        "mean_brier": 0.1747,
-        "n_resolved": 8,
-        "mean_confidence_1_5": 3.17,
-        "scale_note": "Confidence is a 1-5 self-rating, not a probability of being right, so the gap below is a rough comparison. Only a large positive gap is reported as a sentence, and a negative one is never called underconfidence."
-      },
-      "overconfidence": -0.2828,
-      "extremity": 0.0,
-      "agreement_with_acaps": 1.0,
-      "agreement_comparable_pulses": 6,
-      "round2_shift": 0.3,
-      "round2_pulses": 5,
-      "round2_toward_acaps": 5,
-      "source_mix": {
-        "saw": 1,
-        "read": 5,
-        "heard": 0
-      },
-      "abstention_rate": 0.0,
-      "answer_latency_seconds": 0.0,
-      "co_movement": [],
-      "sentences": [
-        "Moves toward the ACAPS band in round 2 on 5 of 5 pulses, by 0.3 on average."
-      ],
-      "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
-      "note": "Descriptive only. Each sentence is a prompt for a conversation, not a verdict."
-    },
-    {
-      "pseudonym": "long-kite",
-      "available": true,
-      "n_pulses": 6,
-      "calibration": {
-        "mean_brier": 0.1225,
-        "n_resolved": 6,
-        "mean_confidence_1_5": 3.0,
-        "scale_note": "Confidence is a 1-5 self-rating, not a probability of being right, so the gap below is a rough comparison. Only a large positive gap is reported as a sentence, and a negative one is never called underconfidence."
-      },
-      "overconfidence": -0.3775,
-      "extremity": 0.0,
-      "agreement_with_acaps": 0.2,
-      "agreement_comparable_pulses": 5,
-      "round2_shift": null,
-      "round2_pulses": 0,
-      "round2_toward_acaps": 0,
-      "source_mix": {
-        "saw": 0,
-        "read": 0,
-        "heard": 5
-      },
-      "abstention_rate": 0.1667,
-      "answer_latency_seconds": 0.0,
-      "co_movement": [],
-      "sentences": [
-        "Tags 5 of 5 answers 'heard' rather than seen or read."
-      ],
-      "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
-      "note": "Descriptive only. Each sentence is a prompt for a conversation, not a verdict."
-    },
-    {
-      "pseudonym": "low-wadi",
-      "available": true,
-      "n_pulses": 5,
-      "calibration": {
-        "mean_brier": 0.16,
-        "n_resolved": 6,
-        "mean_confidence_1_5": 3.0,
-        "scale_note": "Confidence is a 1-5 self-rating, not a probability of being right, so the gap below is a rough comparison. Only a large positive gap is reported as a sentence, and a negative one is never called underconfidence."
-      },
-      "overconfidence": -0.34,
-      "extremity": 0.0,
-      "agreement_with_acaps": 0.8,
-      "agreement_comparable_pulses": 5,
-      "round2_shift": null,
-      "round2_pulses": 0,
-      "round2_toward_acaps": 0,
-      "source_mix": {
-        "saw": 2,
-        "read": 2,
-        "heard": 1
-      },
-      "abstention_rate": 0.0,
-      "answer_latency_seconds": 0.0,
-      "co_movement": [],
-      "sentences": [],
-      "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
-      "note": "Nothing here stands out."
-    },
-    {
-      "pseudonym": "tall-ibis",
-      "available": true,
-      "n_pulses": 6,
-      "calibration": {
-        "mean_brier": 0.265,
-        "n_resolved": 7,
-        "mean_confidence_1_5": 4.0,
-        "scale_note": "Confidence is a 1-5 self-rating, not a probability of being right, so the gap below is a rough comparison. Only a large positive gap is reported as a sentence, and a negative one is never called underconfidence."
-      },
-      "overconfidence": 0.015,
-      "extremity": 0.8333,
-      "agreement_with_acaps": 0.1667,
-      "agreement_comparable_pulses": 6,
-      "round2_shift": null,
-      "round2_pulses": 0,
-      "round2_toward_acaps": 0,
-      "source_mix": {
-        "saw": 5,
-        "read": 0,
-        "heard": 1
-      },
-      "abstention_rate": 0.0,
-      "answer_latency_seconds": 0.0,
-      "co_movement": [
+      "by_affiliation": [
         {
-          "shared": 5,
-          "together": 5,
-          "pseudonym": "wide-dune"
+          "affiliation_tag": "ngo",
+          "n": 3,
+          "sentence": "ngo-affiliated answers sat at or below the panel mean on all 3 pulses."
+        },
+        {
+          "affiliation_tag": "merged",
+          "n": 5,
+          "sentence": "5 panel members are in affiliation groups below n = 3 and are merged; no sentence is written about them."
         }
       ],
-      "sentences": [
-        "Puts 5 of 6 answers at 0.1 or below, or 0.9 or above.",
-        "Lands in the same probability bucket as wide-dune on 5 of 5 shared pulses."
-      ],
-      "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
-      "note": "Descriptive only. Each sentence is a prompt for a conversation, not a verdict."
-    },
-    {
-      "pseudonym": "wide-dune",
-      "available": true,
-      "n_pulses": 6,
-      "calibration": {
-        "mean_brier": 0.3025,
-        "n_resolved": 6,
-        "mean_confidence_1_5": 4.0,
-        "scale_note": "Confidence is a 1-5 self-rating, not a probability of being right, so the gap below is a rough comparison. Only a large positive gap is reported as a sentence, and a negative one is never called underconfidence."
-      },
-      "overconfidence": 0.0525,
-      "extremity": 1.0,
-      "agreement_with_acaps": 0.0,
-      "agreement_comparable_pulses": 5,
-      "round2_shift": null,
-      "round2_pulses": 0,
-      "round2_toward_acaps": 0,
-      "source_mix": {
-        "saw": 5,
-        "read": 0,
-        "heard": 1
-      },
-      "abstention_rate": 0.1667,
-      "answer_latency_seconds": 0.0,
-      "co_movement": [
-        {
-          "shared": 5,
-          "together": 5,
-          "pseudonym": "tall-ibis"
-        }
-      ],
-      "sentences": [
-        "Puts 5 of 5 answers at 0.1 or below, or 0.9 or above.",
-        "Lands in the same probability bucket as tall-ibis on 5 of 5 shared pulses."
-      ],
-      "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
-      "note": "Descriptive only. Each sentence is a prompt for a conversation, not a verdict."
+      "note": "Descriptive sentences about this panel. An empty list is the honest output when nothing stands out."
     }
   ],
   "not_yet": [
     {
-      "pseudonym": "dry-baobab",
-      "n_pulses": 0
+      "panel_id": "PAN-CMR",
+      "n_pulses_revealed": 1
     },
     {
-      "pseudonym": "low-harmattan",
-      "n_pulses": 0
+      "panel_id": "PAN-NGA",
+      "n_pulses_revealed": 1
     },
     {
-      "pseudonym": "quiet-kite",
-      "n_pulses": 0
-    },
-    {
-      "pseudonym": "wide-harmattan",
-      "n_pulses": 0
-    },
-    {
-      "pseudonym": "wide-heron",
-      "n_pulses": 0
+      "panel_id": "PAN-TCD",
+      "n_pulses_revealed": 1
     }
   ],
   "min_pulses": 3,
-  "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
+  "min_per_affiliation": 3,
+  "never": "Never about a person. Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Free text is counted, never quoted.",
   "served_from": "live",
-  "generated_at": "2026-11-07T16:10:56+00:00"
+  "generated_at": "2026-11-07T17:56:31+00:00"
 }

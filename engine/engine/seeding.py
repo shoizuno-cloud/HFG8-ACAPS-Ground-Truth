@@ -7,7 +7,7 @@ demonstrated offline, with no network and no real person's judgement standing in
 from __future__ import annotations
 
 from . import data
-from .store import Expert, Store
+from .store import Expert, Store, now
 
 # Eight synthetic experts. Regions are real eastern-Chad admin names so the map has somewhere to put them;
 # the affiliation caps are exercised on purpose (three NGO entries maximum per panel).
@@ -22,24 +22,66 @@ PANEL = [
     {"id": "X-syn-08", "region": "Ennedi-Est", "themes": ["conflict", "access"], "affiliation": "research"},
 ]
 
-# One round of answers: a real spread with a reasoned minority, two abstentions, and two entries whose
-# wording is close enough that the integrity layer should say so out loud.
+# The frozen question contract for the demo risk. The card shows this and nothing looser: an
+# answer is adjudicated against these words, and a card that asked something vaguer would collect
+# answers to a question nobody can score.
+QUESTION_CONTRACT = {
+    "event": ("More than 50,000 new arrivals from Sudan registered by UNHCR in Ouadda\u00ef and "
+              "Wadi Fira"),
+    "location": "Ouadda\u00ef and Wadi Fira, eastern Chad",
+    "threshold": "> 50,000 newly registered arrivals (cumulative from 1 November 2026)",
+    "horizon_deadline": "2027-03-31",
+    "resolution_source": "UNHCR registration figures for eastern Chad, as reported to ACAPS",
+    "adjudication_rule": ("Cumulative newly registered arrivals in the two provinces, read from "
+                          "the UNHCR figure published nearest the deadline. A revision published "
+                          "later does not reopen the question."),
+    "text": ("Will more than 50,000 new arrivals from Sudan be registered in Ouadda\u00ef and "
+             "Wadi Fira by 31 March 2027?"),
+}
+
+# One round of answers: a real spread with a reasoned minority, two abstentions, two entries whose
+# wording is close enough that the integrity layer should say so out loud, one answer taken by
+# phone and confirmed by its author, and one that was corrected before the deadline.
+#
+# Three of the six estimates are a word with no number behind it, which is the common case on a
+# phone. The aggregate uses the band midpoint for those and says so in `number_note` -- a word is
+# never silently turned into a point.
 ANSWERS = [
-    {"mask": "pseudonym", "probability": 0.85, "confidence": 4, "panel_share_yes": 0.7, "source_tag": "saw",
+    {"mask": "pseudonym", "likelihood_word": "likely", "probability": 0.85, "confidence": "sure",
+     "panel_share_yes": 0.7, "source_tag": "saw", "trigger_pick": "T1",
      "missing": "Night-time militia movement near Adre is not in any public reporting yet."},
-    {"mask": "pseudonym", "probability": 0.80, "confidence": 4, "panel_share_yes": 0.75, "source_tag": "heard",
+    {"mask": "pseudonym", "likelihood_word": "likely", "confidence": "fairly sure",
+     "panel_share_yes": 0.75, "source_tag": "heard", "trigger_pick": "T1",
      "missing": "Night-time militia movement near Adre is not in public reporting yet."},
-    {"mask": "known", "probability": 0.75, "confidence": 3, "panel_share_yes": 0.6, "source_tag": "read",
+    {"mask": "known", "likelihood_word": "likely", "confidence": "fairly sure",
+     "panel_share_yes": 0.6, "source_tag": "read", "trigger_pick": "T2",
      "missing": "Camp capacity in Ouaddai is already past what the sites were planned for."},
-    {"mask": "anonymous", "probability": 0.70, "confidence": 3, "panel_share_yes": 0.65, "source_tag": "saw",
+    {"mask": "anonymous", "likelihood_word": "likely", "probability": 0.70,
+     "confidence": "fairly sure", "panel_share_yes": 0.65, "source_tag": "saw",
+     "trigger_pick": "T2",
      "missing": "Camp capacity in Ouaddai is beyond the planned site figures."},
-    {"mask": "pseudonym", "probability": 0.55, "confidence": 2, "panel_share_yes": 0.55, "source_tag": "read",
+    {"mask": "pseudonym", "likelihood_word": "even", "confidence": "not sure",
+     "panel_share_yes": 0.55, "source_tag": "read", "trigger_pick": "T3",
      "missing": "Seasonal access after the rains will decide whether any of this can be reached."},
-    {"mask": "pseudonym", "probability": 0.30, "confidence": 4, "panel_share_yes": 0.6, "source_tag": "saw",
-     "missing": "Border raids have slowed since mid-September; the pressure is displacement, not attacks."},
+    # The reasoned minority, and the one answer that was corrected: it went in as 'even' and was
+    # revised down before the deadline. Both versions are kept.
+    {"mask": "pseudonym", "likelihood_word": "even", "confidence": "fairly sure",
+     "panel_share_yes": 0.6, "source_tag": "saw", "trigger_pick": "T1",
+     "missing": "Border raids have slowed since mid-September.",
+     "_correction": {"mask": "pseudonym", "likelihood_word": "unlikely", "probability": 0.30,
+                     "confidence": "sure", "panel_share_yes": 0.6, "source_tag": "saw",
+                     "trigger_pick": "T1",
+                     "missing": "Border raids have slowed since mid-September.",
+                     "against": ("The pressure is displacement, not attacks; registration could "
+                                 "stay flat while the border stays quiet.")}},
+    # Taken by phone by the analyst and confirmed by its author through their own link. Until that
+    # confirmation it would not have counted in the round at all.
     {"mask": "known", "stance": "outside_my_expertise", "panel_share_yes": 0.7,
-     "missing": "I work on prices, not protection. Ask me about the market in Abeche."},
-    {"mask": "pseudonym", "stance": "not_enough_evidence", "panel_share_yes": 0.65, "source_tag": "heard",
+     "relayed": True, "relayed_by": "analyst", "_relayed_confirm": True,
+     "missing": ("Market prices in Abeche would tell you about absorption capacity, "
+                 "and nobody is tracking them.")},
+    {"mask": "pseudonym", "stance": "not_enough_evidence", "panel_share_yes": 0.65,
+     "source_tag": "heard",
      "missing": "Nothing I have seen this week would move me either way."},
 ]
 
@@ -90,16 +132,26 @@ def seed_demo(store: Store, settings, risk_id: str = DEMO_RISK, seal: bool = Tru
     if not risk:
         raise RuntimeError(f"{risk_id} is not in the export; cannot seed the demo")
 
+    store.contracts[risk_id] = {**QUESTION_CONTRACT, "risk_id": risk_id, "frozen_at": now()}
     pulse = _build_pulse(risk, "doorbell", None, _trigger_evidence(risk))
     pulse_id = pulse["id"]
 
     for row, expert in zip(ANSWERS, PANEL):
         # Each panel member gets a magic link; /demo/links lists them for the desk.
         token = store.issue_token(pulse_id, expert["id"])
-        if seal:
-            body = {"stance": row.get("stance", "estimate"), "round": 1, **row}
-            store.seal(pulse_id, expert["id"], body, settings.commitment_salt, settings.pseudonym_key)
-            store.mark_used(token)
+        if not seal:
+            continue
+        body = {"stance": row.get("stance", "estimate"), "round": 1,
+                **{k: v for k, v in row.items() if not k.startswith("_")}}
+        answer = store.seal(pulse_id, expert["id"], body, settings.commitment_salt,
+                            settings.pseudonym_key)
+        store.take_edit_key(answer)
+        if row.get("_correction"):
+            store.correct(answer, {"stance": "estimate", "round": 1, **row["_correction"]},
+                          settings.commitment_salt)
+        if row.get("_relayed_confirm"):
+            store.confirm_relayed(answer)
+        store.mark_used(token)
 
     # Four open links with nothing sealed behind them, for the QR step where the jury becomes the panel.
     for index in range(1, 5):

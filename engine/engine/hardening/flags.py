@@ -13,6 +13,10 @@ DEFAULTS = {
     "FF_BLIND": True,    # blind-signed single-use credentials
     "FF_ZK": False,      # zero-knowledge group membership: off until stable (see zk.py)
     "FF_ANCHOR": True,   # timestamp anchoring, degrades to "pending"
+    # The consent-gated calibration programme (section 6d). Off, and off is the point: it is
+    # the only thing here that measures a person, and it does not run until an expert has read
+    # the disclosure and said yes.
+    "FF_CALIBRATION": False,
 }
 TRUE = {"1", "true", "yes", "on"}
 
@@ -51,8 +55,8 @@ class Mechanism:
 MECHANISMS = (
     Mechanism(
         1, "pq_registry", "Post-quantum registry encryption", "FF_PQ",
-        "ML-KEM-768 hybrid (ML-KEM-768 + X25519) wraps the AES-256-GCM key that encrypts the "
-        "expert-id to identity map at rest; the key is held by the committee service",
+        "ML-KEM-768 for key establishment, hybrid with X25519; AES-256-GCM at rest over the "
+        "expert-id to identity map; the key is held by the committee service",
         "Registry page: the lock line",
         "Long-horizon confidentiality of the identity map against harvest-now-decrypt-later",
         "Confidentiality from an administrator with the key; anything about answers",

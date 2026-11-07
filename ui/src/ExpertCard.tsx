@@ -12,11 +12,13 @@ import {
 } from "lucide-react";
 import {
   getCard,
-  sealAnswer,
+  draftAnswer,
+  confirmAnswer,
   mock,
   type Card,
   type Mask,
   type Answer,
+  type AnswerDraft,
 } from "./api";
 import { CopyButton } from "./LiveWorkspace";
 import { safeUrl, validResult } from "./service";
@@ -84,8 +86,11 @@ export function ExpertCard({ token }: { token: string }) {
     [stance, setStance] = useState<Answer["stance"]>("estimate"),
     [changed, setChanged] = useState(false);
   const [busy, setBusy] = useState(false),
+    // Two states, because v3.4 made answering two steps: a draft, which commits nothing and can
+    // be read back and corrected on screen, and the receipt that only a confirmation produces.
+    [draft, setDraft] = useState<AnswerDraft | null>(null),
     [receipt, setReceipt] = useState<Awaited<
-      ReturnType<typeof sealAnswer>
+      ReturnType<typeof confirmAnswer>
     > | null>(null),
     [submitError, setSubmitError] = useState("");
   useEffect(() => {
@@ -107,15 +112,20 @@ export function ExpertCard({ token }: { token: string }) {
     };
   }, [token, reload]);
   const blind = card?.round !== 2; // Round one remains blind even if an older API includes a rating.
+  /** Step one. Submit opens the confirmation screen; nothing is recorded yet, which is what
+   *  makes a link click or a mail scanner harmless. */
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (busy || receipt) return;
+    if (busy || receipt || draft) return;
     setBusy(true);
     setSubmitError("");
     try {
-      setReceipt(
-        await sealAnswer(token, {
+      setDraft(
+        await draftAnswer(token, {
           stance,
+          // This card asks for an exact percentage, so it sends one and no word. The engine
+          // accepts either; with only a word it uses that band's midpoint and says so.
+          likelihood_word: null,
           probability: stance === "estimate" ? probability / 100 : null,
           panel_share_yes: stance === "estimate" ? panel / 100 : null,
           confidence: stance === "estimate" ? confidence : null,
@@ -126,6 +136,19 @@ export function ExpertCard({ token }: { token: string }) {
           changed_mind: !blind && changed,
         }),
       );
+    } catch (e) {
+      setSubmitError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  /** Step two: the commitment. */
+  async function confirm() {
+    if (busy || receipt || !draft) return;
+    setBusy(true);
+    setSubmitError("");
+    try {
+      setReceipt(await confirmAnswer(token, draft.confirm_token));
     } catch (e) {
       setSubmitError((e as Error).message);
     } finally {
@@ -186,6 +209,31 @@ export function ExpertCard({ token }: { token: string }) {
             <div className="state" role="status">
               Opening your expert card…
             </div>
+          ) : draft && !receipt ? (
+            <div className="state confirm-step">
+              <h2>Is this right?</h2>
+              <p className="confirm-line">{draft.summary}</p>
+              <p className="help">{draft.number_note}</p>
+              <p className="help">{draft.message}</p>
+              {submitError && (
+                <p className="error" role="alert">
+                  {submitError}
+                </p>
+              )}
+              <div className="confirm-actions">
+                <button type="button" onClick={confirm} disabled={busy}>
+                  {busy ? "Recording…" : "Confirm"}
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setDraft(null)}
+                  disabled={busy}
+                >
+                  Go back and change it
+                </button>
+              </div>
+            </div>
           ) : receipt ? (
             <div className="state receipt" role="status">
               <span className="success-mark">
@@ -193,9 +241,9 @@ export function ExpertCard({ token }: { token: string }) {
               </span>
               <h2>{en.sealed}</h2>
               <p>
-                Submitted. You’ll get the group outcome when this resolves. Your
-                answer uses the <strong>{mask}</strong> mask. Only a group view
-                with at least five answers can be published.
+                {receipt.message} Your answer uses the{" "}
+                <strong>{mask}</strong> mask. Only a group view with at least
+                five answers can be published.
               </p>
               <div className="receipt-box">
                 <span>
@@ -216,10 +264,16 @@ export function ExpertCard({ token }: { token: string }) {
                   label="Copy commitment"
                 />
               </div>
-              {mask !== "anonymous" && (
-                <a href={`/me/${encodeURIComponent(token)}/calibration`}>
-                  Opt in to private calibration
-                </a>
+              <p className="help">{receipt.band_note}</p>
+              {receipt.correction_allowed_until && (
+                <p className="help">
+                  You can change your answer until{" "}
+                  {new Date(receipt.correction_allowed_until).toLocaleString(
+                    "en-GB",
+                    { timeZone: "UTC" },
+                  )}{" "}
+                  UTC. Every version is kept.
+                </p>
               )}
               {mask === "anonymous" && (
                 <p>
@@ -252,16 +306,21 @@ export function ExpertCard({ token }: { token: string }) {
                   )}
                 </div>
                 <h2>{card.risk.title}</h2>
-                <details className="evidence">
-                  <summary>
-                    {card.pulse.evidence[0]
-                      ? evidenceSummary(card.pulse.evidence[0])
-                      : "Edition evidence"}
-                  </summary>
-                  {card.pulse.evidence.map((e, i) => (
-                    <EvidenceLine key={i} value={e} />
-                  ))}
-                </details>
+                {card.pulse.evidence?.length ? (
+                  <details className="evidence">
+                    <summary>
+                      {evidenceSummary(card.pulse.evidence[0])}
+                    </summary>
+                    {card.pulse.evidence.map((e, i) => (
+                      <EvidenceLine key={i} value={e} />
+                    ))}
+                  </details>
+                ) : (
+                  <p className="help">
+                    The alert evidence behind this question appears once your
+                    answer is in, with ACAPS&rsquo;s own rating.
+                  </p>
+                )}
               </div>
               {!blind && (
                 <section className="group-view">
@@ -386,7 +445,7 @@ export function ExpertCard({ token }: { token: string }) {
                       <span className="optional">Optional</span>
                     </label>
                     <p className="help" id="accuracy-prompt">
-                      {card.accuracy_prompt ||
+                      {card.optional?.accuracy_prompt ||
                         "Is this something you saw, read, or heard?"}
                     </p>
                     <div
@@ -445,7 +504,9 @@ export function ExpertCard({ token }: { token: string }) {
                       aria-labelledby="mask-label"
                     >
                       {(["known", "pseudonym", "anonymous"] as Mask[])
-                        .filter((m) => card.mask_options.includes(m))
+                        .filter((m) =>
+                          card.mask_options.some((option) => option.id === m),
+                        )
                         .map((m, i) => {
                           const Icon = [BadgeCheck, UserRound, Fingerprint][i];
                           return (
@@ -468,9 +529,13 @@ export function ExpertCard({ token }: { token: string }) {
                         : mask === "pseudonym"
                           ? "Peers see a nickname, not your identity."
                           : "No pseudonym is shown. Your answer counts only in the aggregate."}{" "}
-                      Public output is group-only. Distinctive wording can be
-                      recognised by peers, even under a pseudonym. Anonymous
-                      answers cannot be claimed later.
+                      Public output is group-only.{" "}
+                      {/* The engine holds this sentence once, in hardening/flags.py, and the
+                          honesty box on the ledger carries the same words. Keeping a second
+                          copy here is how the product ends up making two different promises. */}
+                      {card.mask_note}
+                      {mask === "anonymous" &&
+                        " You will not receive personal feedback on this answer, and it cannot be claimed later."}
                     </p>
                     <details className="privacy-detail">
                       <summary>Who can see what?</summary>
