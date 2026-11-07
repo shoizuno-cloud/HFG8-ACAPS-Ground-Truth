@@ -190,8 +190,29 @@ anonymity; weigh them under A and B." Consequences: the live demo is inside the 
 it work"); the three must-haves are named in the jury's words on slide 2 and shown working in the demo (card, mask
 picker, ledger); ethics, security and legal are labelled on slide 3; slide 6 carries one sentence of business model.
 Full mapping and the Q&A answers: docs/sealed-signals/judging-checklist.md. Lane B: the mask picker and the ledger's
-"never an individual" line must be visible without explanation. Lane A: `make demo` must run the full loop live on
-stage in under 75 seconds including the jury's real answers.
+"never an individual" line must be visible without explanation. Lane A: `make demo` runs the full loop in under
+75 seconds.
+
+## 0d. Repository standard (enforced at every merge)
+
+1. Root files: `CLAUDE.md` (project context), `README.md` (problem, five-step solution, the must-haves by the
+   organisers' name with code paths, architecture, technology table, run, evidence, real vs synthetic, what we do not
+   claim, pilot), `AGENTS.md` (file map and the test or command behind each claim), `SUBMISSION.md`, `CHANGELOG.md`.
+   Every code path in them stays true; if a module moves, update the table in the same commit.
+2. Evidence: `scripts/capture_evidence.sh` writes `docs/evidence/make-check.txt`, `make-demo.txt`, `tree.txt`; Lane B
+   adds `docs/evidence/screens/` (three screens at 375 px and 1920 px) and `phones.md` (measured time and taps);
+   Lane A adds `sensitivity.png`. Regenerated from a clean clone at the Sunday freeze.
+3. Tests are named by the behaviour they prove (`test_link_click_never_commits`, `test_reveal_refused_before_deadline`,
+   `test_public_ledger_never_returns_individual`, `test_replay_apr2026_tcd005_rank1`, `test_blind_token_reuse_rejected`,
+   `test_pattern_sentence_never_names_pseudonym`).
+4. Every module has a top docstring saying what it does, what it guarantees and what it does not, in the trust-design
+   wording. Every feature flag is documented in `engine/engine/hardening/flags.py` with its fallback.
+5. No dead code, no TODO, no placeholder text on the submitted branch. Unfinished work is deleted or moved behind a
+   flag that is documented as off.
+6. The organisers' files stay unchanged (`docs/challenge/`, `data/`, `references/`, `notebooks/`); ours sit beside them.
+7. Submission: `demo` contains `main`'s history. Sunday 10:30 freeze: all lanes merged into `demo`, `make check` green,
+   evidence captured, README tables true, tag `v1.0`. One pull request `demo` → `main` with `SUBMISSION.md` as the
+   description, merged before 11:30; the submission form links to `main`.
 
 ## 1a. Who can learn what (replaces every "sealed" or "nothing leaves the device" claim)
 
