@@ -59,13 +59,13 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
 .phone .go{background:var(--teal);color:#fff;border-radius:12px;text-align:center;padding:13px;font-weight:600;font-size:17px}
 /* architecture */
 .arch{display:grid;grid-template-columns:repeat(6,1fr);gap:26px;margin-top:20px}
-.node{border:2px solid var(--line);border-radius:12px;padding:30px 26px;min-height:600px;position:relative;background:#fff}
+.node{border:2px solid var(--line);border-radius:12px;padding:30px 26px;min-height:700px;position:relative;background:#fff}
 .node.t{border-color:var(--teal);background:var(--teal-soft)}
 .node.a{border-color:var(--amber);background:var(--amber-soft)}
 .node h3{font-size:30px;font-weight:600;margin-bottom:14px;line-height:1.15}
 .node.t h3{color:var(--teal)}.node.a h3{color:var(--amber)}
-.node p{font-size:21px;color:var(--muted);line-height:1.4;margin-bottom:18px}
-.node .tech{font-size:17px;margin:3px 3px 3px 0}
+.node p{font-size:23px;color:var(--muted);line-height:1.45;margin-bottom:22px}
+.node .tech{font-size:19px;margin:4px 4px 4px 0}
 .arrow{position:absolute;right:-22px;top:50%;width:22px;height:2px;background:var(--line)}
 .arrow::after{content:"";position:absolute;right:0;top:-5px;border:6px solid transparent;border-left:8px solid var(--line)}
 .legend{display:flex;gap:36px;font-size:20px;color:var(--muted);margin-top:28px}
@@ -98,6 +98,21 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
 .cmp th.us,.cmp td.us{background:var(--teal-soft)}
 .num{font-size:120px;font-weight:600;line-height:1;letter-spacing:-4px;color:var(--teal)}
 .tag{position:absolute;background:var(--teal);color:#fff;font-size:14px;font-weight:600;border-radius:999px;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+
+.prob{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:20px}
+.prob > div{border-top:10px solid var(--amber);padding-top:34px}
+.prob .n{font-size:190px;font-weight:600;line-height:1;letter-spacing:-5px;color:var(--amber)}
+.prob h3{font-size:42px;font-weight:600;margin:24px 0 18px;line-height:1.15}
+.prob p{font-size:26px;color:var(--muted);line-height:1.4}
+.sol{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;margin-top:20px}
+.sol > div{border-radius:12px;padding:34px 28px;min-height:680px;position:relative;border:2px solid var(--line);background:#fff}
+.sol > div.t{background:var(--teal-soft);border-color:var(--teal)}
+.sol > div.a{background:var(--amber-soft);border-color:var(--amber)}
+.sol .k2{font-size:20px;color:var(--muted);margin-bottom:8px}
+.sol h3{font-size:36px;font-weight:600;line-height:1.1;margin-bottom:14px}
+.sol > div.t h3{color:var(--teal)}.sol > div.a h3{color:var(--amber)}
+.sol p{font-size:25px;line-height:1.45;color:var(--ink)}
+.sol .fix{position:absolute;left:28px;right:28px;bottom:28px;font-size:21px;color:var(--muted);border-top:1.5px solid var(--line);padding-top:12px}
 </style></head><body>
 <div id="stage">
 
@@ -110,17 +125,28 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
  <div class="foot"><span>Hackathon for Good #8, ACAPS Ground Truth</span><span>Zain Ul Haq, Saleeta Qadir, Sho Izuno</span></div>
 </section>
 <section class="slide" id="s1">
- <div style="display:flex;gap:100px;align-items:center;margin-top:60px">
-  <div><div class="big" data-s="0">47<span style="font-size:140px;letter-spacing:0">%</span></div><p data-s="0" style="font-size:36px;font-weight:500;margin-top:16px;max-width:700px">of Medium-rated ACAPS risks materialised. A coin flip.</p></div>
-  <div style="flex:1">
-   <p data-s="1" style="font-size:34px;line-height:1.35">The expert checks between ACAPS's scheduled reviews happen by email and conversation: not structured, not time-stamped, not auditable.</p>
-   <p data-s="2" style="font-size:34px;line-height:1.35;margin-top:30px;color:var(--teal);font-weight:500">We give those checks a trail.</p>
-  </div>
+ <div class="line" data-s="0">The problem: risk ratings are uncertain, and the expert checks that should sharpen them leave nothing behind.</div>
+ <div class="prob">
+  <div data-s="1"><div class="n" style="white-space:nowrap">47<span style="font-size:110px;letter-spacing:0"> %</span></div><h3>Medium-rated risks are a coin flip</h3><p>27 of 58 resolved Medium risks materialised; 32 of 38 High. The rating is where preparedness money starts.</p></div>
+  <div data-s="2"><div class="n">0</div><h3>Expert checks leave no trail</h3><p>Between scheduled reviews, analysts check with experts by email and conversation. No structure, no timestamp, no record of who said what before the outcome. Experts will not sign up to a portal to change that.</p></div>
+  <div data-s="3"><div class="n">?</div><h3>Nobody can see the bias or the misses</h3><p>Anchoring on the published rating, herding, loud majorities, packed panels. No feedback to the expert, no public record of what fed into a rating or when it was wrong.</p></div>
  </div>
- <div class="foot"><span>27 of 58 resolved Medium risks; 32 of 38 High. ACAPS Risk Radar export, 139 risks</span><span>1</span></div>
+ <div class="foot"><span>Numbers from the ACAPS Risk Radar export, 139 risks, 104 resolved; the mentor's own words: "we will get things wrong; the point is honesty about it"</span><span>1</span></div>
 </section>
 <section class="slide" id="s2">
- <div class="line" data-s="0">The whole system on one screen. Teal is arithmetic, amber is a person.</div>
+ <div class="line" data-s="0">The solution: a one-minute expert loop on top of ACAPS's data, with bias designed out, every claim checked, and a public record that shows its misses.</div>
+ <div class="sol">
+  <div class="t" data-s="1"><div class="k2">1</div><h3>Alert</h3><p>A deterministic diff of ACAPS's monthly severity and access editions finds the moves and ranks them. No model.</p><div class="fix">Answers: ratings go stale between reviews</div></div>
+  <div class="a" data-s="2"><div class="k2">2</div><h3>Ask</h3><p>The analyst approves a frozen question and the eight best-matched experts get it by email, WhatsApp, Signal, SMS, Teams or a call. No sign-up, one link.</p><div class="fix">Answers: experts never sign up</div></div>
+  <div class="a" data-s="3"><div class="k2">3</div><h3>Answer</h3><p>One screen, one tap, mask per answer. The rating is hidden, answers are committed with a timestamp and revealed together at the deadline.</p><div class="fix">Answers: anchoring, herding, social pressure</div></div>
+  <div class="t" data-s="4"><div class="k2">4</div><h3>Check</h3><p>Mean, spread, unattributed disagreement, descriptive bias notes. An Investigator, Skeptic and Judge turn it into a cited draft with every number checked.</p><div class="fix">Answers: bias nobody could see</div></div>
+  <div class="a" data-s="5"><div class="k2">5</div><h3>Decide and record</h3><p>The analyst accepts, edits or rejects, with the decision it informs. The ledger keeps the group view, the honesty box, a Verify button and the misses. Scored when the risk resolves.</p><div class="fix">Answers: no trail, no feedback, no misses</div></div>
+ </div>
+ <div class="legend" data-s="5"><span class="lt">arithmetic</span><span class="la">a person decides</span><span style="margin-left:auto">Nothing publishes itself. One validation layer among others.</span></div>
+ <div class="foot"><span>Easier to contribute to, easier to scrutinise, easier to trace</span><span>2</span></div>
+</section>
+<section class="slide" id="s3">
+ <div class="line" data-s="0">How it is built: the six modules and the technology in each.</div>
  <div class="arch">
   <div class="node t" data-s="1"><h3>Alert engine</h3><p>Diffs ACAPS's monthly severity and access editions for every crisis, ranks the moves, links to the active risk.</p><span class="tech">ACAPS API</span> <span class="tech">INFORM editions</span> <span class="tech">rules, no model</span><i class="arrow"></i></div>
   <div class="node a" data-s="2"><h3>Analyst approves</h3><p>Freezes the question contract: event, place, threshold, deadline. Picks the eight best-matched experts.</p><span class="tech">question contract</span> <span class="tech">panel matching</span><i class="arrow"></i></div>
@@ -130,9 +156,102 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
   <div class="node a" data-s="6"><h3>Decide and record</h3><p>Accept, edit or reject. Ledger with the honesty box. Scored at panel level when the risk resolves.</p><span class="tech">Verify</span> <span class="tech">ML-DSA-65 attestation</span> <span class="tech">OpenTimestamps</span></div>
  </div>
  <div class="legend" data-s="6"><span class="lt">arithmetic</span><span class="la">a person decides</span><span style="margin-left:auto">Registry: ML-KEM-768 key establishment, AES-256-GCM at rest, every read logged</span></div>
- <div class="foot"><span>Nothing publishes itself. One validation layer among others.</span><span>2</span></div>
+ <div class="foot"><span>Nothing publishes itself. One validation layer among others.</span><span>3</span></div>
 </section>
-<section class="slide" id="s3">
+<section class="slide" id="s4">
+ <div class="line" data-s="0">Bias designed out on the card, every claim checked by the agent loop, a person decides.</div>
+ <div style="display:flex;gap:50px;align-items:flex-start">
+  <div style="position:relative;flex:none">
+   <div class="phone" data-s="1" style="height:720px;width:360px">
+    <div class="from">Alex, ACAPS Risk Radar</div>
+    <div class="qn" style="font-size:18px">Will more than 50,000 new arrivals from Sudan be registered in Ouaddaï and Wadi Fira by 31 March 2027?</div>
+    <div class="w"><span>very unlikely</span><small>under 10 %</small></div>
+    <div class="w"><span>unlikely</span><small>10 to 35 %</small></div>
+    <div class="w"><span>even</span><small>35 to 65 %</small></div>
+    <div class="w sel"><span>likely</span><small>65 to 90 %</small></div>
+    <div class="w"><span>very likely</span><small>over 90 %</small></div>
+    <div class="st"><span>Outside my area</span><span>Not enough evidence</span></div>
+    <div class="opt">Strongest reason this would NOT happen? Saw, read or heard?</div>
+    <div class="mask"><span>named to ACAPS</span><span>nickname to peers</span><span>no identity kept</span></div>
+    <div class="go">Review and confirm</div>
+   </div>
+   <div class="tag" data-s="1" style="left:-14px;top:46px">1</div><div class="tag" data-s="1" style="left:-14px;top:180px">2</div><div class="tag" data-s="1" style="left:-14px;top:500px">3</div><div class="tag" data-s="1" style="left:-14px;top:534px">4</div><div class="tag" data-s="1" style="left:-14px;top:570px">5</div>
+  </div>
+  <div style="width:560px" data-s="2">
+   <div class="ann" style="padding:10px 0"><div class="n" style="width:36px;height:36px;font-size:17px">1</div><div><h4 style="font-size:20px">Anchoring</h4><p style="font-size:16px">ACAPS's band and the alert hidden until after submission.</p></div></div>
+   <div class="ann" style="padding:10px 0"><div class="n" style="width:36px;height:36px;font-size:17px">2</div><div><h4 style="font-size:20px">False precision, forced guessing</h4><p style="font-size:16px">Ranges printed under the words; abstention is a real answer, never scored.</p></div></div>
+   <div class="ann" style="padding:10px 0"><div class="n" style="width:36px;height:36px;font-size:17px">3</div><div><h4 style="font-size:20px">Confirmation bias</h4><p style="font-size:16px">"Strongest reason this would NOT happen" (consider the opposite).</p></div></div>
+   <div class="ann" style="padding:10px 0"><div class="n" style="width:36px;height:36px;font-size:17px">4</div><div><h4 style="font-size:20px">Overclaiming</h4><p style="font-size:16px">Saw, read or heard, tagged before free text; the tag travels with the claim.</p></div></div>
+   <div class="ann" style="padding:10px 0;border:none"><div class="n" style="width:36px;height:36px;font-size:17px">5</div><div><h4 style="font-size:20px">Herding and social pressure</h4><p style="font-size:16px">Mask per answer; committed with a timestamp, revealed together at the deadline; round 2 shows only an anonymised spread.</p></div></div>
+   <div style="margin-top:10px;font-size:14px"><b style="font-size:16px">Described on the desk, never a verdict:</b><br><span class="chip t">convergence after reveal</span><span class="chip t">co-movement</span><span class="chip t">shared origin</span><span class="chip t">news-driven</span><span class="chip t">coverage gap</span></div>
+  </div>
+  <div class="win" data-s="3" style="flex:1;height:720px">
+   <div class="bar"><i></i><i></i><i></i><b>Draft R1043: Investigator → Skeptic → Judge</b><span style="margin-left:auto">Judge 0.92</span></div>
+   <div class="main" style="font-size:15px">
+    <div style="display:flex;gap:10px;margin-bottom:14px"><div class="node t" style="min-height:0;flex:1;padding:10px 12px"><h3 style="font-size:16px;margin-bottom:4px">Investigator</h3><p style="font-size:13px;margin:0">Claims, each citing a panel aggregate, an ACAPS record or a source.</p></div><div class="node t" style="min-height:0;flex:1;padding:10px 12px"><h3 style="font-size:16px;margin-bottom:4px">Skeptic</h3><p style="font-size:13px;margin:0">Exact provenance, no tolerance; passage, date, place; corroboration in ACAPS, ReliefWeb, ACLED.</p></div><div class="node t" style="min-height:0;flex:1;padding:10px 12px"><h3 style="font-size:16px;margin-bottom:4px">Judge</h3><p style="font-size:13px;margin:0">Coverage, numbers match, grounding; one repair round.</p></div></div>
+    <p style="margin-bottom:8px"><span class="chip t">supported</span> Panel mean 0.69, n 8, spread 0.3 to 0.9. <span class="sub" style="font-size:12px">RoundResult P-0001 v1</span></p>
+    <p style="margin-bottom:8px"><span class="chip t">supported</span> TCD005 severity 6.1 → 6.9, rank 1 of 123. <span class="sub" style="font-size:12px">inform-severity-index Apr2026</span></p>
+    <p style="margin-bottom:8px"><span class="chip t">supported</span> Two experts expect displacement rather than attacks. <span class="sub" style="font-size:12px">unattributed</span></p>
+    <p style="margin-bottom:8px"><span class="chip a">to verify</span> Militia movements near Adré at night. <span class="sub" style="font-size:12px">single source, heard; held in the queue, never in the draft</span></p>
+    <p style="margin-bottom:8px"><span class="chip" style="border-color:#c33;color:#c33">rejected</span> "Arrivals doubled." <span class="sub" style="font-size:12px">no record holds that number; rewritten</span></p>
+    <div style="border-top:1.5px solid var(--line);margin-top:12px;padding-top:12px"><b>Decision</b> <span class="btn a" style="font-size:14px;padding:6px 12px">Accept</span> <span class="btn o" style="font-size:14px;padding:6px 12px">Edit</span> <span class="btn o" style="font-size:14px;padding:6px 12px">Reject</span><p class="sub" style="font-size:13px;margin-top:6px">What decision: preparedness budget, Ouaddaï. For whom: UNHCR Chad. By when: 15 Dec.</p></div>
+    <div style="margin-top:12px;font-size:12px"><span class="tech">deterministic template default</span> <span class="tech">LLM loop behind FF_AGENTS, never expert-facing</span> <span class="tech">hard fail: n under 5, any number off, claim without record</span></div>
+   </div>
+  </div>
+ </div>
+ <div class="foot"><span>Tversky and Kahneman; Delphi; Pennycook and Rand; Lord, Lepper and Preston; Prelec, Seung and McCoy; ACAPS bias brief 2016 for the names</span><span>4</span></div>
+</section>
+<section class="slide" id="s5">
+ <div class="line" data-s="0">Why every stakeholder can trust it: a public record each of them can check, and protections each of them can see.</div>
+ <div style="display:flex;gap:34px;align-items:flex-start">
+  <div class="win" data-s="1" style="width:640px;height:660px;flex:none">
+   <div class="bar"><i></i><i></i><i></i><b>Public ledger</b><span style="margin-left:auto">no names, ever</span></div>
+   <div class="main" style="font-size:16px;line-height:1.45">
+    <b>R1043, eastern Chad</b><br>Committed 7 Nov 09:00. Group 0.69, spread 0.3 to 0.9. ACAPS band High. Decision: kept High. What decision: preparedness budget, Ouaddaï. For whom: UNHCR Chad. By when: 15 Dec.
+    <div style="border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px;line-height:1.45"><b>Honesty box</b> 8 experts, agreement 0.75, no access expert on the panel, claims 2 corroborated and 2 queued, relayed 0, panel record 3 of 4 with one miss.</div>
+    <span class="btn">Verify: matches</span> <span class="sub" style="font-size:14px">existed at this time, unchanged since; timing, not truth</span>
+    <div style="margin-top:10px;font-size:13px"><span class="tech">commitment SHA-256, salted</span> <span class="tech">attested ML-DSA-65</span> <span class="tech">anchored OpenTimestamps</span></div>
+    <div style="margin-top:12px;border-top:1.5px solid var(--line);padding-top:10px;font-size:14px"><b>R1018, Niger</b> group 0.42, ACAPS Medium, <b>panel view rejected</b>, rationale on record. Outcome: materialised. <b>A miss, on the page.</b></div>
+    <div style="margin-top:12px;border-top:1.5px solid var(--line);padding-top:10px;font-size:14px"><b>Registry</b> identity map: ML-KEM-768 hybrid key establishment, AES-256-GCM at rest, key with the committee. 3 reads this month, each with a reason, visible to the committee.</div>
+   </div>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+   <div class="mech" data-s="2"><h3>Experts</h3><p>Mask per answer; pseudonymised to peers, limits stated. Committed before anyone sees it, revealed together, so no one anchors on them. Never scored as a person; calibration only with consent, and they see it first. Outcome report for every answer.</p></div>
+   <div class="mech" data-s="2"><h3>Analysts</h3><p>Alerts from arithmetic on ACAPS's own editions. Bias patterns described, never verdicts. Every number in the draft checked against a versioned record; uncorroborated claims held in a queue. Their decision and rationale on record.</p></div>
+   <div class="mech" data-s="3"><h3>ACAPS committee</h3><p>Vetted panels, two approvals, affiliation cap. Identity map encrypted with post-quantum key establishment; every read logged. One-time blind-signed credentials prove a vetted member answered without linking the answer to the approval. Outcome records signed with ML-DSA-65.</p></div>
+   <div class="mech" data-s="3"><h3>Readers and donors</h3><p>A public ledger with the group view, the decision it could inform, the limits, and the misses, including when the analyst overruled a panel that was right. One click recomputes the commitment hash. Aggregates only at five or more; never an individual.</p></div>
+   <div data-s="4" style="grid-column:1 / -1;border-top:2px solid var(--line);padding-top:14px;font-size:17px;color:var(--muted);line-height:1.5"><b style="color:var(--ink)">What we do not claim.</b> Commitments prove timing and consistency, not secrecy from the operator. Masks give confidentiality from peers and the public, not anonymity from ACAPS. Anchoring is a timestamp, not a blockchain product. Scores are for forecasts, never for people.</div>
+  </div>
+ </div>
+ <div class="foot"><span>Six mechanisms built and tested behind flags, each with "proves / does not" on the repo page; detail in the Q&A slides</span><span>5</span></div>
+</section>
+<section class="slide" id="s6">
+ <div class="line" data-s="0">It runs, it is different, and it is ready for a supervised pilot.</div>
+ <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:30px" data-s="1">
+  <div><div class="num" style="font-size:96px">123</div><p class="sub" style="font-size:19px">crises diffed live from the ACAPS API; the April 2026 Chad move reproduced by replay, rank 1</p></div>
+  <div><div class="num" style="font-size:96px">104</div><p class="sub" style="font-size:19px">resolved ACAPS risks in the sensitivity test; labelled as a software test, no timing claim</p></div>
+  <div><div class="num" style="font-size:96px">&lt; 60 s</div><p class="sub" style="font-size:19px">full loop from a clean clone, offline: alert to scores</p></div>
+  <div><div class="num" style="font-size:96px">9</div><p class="sub" style="font-size:19px">feature flags, each with a deterministic fallback; UI states which path ran; five external reviews applied</p></div>
+ </div>
+ <table class="cmp" data-s="2" style="margin-top:34px;font-size:19px">
+  <tr><th style="width:560px"></th><th>Email thread today</th><th>Survey tool</th><th>Prediction market</th><th class="us">Sealed Signals</th></tr>
+  <tr><td>No account for the expert; six channels, one link</td><td class="y">yes</td><td class="n">no</td><td class="n">no</td><td class="us y">yes</td></tr>
+  <tr><td>Rating hidden, answers committed before anyone sees them</td><td class="n">no</td><td class="n">no</td><td class="n">no, prices are public</td><td class="us y">yes</td></tr>
+  <tr><td>Bias patterns described to the analyst, never a verdict on a person</td><td class="n">no</td><td class="n">no</td><td class="n">no</td><td class="us y">yes</td></tr>
+  <tr><td>Every number in the draft checked against a versioned record</td><td class="n">no</td><td class="n">no</td><td class="n">no</td><td class="us y">yes</td></tr>
+  <tr><td>Public record with timing proof, limits and misses; a person decides</td><td class="n">no</td><td class="n">no</td><td class="p">prices only</td><td class="us y">yes</td></tr>
+ </table>
+ <div style="display:flex;gap:40px;margin-top:30px;align-items:center" data-s="3">
+  <div style="font-size:26px;font-weight:600">Pilot, December: 1 crisis, 8 experts with consent, 3 months, ACAPS's Risk Radar manager as the analyst.</div>
+  <div class="sub" style="font-size:20px;margin-left:auto">Zain Ul Haq, backend. Saleeta Qadir, frontend. Sho Izuno, research and pitch.</div>
+ </div>
+ <div class="foot"><span>Easier to contribute to, easier to scrutinise, easier to trace</span><span>6</span></div>
+</section>
+<section class="slide dark" id="s7">
+ <div style="margin-top:200px"><h1 data-s="0" style="font-size:96px">Easier to contribute to.<br>Easier to scrutinise.<br>Easier to trace.</h1><p class="sub" data-s="1" style="font-size:32px;margin-top:50px">The numbers raise the alert, people make the call, the record shows the misses.</p></div>
+ <div class="foot"><span>github.com/zaindroid/HFG8-ACAPS-Ground-Truth</span><span>Thank you</span></div>
+</section>
+<section class="slide" id="b1">
  <div class="line" data-s="0">Alert engine: a deterministic diff of ACAPS's monthly editions found the real April 2026 move. No model.</div>
  <div class="win" data-s="1" style="height:760px">
   <div class="bar"><i></i><i></i><i></i><b>Sealed Signals, analyst desk</b><span style="margin-left:auto">ACAPS API, live, editions Nov 2026</span></div>
@@ -155,9 +274,9 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
    </div>
   </div>
  </div>
- <div class="foot"><span>The real April 2026 move, reproduced by the engine from cached editions, offline</span><span>3</span></div>
+ <div class="foot"><span>The real April 2026 move, reproduced by the engine from cached editions, offline</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="s4">
+<section class="slide" id="b2">
  <div class="line" data-s="0">Reach: no sign-up, six channels, one magic link, every reply parsed into the same record.</div>
  <div class="win" data-s="1" style="height:760px">
   <div class="bar"><i></i><i></i><i></i><b>Sealed Signals, analyst desk</b><span style="margin-left:auto">Pulse P-0001, R1043, deadline Mon 09:00</span></div>
@@ -179,9 +298,9 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
    </div>
   </div>
  </div>
- <div class="foot"><span>Inbound parsers for email, WhatsApp, SMS and voice; every channel resolves to the same record and mask</span><span>4</span></div>
+ <div class="foot"><span>Inbound parsers for email, WhatsApp, SMS and voice; every channel resolves to the same record and mask</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="s5">
+<section class="slide" id="b3">
  <div class="line" data-s="0">Psychology layer: six biases designed out on the card, five patterns described on the desk.</div>
  <div style="display:flex;gap:70px;align-items:flex-start">
   <div style="position:relative;flex:none">
@@ -210,9 +329,9 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
    <div data-s="5" style="margin-top:18px;border:2px solid var(--line);border-radius:12px;padding:16px 20px;background:#fff"><b style="font-size:20px">Described on the desk, never a verdict</b><div style="margin-top:8px"><span class="chip t">convergence after reveal</span><span class="chip t">co-movement, m of p pulses</span><span class="chip t">shared origin, same wording</span><span class="chip t">news-driven vs flat indices</span><span class="chip t">coverage gap</span><span class="chip a">affiliation cap, 3 of 8</span><span class="chip a">surprisingly-popular, labelled experiment</span></div></div>
   </div>
  </div>
- <div class="foot"><span>Tversky and Kahneman; Delphi; Prelec, Seung and McCoy 2017; Tetlock; ACAPS cognitive-biases brief 2016 for the names</span><span>5</span></div>
+ <div class="foot"><span>Tversky and Kahneman; Delphi; Prelec, Seung and McCoy 2017; Tetlock; ACAPS cognitive-biases brief 2016 for the names</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="s6">
+<section class="slide" id="b4">
  <div class="line" data-s="0">Agentic verification: three roles, every number checked against a versioned record, a person decides.</div>
  <div style="display:flex;gap:30px">
   <div class="win" data-s="1" style="flex:1;height:700px">
@@ -234,33 +353,9 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
    <div class="mech" style="margin-top:18px"><h3>Audit</h3><p>Skeptic verdicts and Judge scores are stored next to the decision on the ledger.</p></div>
   </div>
  </div>
- <div class="foot"><span>Same pattern as our FloodSense engine; here the loop drafts, a person publishes</span><span>6</span></div>
+ <div class="foot"><span>Same pattern as our FloodSense engine; here the loop drafts, a person publishes</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="s7">
- <div class="line" data-s="0">Why every stakeholder can trust it: a public record each of them can check, and protections each of them can see.</div>
- <div style="display:flex;gap:34px;align-items:flex-start">
-  <div class="win" data-s="1" style="width:640px;height:660px;flex:none">
-   <div class="bar"><i></i><i></i><i></i><b>Public ledger</b><span style="margin-left:auto">no names, ever</span></div>
-   <div class="main" style="font-size:16px;line-height:1.45">
-    <b>R1043, eastern Chad</b><br>Committed 7 Nov 09:00. Group 0.69, spread 0.3 to 0.9. ACAPS band High. Decision: kept High. What decision: preparedness budget, Ouaddaï. For whom: UNHCR Chad. By when: 15 Dec.
-    <div style="border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px;line-height:1.45"><b>Honesty box</b> 8 experts, agreement 0.75, no access expert on the panel, claims 2 corroborated and 2 queued, relayed 0, panel record 3 of 4 with one miss.</div>
-    <span class="btn">Verify: matches</span> <span class="sub" style="font-size:14px">existed at this time, unchanged since; timing, not truth</span>
-    <div style="margin-top:10px;font-size:13px"><span class="tech">commitment SHA-256, salted</span> <span class="tech">attested ML-DSA-65</span> <span class="tech">anchored OpenTimestamps</span></div>
-    <div style="margin-top:12px;border-top:1.5px solid var(--line);padding-top:10px;font-size:14px"><b>R1018, Niger</b> group 0.42, ACAPS Medium, <b>panel view rejected</b>, rationale on record. Outcome: materialised. <b>A miss, on the page.</b></div>
-    <div style="margin-top:12px;border-top:1.5px solid var(--line);padding-top:10px;font-size:14px"><b>Registry</b> identity map: ML-KEM-768 hybrid key establishment, AES-256-GCM at rest, key with the committee. 3 reads this month, each with a reason, visible to the committee.</div>
-   </div>
-  </div>
-  <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:18px">
-   <div class="mech" data-s="2"><h3>Experts</h3><p>Mask per answer; pseudonymised to peers, limits stated. Committed before anyone sees it, revealed together, so no one anchors on them. Never scored as a person; calibration only with consent, and they see it first. Outcome report for every answer.</p></div>
-   <div class="mech" data-s="2"><h3>Analysts</h3><p>Alerts from arithmetic on ACAPS's own editions. Bias patterns described, never verdicts. Every number in the draft checked against a versioned record; uncorroborated claims held in a queue. Their decision and rationale on record.</p></div>
-   <div class="mech" data-s="3"><h3>ACAPS committee</h3><p>Vetted panels, two approvals, affiliation cap. Identity map encrypted with post-quantum key establishment; every read logged. One-time blind-signed credentials prove a vetted member answered without linking the answer to the approval. Outcome records signed with ML-DSA-65.</p></div>
-   <div class="mech" data-s="3"><h3>Readers and donors</h3><p>A public ledger with the group view, the decision it could inform, the limits, and the misses, including when the analyst overruled a panel that was right. One click recomputes the commitment hash. Aggregates only at five or more; never an individual.</p></div>
-   <div data-s="4" style="grid-column:1 / -1;border-top:2px solid var(--line);padding-top:14px;font-size:17px;color:var(--muted);line-height:1.5"><b style="color:var(--ink)">What we do not claim.</b> Commitments prove timing and consistency, not secrecy from the operator. Masks give confidentiality from peers and the public, not anonymity from ACAPS. Anchoring is a timestamp, not a blockchain product. Scores are for forecasts, never for people.</div>
-  </div>
- </div>
- <div class="foot"><span>Six mechanisms built and tested behind flags, each with "proves / does not" on the repo page; detail in the Q&A slides</span><span>7</span></div>
-</section>
-<section class="slide" id="s8">
+<section class="slide" id="b5">
  <div class="line" data-s="0">Proof it runs, not promises.</div>
  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:30px;margin-top:10px">
   <div data-s="1"><div class="num">123</div><p class="sub" style="font-size:22px">crises diffed live from the ACAPS API each month; the April 2026 Chad move reproduced by replay, rank 1, delta 0.8</p></div>
@@ -273,9 +368,9 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
   <div class="mech"><h3>Measured, not claimed</h3><p>Card time and taps on two real phones over venue Wi-Fi, written in the README. Payload under 50 KB. Channel preferences marked as hypotheses.</p></div>
   <div class="mech"><h3>Reviewed</h3><p>Five independent model reviews on the design; every over-claim they found is gone: no "earlier than ACAPS", no "sealed means secret", no hidden measurement of experts, equal-weight mean primary.</p></div>
  </div>
- <div class="foot"><span>make demo · make check · docs/sealed-signals/trust-design.md</span><span>8</span></div>
+ <div class="foot"><span>make demo · make check · docs/sealed-signals/trust-design.md</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="s9">
+<section class="slide" id="b6">
  <div class="line" data-s="0">Why it is different from an email thread, a survey tool and a prediction market.</div>
  <table class="cmp" data-s="1">
   <tr><th style="width:520px"></th><th>Email thread today</th><th>Survey tool</th><th>Prediction market</th><th class="us">Sealed Signals</th></tr>
@@ -289,9 +384,9 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
   <tr data-s="5"><td>Identity protected with stated limits, quantum-safe at rest</td><td class="n">no</td><td class="n">no</td><td class="p">pseudonymous wallets</td><td class="us y">yes, masks, blind credentials, ML-KEM</td></tr>
   <tr data-s="5"><td>Scored against outcomes; expert sees their own calibration first</td><td class="n">no</td><td class="n">no</td><td class="p">money, public</td><td class="us y">yes, panel-level, consent-gated</td></tr>
  </table>
- <div class="foot"><span>No ranking, no money, no engagement metrics, no chatbot</span><span>9</span></div>
+ <div class="foot"><span>No ranking, no money, no engagement metrics, no chatbot</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide dark" id="s10">
+<section class="slide dark" id="b7">
  <div class="line" data-s="0" style="color:#fff">Ready for a supervised pilot of this workflow.</div>
  <div style="display:flex;gap:50px;margin-top:60px">
   <div data-s="1" style="width:260px"><div style="font-size:200px;font-weight:600;line-height:1;letter-spacing:-6px">1</div><p class="sub" style="font-size:28px">crisis: eastern Chad</p></div>
@@ -299,13 +394,9 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
   <div data-s="3" style="width:300px"><div style="font-size:200px;font-weight:600;line-height:1;letter-spacing:-6px">3</div><p class="sub" style="font-size:28px">months, ACAPS's Risk Radar manager as the analyst</p></div>
   <div data-s="4" style="flex:1;min-width:600px;border-left:2px solid #2d5c58;padding-left:50px;font-size:26px;line-height:1.5;color:#9fc8c3">Measured: experts still answering in week 8; minutes per weekly update; panel mean against the rating on questions that resolve.<br><br>Running today: live ACAPS API with offline cache, full loop in under a minute from a clean clone, every mechanism tested with its limit written down.</div>
  </div>
- <div class="foot"><span>Zain Ul Haq, backend. Saleeta Qadir, frontend. Sho Izuno, research and pitch.</span><span>10</span></div>
+ <div class="foot"><span>Zain Ul Haq, backend. Saleeta Qadir, frontend. Sho Izuno, research and pitch.</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide dark" id="s11">
- <div style="margin-top:200px"><h1 data-s="0" style="font-size:96px">Easier to contribute to.<br>Easier to scrutinise.<br>Easier to trace.</h1><p class="sub" data-s="1" style="font-size:32px;margin-top:50px">The numbers raise the alert, people make the call, the record shows the misses.</p></div>
- <div class="foot"><span>github.com/zaindroid/HFG8-ACAPS-Ground-Truth</span><span>Thank you</span></div>
-</section>
-<section class="slide" id="b1">
+<section class="slide" id="b8">
  <div class="line" data-s="0">Q&A: ACAPS's own personas, and where our modules sit in their workflow.</div>
  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:10px">
   <div data-s="1" style="border:2px solid var(--line);border-radius:12px;padding:40px 36px;min-height:520px"><div style="font-size:46px;font-weight:600">Jose</div><div class="sub" style="font-size:24px;margin-bottom:28px">UN regional office, covers Sudan</div><p style="font-family:var(--serif);font-style:italic;font-size:30px;line-height:1.35;margin-bottom:30px">"an easy way for field-users to provide quality feedback to HQ level"</p><span class="chip t" style="font-size:20px;padding:8px 16px">answers the Chad pulse</span></div>
@@ -320,7 +411,7 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
  </div>
  <div class="foot"><span>Personas from ACAPS's reader research; hypotheses until the pilot</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="b2">
+<section class="slide" id="b9">
  <div class="line" data-s="0">Q&A: cryptographic ledger, six mechanisms, each with the one thing it proves and the one thing it does not.</div>
  <div style="display:flex;gap:30px">
   <div class="win" data-s="1" style="width:760px;height:700px;flex:none">
@@ -345,7 +436,7 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
  </div>
  <div class="foot"><span>All six built and tested with deterministic fallbacks; the UI states which path ran</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="b3">
+<section class="slide" id="b10">
  <div class="line" data-s="0">Q&A: scoring and calibration. Forecasts, not people.</div>
  <div style="display:flex;gap:40px;align-items:flex-start">
   <div style="width:1040px" data-s="1">
@@ -370,7 +461,7 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
  </div>
  <div class="foot"><span>Scores never gate approval or removal in the pilot</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="b4">
+<section class="slide" id="b11">
  <div class="line" data-s="0">Fallback: revealed together at the deadline, disagreement unattributed.</div>
  <div class="win" data-s="1" style="height:760px">
   <div class="bar"><i></i><i></i><i></i><b>Sealed Signals, analyst desk</b><span style="margin-left:auto">Pulse P-0001, revealed Mon 09:00, 8 of 8</span></div>
@@ -393,9 +484,9 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
    </div>
   </div>
  </div>
- <div class="foot"><span>Distinctive free text lives in the access-logged verification queue, never on this view</span><span>fallback</span></div>
+ <div class="foot"><span>Distinctive free text lives in the access-logged verification queue, never on this view</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="b5">
+<section class="slide" id="b12">
  <div class="line" data-s="0">Fallback: the cited draft, the decision, the public record with its misses.</div>
  <div style="display:flex;gap:30px">
   <div class="win" data-s="1" style="height:720px;flex:1">
@@ -424,15 +515,15 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
    </div>
   </div>
  </div>
- <div class="foot"><span>When the risk resolves: scored at panel level, outcome report to every expert</span><span>fallback</span></div>
+ <div class="foot"><span>When the risk resolves: scored at panel level, outcome report to every expert</span><span>Q&amp;A</span></div>
 </section>
-<section class="slide" id="b6">
+<section class="slide" id="b13">
  <div class="line" data-s="0">Backup: sensitivity test on all 104 resolved risks, synthetic panels.</div>
  <div style="display:flex;gap:60px;align-items:flex-start">
   <div style="width:640px;font-size:26px;line-height:1.45" data-s="1">Scenarios: mixed accuracy, shared bias, correlated errors, no expert advantage. Brier of the equal-weight mean, the shrunk weighted mean, and ACAPS's band under a stated mapping.<br><br><span style="color:var(--teal);font-weight:500">Tests the pipeline. Says nothing about real experts. No timing claim.</span></div>
   <div data-s="1" style="flex:1;height:600px;border:2px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:24px">reports/sensitivity.png</div>
  </div>
- <div class="foot"><span>Intervals labelled as resampling spread, not statistical confidence</span><span>fallback</span></div>
+ <div class="foot"><span>Intervals labelled as resampling spread, not statistical confidence</span><span>Q&amp;A</span></div>
 </section>
 </div>
 <div class="hud" id="hud">Right, Space or click: next. Left: back. F: fullscreen. 0 to 9: jump. B: Q&A and fallback slides.</div>
