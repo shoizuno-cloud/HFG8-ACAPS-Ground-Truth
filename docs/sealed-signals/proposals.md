@@ -61,3 +61,27 @@ Priority: **M** = before the Sat 20:00 merge, **S** = before the Sun 10:30 freez
 ## Done by v3 (kept for the record)
 
 Question contract (now exists); group outcome report route; no extremizing; stance options on the card; no countdown in the product; scoring committee-side; honesty box fields for decision use and rejected panel view; privacy-engineering page created.
+
+## Added for v3.1 (Risk Alert Engine, trust-design.md)
+
+### P15. Demo opens with Replay, not a live run on the current month (M) - Lane A + B
+- We diffed the cached editions ourselves. Under our reading of the rules, March to April 2026 fires 9 of 123 crises (TCD005 first), and October to November 2026 fires 0 of 122. The master prompt says the demo "opens with the engine diffing the current month live". That would show an empty Alerts page. Use Replay April 2026 for the opening. Keep "Run engine" for Q&A: "in a quiet month it says nothing".
+
+### P16. Wording of the headline fact (M) - everyone who speaks
+- TCD005 index 6.1 to 6.9 is the largest **rise** of 123 crises. By absolute change it is second (PAK007 fell 0.9). The master prompt says "largest move" and "Rank by |delta|" in 6b, which would make TCD005 rank 2. Say "largest rise", and confirm Lane A ranks by signed rise or fixes the test ("TCD005 must be rank 1").
+
+### P17. The alert is on TCD005, not on R1043 (M) - Lane A + B
+- TCD005 is the displacement crisis; R1043 is cross-border insecurity. The link is a keyword match confirmed by the analyst. Add one line to the pulse evidence: "Alert measures: INFORM Severity for Displacement from Sudan to Chad. Linked to R1043 by analyst."
+
+### P18. Component rule sign (S) - Lane A
+- "A component delta of 1.0 or more": is that absolute or only rises? Under absolute, PAK007 (a fall) fires. A fall is not a risk alert. Decide and test.
+
+### P19. Cached ACAPS data in a public repo (M) - team, ask ACAPS
+- `data/acaps-api/` holds about 1 MB of ACAPS API responses ("ACAPS terms of use apply"). Forks of this repo are public. Ask Alex whether publishing the cache is allowed, or keep it out of the public submission and ship only the TCD005 slice needed for the replay. No API token is in the repo (checked with a text search).
+
+### P20. Master prompt inconsistencies, second batch (M) - file owner
+1. Section 0, which must stay identical in README, slides and UI, still says "or, in phase 2, an indicator doorbell". Under 6b the alert engine on ACAPS monthly editions is primary and external feeds are a later note. Update section 0 and the README together.
+2. `trust-design.md` and section 6 still say "Palley & Soll (peer prediction)". See `bias-and-honesty.md` 3.5: Palley and Satopaa 2023 is the peer-prediction paper.
+3. `trust-design.md` section 5 says answers are "sealed"; section 1a says commitments do not hide answers from the operator. Pick "committed" throughout.
+4. `trust-design.md` says "Lane C verifies every citation above before it goes on a slide". Done in `bias-and-honesty.md`; the table row on the loud majority cites the wrong paper until fixed.
+5. The v3.1 changelog calls the 6.1 to 6.9 jump "the largest move". See P16.
