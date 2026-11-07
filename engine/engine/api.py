@@ -28,6 +28,7 @@ from . import (acaps, alerts as alert_engine, data, draft as draft_builder, logg
 from . import hardening as hardening_mod
 from .hardening import (anchors as anchor_lib, calibration as calibration_lib,
                         flags as ff, patterns as pattern_lib)
+from . import impact as impact_lib
 from . import scan as scan_lib
 from . import store
 from .store import Expert, Store, TooFew, now, pseudonym_for, round_verify_hash
@@ -42,6 +43,8 @@ STORE = Store(k_min=SETTINGS.k_min)
 ALERTS = alert_engine.new_store()
 HARD = hardening_mod.new()
 SCANS = scan_lib.ScanStore()
+# Links whose owner said "no more outcome reports". Separate from STOP, which ends all contact.
+REPORTS_OFF: set[str] = set()
 _subscribers: set[asyncio.Queue] = set()
 
 
@@ -1082,9 +1085,24 @@ def _n_text(n: int, panel: int) -> str:
     return "a minority of the panel answered"
 
 
+def _impact(pulse_id: str, n: int) -> dict:
+    pulse = STORE.pulses.get(pulse_id) or {}
+    risk = data.get_risk(pulse.get("risk_id") or "") or {}
+    entry = next((e for e in STORE.ledger if e["pulse_id"] == pulse_id), None)
+    decided = next((d for d in STORE.drafts.values() if d["pulse_id"] == pulse_id), {})
+    return impact_lib.message(
+        n=n, n_text=_n_text(n, _panel_size(pulse_id)), risk=risk, entry=entry,
+        size=impact_lib.scale(risk, ALERTS), decision_note=decided.get("note"),
+        analyst_note=pulse.get("analyst_note"), reach=pulse.get("reach"))
+
+
 @api.get("/e/{token}/feedback", tags=["expert"])
-def feedback(token: str):
-    """The message after the reveal, and the only place an expert sees ACAPS's band (section 8)."""
+def feedback(token: str, show_mine: bool = False):
+    """The message after the reveal, and the only place an expert sees ACAPS's band (section 8).
+
+    It thanks the expert and says what the panel's input changed, from the record. It does not put
+    the expert's own answer beside the result: that reads as a verdict on a person. The expert can
+    ask for their answer with `show_mine=true`."""
     resolved = STORE.resolve_token(token)
     if not resolved:
         raise HTTPException(404, "this link is not valid; ask the analyst for a new one")
@@ -1121,10 +1139,13 @@ def feedback(token: str):
         "spread": result["spread"],
         "disagreement": result.get("disagreement") or [],
         "number_note": result.get("number_note"),
-        "your_answer": your_answer,
-        "your_answer_note": (None if your_answer else
+        "impact": _impact(pulse_id, result["n"]),
+        "your_answer": your_answer if show_mine else None,
+        "your_answer_note": ("Shown because you asked." if show_mine and your_answer else
                              "You answered with no identity kept, so this service cannot tell "
-                             "which answer was yours and shows you the group view only."),
+                             "which answer was yours." if show_mine else
+                             "Your own answer is not shown here unless you ask for it."),
+        "reports_on": token not in REPORTS_OFF,
         "acaps_band": risk.get("probability_acaps"),
         "acaps_level": risk.get("level"),
         "acaps_band_shown": True,
@@ -1425,8 +1446,55 @@ def outcome_report(pulse_id: str):
             f"{decided.get('status', 'no decision yet')}"
             + (f": {decided.get('note')}" if decided.get("note") else "")
         ),
-        "note": "Sent to everyone who answered, whatever mask they chose.",
+        "impact": _impact(pulse_id, found["n"]),
+        "note": ("Sent to everyone who answered, whatever mask they chose, unless they switched "
+                 "outcome reports off. It is about the panel and what changed, never about a person."),
+        "recipients": sum(1 for t, (pid, _) in STORE.tokens.items()
+                          if pid == pulse_id and t in STORE.used_tokens and t not in REPORTS_OFF),
     })
+
+
+@api.post("/pulses/{pulse_id}/thanks", tags=["outcome"])
+def analyst_thanks(pulse_id: str, body: dict = Body(default_factory=dict)):
+    """A personal line from the analyst, written by a person. Never generated."""
+    pulse = STORE.pulses.get(pulse_id)
+    if not pulse:
+        raise HTTPException(404, f"no pulse {pulse_id}")
+    text = (body.get("text") or "").strip()[:280]
+    if not text:
+        raise HTTPException(422, "write the line yourself; an empty note is not sent")
+    pulse["analyst_note"] = {"text": text, "by": (body.get("by") or "ACAPS").strip()[:60],
+                             "written_by": "analyst", "at": now()}
+    return envelope({"pulse_id": pulse_id, "analyst_note": pulse["analyst_note"]})
+
+
+@api.post("/pulses/{pulse_id}/reach", tags=["outcome"])
+def update_reach(pulse_id: str, body: dict = Body(default_factory=dict)):
+    """Reach of the published update, only as ACAPS reports it. Absent unless supplied."""
+    pulse = STORE.pulses.get(pulse_id)
+    if not pulse:
+        raise HTTPException(404, f"no pulse {pulse_id}")
+    readers, orgs = body.get("readers"), body.get("organisations")
+    parts = []
+    if isinstance(orgs, int) and orgs > 0:
+        parts.append(f"{orgs:,} organisations")
+    if isinstance(readers, int) and readers > 0:
+        parts.append(f"{readers:,} readers")
+    if not parts:
+        raise HTTPException(422, "give readers or organisations as counts reported by ACAPS")
+    pulse["reach"] = {"readers": readers, "organisations": orgs,
+                      "text": f"The update was read by {' and '.join(parts)} (as reported by ACAPS)."}
+    return envelope({"pulse_id": pulse_id, "reach": pulse["reach"]})
+
+
+@api.post("/e/{token}/reports-off", tags=["expert"])
+def reports_off(token: str):
+    """One word turns outcome reports off for this link. Separate from STOP, which ends contact."""
+    if not STORE.resolve_token(token):
+        raise HTTPException(404, "this link is not valid")
+    REPORTS_OFF.add(token)
+    return envelope({"reports_on": False,
+                     "message": "Outcome reports are off for you. Reply REPORTS ON to turn them back on."})
 
 
 @api.get("/me/{token}/calibration", tags=["outcome"])

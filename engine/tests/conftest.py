@@ -26,6 +26,8 @@ def seeded():
     from engine.api import ALERTS, HARD, STORE, SETTINGS, app
     from engine.seeding import seed_demo
 
+    from engine.api import REPORTS_OFF
+    REPORTS_OFF.clear()
     HARD.reset()
     pulse_id = seed_demo(STORE, SETTINGS)
     # The alert store is module-global too. Without this, a dismissed or approved event from an
