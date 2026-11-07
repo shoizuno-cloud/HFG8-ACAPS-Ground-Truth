@@ -1,12 +1,11 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./workspace-session";
 import AxeBuilder from "@axe-core/playwright";
 test("blind round hides all ACAPS anchors, source and confidence are selectable", async ({
   page,
 }, info) => {
   await page.goto("/e/demo");
-  await expect(
-    page.getByRole("button", { name: "Seal my answer" }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Submit" })).toBeVisible();
   await expect(page.getByText("High", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Still High?", { exact: true })).toHaveCount(0);
   await expect(
@@ -21,7 +20,7 @@ test("blind round hides all ACAPS anchors, source and confidence are selectable"
     "true",
   );
   await expect(
-    page.getByRole("heading", { name: "Bias and integrity" }),
+    page.getByRole("heading", { name: "Integrity notes" }),
   ).toHaveCount(0);
   await page.screenshot({
     path: `test-results/v2-expert-${info.project.name}.png`,
@@ -33,7 +32,7 @@ test("blind round hides all ACAPS anchors, source and confidence are selectable"
 test("Radar filters, country map, source badge and matching work", async ({
   page,
 }, info) => {
-  await page.goto("/");
+  await page.goto("/radar");
   await expect(
     page.getByText("Source: CSV fallback", { exact: false }),
   ).toBeVisible();
@@ -116,7 +115,7 @@ test("integrity is desk-only and the public ledger includes honesty and resolved
   await page.getByRole("button", { name: "Load synthetic answers" }).click();
   await page.getByRole("button", { name: "Reveal round 1" }).click();
   await expect(
-    page.getByRole("heading", { name: "Bias and integrity" }),
+    page.getByRole("heading", { name: "Integrity notes" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Prepare draft" }).click();
   await expect(
@@ -127,17 +126,26 @@ test("integrity is desk-only and the public ledger includes honesty and resolved
     .fill(
       "Fixture replay only; uncorroborated claim excluded from the visible draft.",
     );
+  await page
+    .getByLabel("Decision to inform", { exact: true })
+    .fill("Pre-position shelter");
+  await page.getByLabel("Decision owner", { exact: true }).fill("NGO lead");
+  await page
+    .getByLabel("Decision needed by", { exact: true })
+    .fill("2026-11-20");
   await page.getByRole("button", { name: "Accept draft" }).click();
   await page.getByRole("link", { name: "View public ledger" }).click();
   await expect(
     page.getByRole("region", { name: "Public honesty box" }),
   ).toHaveCount(2);
   await expect(
-    page.getByRole("heading", { name: "Bias and integrity" }),
+    page.getByRole("heading", { name: "Integrity notes" }),
   ).toHaveCount(0);
   await expect(page.getByText("quiet-heron")).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Resolved history / R0987" }),
   ).toBeVisible();
   await expect(page.getByText("Includes misses")).toHaveCount(2);
+  await expect(page.getByRole("heading", {name:"Panel view rejected by the analyst"})).toBeVisible();
+  await expect(page.getByText("Pre-position shelter", {exact:true})).toBeVisible();
 });

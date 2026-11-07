@@ -1,8 +1,14 @@
+import {
+  DecisionUseFields,
+  emptyDecisionUse,
+  completeDecisionUse,
+  OutcomeReportPanel,
+} from "./V3Workflow";
 import { PortalHeader } from "./PortalHeader";
 import { HistoricalLedger } from "./HistoricalLedger";
 import { DraftNarrative } from "./Grounding";
 import { HonestyBox, IntegrityPanel, PanelMatch } from "./V2Panels";
-import { Verification } from "./LiveWorkspace";
+import { GroupChart, Verification } from "./LiveWorkspace";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   ArrowRight,
@@ -94,77 +100,7 @@ function Shell({
   );
 }
 function ProbabilityChart() {
-  return (
-    <>
-      <div className="stat-row">
-        <div>
-          <span>Weighted panel</span>
-          <strong>{percent(result.weighted_probability)}</strong>
-        </div>
-        <div>
-          <span>ACAPS reference</span>
-          <strong>
-            70<span>%</span>
-          </strong>
-        </div>
-        <div>
-          <span>Surprisingly popular</span>
-          <strong className="small-stat">
-            {result.surprisingly_popular === "yes" ? "Yes" : "No"}
-          </strong>
-        </div>
-      </div>
-      <svg
-        className="probability-chart"
-        viewBox="0 0 560 185"
-        role="img"
-        aria-label="Binned panel estimates on a zero to one hundred percent probability scale. ACAPS reference seventy percent, weighted panel seventy-eight percent."
-      >
-        <line x1="40" y1="134" x2="520" y2="134" className="chart-axis" />
-        {[0, 20, 40, 60, 80, 100].map((v) => (
-          <g key={v}>
-            <line
-              x1={40 + v * 4.8}
-              x2={40 + v * 4.8}
-              y1="28"
-              y2="134"
-              className="chart-grid"
-            />
-            <text x={40 + v * 4.8} y="155" textAnchor="middle">
-              {v}%
-            </text>
-          </g>
-        ))}
-        <line x1="376" x2="376" y1="20" y2="134" className="acaps-line" />
-        <text x="368" y="16" textAnchor="end">
-          ACAPS
-        </text>
-        {result.distribution.flatMap((b) =>
-          Array.from({ length: b.count }, (_, i) => {
-            const [lo, hi] = b.bucket.split("-").map(Number);
-            return (
-              <circle
-                key={`${b.bucket}-${i}`}
-                cx={40 + ((lo + hi) / 2) * 480}
-                cy={118 - i * 24}
-                r="7"
-                className="panel-dot"
-              />
-            );
-          }),
-        )}
-        <path d="M414 38 l7 7 -7 7 -7 -7Z" className="weighted-dot" />
-        <text x="280" y="180" textAnchor="middle">
-          Probability of materialisation within six months
-        </text>
-      </svg>
-      <p className="panel-caption">
-        Dots represent counts at bucket centres, not individual forecasts.
-        Diamond: weighted panel. High is mapped to 70% for comparison.
-        Confidence intervals are not supplied by this fixture.
-      </p>
-    </>
-  );
+  return <GroupChart result={result} reference={risk.probability_acaps} />;
 }
 function Regions() {
   const safe = result.agreement_by_region.filter(
@@ -208,6 +144,7 @@ function Desk() {
   const [answers, setAnswers] = useState(decision ? result.n : 0);
   const [revealed, setRevealed] = useState(!!decision);
   const [hasDraft, setHasDraft] = useState(!!decision);
+  const [decisionUse, setDecisionUse] = useState(emptyDecisionUse);
   const [note, setNote] = useState("");
   const [edit, setEdit] = useState(false);
   const [probability, setProbability] = useState("High");
@@ -233,12 +170,19 @@ function Desk() {
       setError("Add a decision note before continuing.");
       return;
     }
+    if (!completeDecisionUse(decisionUse)) {
+      setError(
+        "Add the decision, decision owner and deadline before continuing.",
+      );
+      return;
+    }
     void simulate("Saving decision", () => {
       const next: Decision = {
         action,
         probability:
           action === "edit" ? probability : draft.proposed_probability,
         note: note.trim(),
+        decision_use: decisionUse,
         at: new Date().toISOString(),
       };
       sessionStorage.setItem(storageKey, JSON.stringify(next));
@@ -358,7 +302,7 @@ function Desk() {
             ) : (
               <div className="empty-panel">
                 <LockKeyhole size={24} />
-                <h3>Independent views stay sealed</h3>
+                <h3>Peer views stay hidden before reveal</h3>
                 <p>Reveal the round to see the group distribution.</p>
               </div>
             )}
@@ -399,7 +343,11 @@ function Desk() {
                   </span>
                   <span>Risk level: {draft.proposed_level}</span>
                 </div>
-                <DraftNarrative draft={draft} themes={result.missing_themes} />
+                <DraftNarrative
+                  draft={draft}
+                  themes={result.missing_themes}
+                  result={result}
+                />
                 <div className="citations">
                   {draft.citations.map((c) => (
                     <a
@@ -431,6 +379,10 @@ function Desk() {
                   </div>
                 ) : (
                   <div className="decision-form">
+                    <DecisionUseFields
+                      value={decisionUse}
+                      onChange={setDecisionUse}
+                    />
                     <label htmlFor="decision-note">Decision note</label>
                     <textarea
                       id="decision-note"
@@ -515,30 +467,35 @@ function Desk() {
         <aside className="desk-side">
           <PanelMatch riskId={risk.risk_id} />
           {revealed && <IntegrityPanel pulseId={pulse.id} />}
-          <Panel title="Doorbell log" detail="Fixture replay">
-            <div className="doorbell-title">
-              <Bell size={18} />
-              <strong>Indicator shift detected</strong>
-            </div>
-            <p className="panel-caption">
-              {date(pulse.fired_at)} · linked to this risk’s triggers
-            </p>
-            {pulse.evidence.map((e) => (
-              <div className="indicator-row" key={e.indicator}>
-                <a href={e.url} target="_blank" rel="noreferrer">
-                  {e.source} <ArrowRight size={12} />
-                </a>
-                <span>{e.indicator.replaceAll("_", " ")}</span>
-                <strong>
-                  {e.value.toLocaleString("en-GB")}{" "}
-                  <small>
-                    vs {e.baseline.toLocaleString("en-GB")} baseline
-                  </small>
-                </strong>
-                <span>z = {e.z}</span>
+          {import.meta.env.VITE_FF_DOORBELL === "1" && (
+            <Panel
+              title="Phase-2 indicator replay"
+              detail="Fixture replay · analyst-triggered is primary"
+            >
+              <div className="doorbell-title">
+                <Bell size={18} />
+                <strong>Indicator shift detected</strong>
               </div>
-            ))}
-          </Panel>
+              <p className="panel-caption">
+                {date(pulse.fired_at)} · linked to this risk’s triggers
+              </p>
+              {pulse.evidence.map((e) => (
+                <div className="indicator-row" key={e.indicator}>
+                  <a href={e.url} target="_blank" rel="noreferrer">
+                    {e.source} <ArrowRight size={12} />
+                  </a>
+                  <span>{e.indicator.replaceAll("_", " ")}</span>
+                  <strong>
+                    {e.value.toLocaleString("en-GB")}{" "}
+                    <small>
+                      vs {e.baseline.toLocaleString("en-GB")} baseline
+                    </small>
+                  </strong>
+                  <span>z = {e.z}</span>
+                </div>
+              ))}
+            </Panel>
+          )}
           <Panel
             title="Agreement by region"
             detail={revealed ? "Regional minimum n = 3" : "Sealed"}
@@ -571,35 +528,7 @@ function Desk() {
               <p className="empty-copy">Themes appear after reveal.</p>
             )}
           </Panel>
-          <Panel title="Super-estimator board" detail="Synthetic pseudonyms">
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Pseudonym</th>
-                    <th>Resolved</th>
-                    <th>Brier</th>
-                    <th>Weight</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {board.super_estimators.map((expert) => (
-                    <tr key={expert.pseudonym}>
-                      <td>{expert.pseudonym}</td>
-                      <td>{expert.n}</td>
-                      <td>{expert.mean_brier.toFixed(2)}</td>
-                      <td>{expert.weight.toFixed(1)}×</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="panel-caption">
-              Lower Brier scores are better. Reliability weights affect the
-              aggregate. Private calibration is available only through an
-              expert’s own invitation.
-            </p>
-          </Panel>
+          <OutcomeReportPanel pulseId={pulse.id} />
         </aside>
       </div>
       {error && (
@@ -655,6 +584,13 @@ function Ledger() {
           className="ledger-entry"
         >
           <h3>{risk.title}</h3>
+          {entry.group_probability !== result.mean && (
+            <p className="panel-caption">
+              Stored ledger fixture: {percent(entry.group_probability)}. Current
+              v3 round mean: {percent(result.mean)}. These fixtures disagree;
+              Lane A must regenerate a consistent version before live use.
+            </p>
+          )}
           <div className="ledger-stats">
             <div>
               <span>Group probability</span>
@@ -672,7 +608,13 @@ function Ledger() {
               <small>Not scored yet</small>
             </div>
           </div>
-          <HonestyBox value={entry.honesty} />
+          <HonestyBox
+            value={{
+              ...entry.honesty,
+              decision_use:
+                decision?.decision_use || entry.honesty.decision_use,
+            }}
+          />
           <dl className="ledger-details">
             <div>
               <dt>Sealed at</dt>

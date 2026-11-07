@@ -63,13 +63,32 @@ export type LedgerEntry = {
   honesty?: Honesty;
 };
 export type Calibration = {
-  pseudonym: string;
+  expert_internal_id?: string;
   n_resolved: number;
   mean_brier: number;
-  reliability_weight: number;
-  moved_before_acaps: number;
   overconfidence?: number;
   note: string;
+};
+export type DecisionUse = {
+  what_decision: string;
+  for_whom: string;
+  by_when: string;
+};
+export type QuestionContract = {
+  risk_id: string;
+  event: string;
+  location: string;
+  horizon_deadline: string;
+  resolution_source: string;
+  adjudication_rule: string;
+  frozen_at?: string;
+};
+export type OutcomeReport = {
+  pulse_id: string;
+  group_mean: number;
+  outcome: string;
+  analyst_decision_summary: string;
+  n?: number;
 };
 export const apiBase = (import.meta.env.VITE_API_URL || "/api").replace(
   /\/$/,
@@ -144,13 +163,24 @@ export const endpoint = {
     api<Result>(`/pulses/${encodeURIComponent(id)}/reveal`, {}),
   draft: (id: string) =>
     api<Draft>(`/pulses/${encodeURIComponent(id)}/draft`, {}),
-  decision: (id: string, action: string, note: string, probability?: string) =>
+  decision: (
+    id: string,
+    action: string,
+    note: string,
+    probability?: string,
+    decisionUse?: DecisionUse,
+  ) =>
     api<Draft>(`/drafts/${encodeURIComponent(id)}/decision`, {
       action,
       note,
+      ...(decisionUse ? { decision_use: decisionUse } : {}),
       ...(action === "edit" ? { edited_probability: probability } : {}),
     }),
   board: () => api<Board>("/analyst/board"),
+  contract: (id: string, body: QuestionContract) =>
+    api<QuestionContract>(`/risks/${encodeURIComponent(id)}/contract`, body),
+  outcomeReport: (id: string) =>
+    api<OutcomeReport>(`/pulses/${encodeURIComponent(id)}/outcome-report`),
   ledger: () => api<{ entries: LedgerEntry[]; k_min: number }>("/ledger"),
   verify: (hash: string) =>
     api<{ valid: boolean; sealed_at: string; anchor: string | null }>(
@@ -167,7 +197,7 @@ export const endpoint = {
   card: (token: string) => api<Card>(`/e/${encodeURIComponent(token)}`),
   answer: (token: string, body: Answer) =>
     api<{
-      sealed_at: string;
+      committed_at: string;
       commitment: string;
       generated_at: string;
       served_from: string;
@@ -185,8 +215,13 @@ export function validResult(value: Result) {
   return (
     Number.isInteger(value.n) &&
     value.n >= 5 &&
-    value.weighted_probability >= 0 &&
-    value.weighted_probability <= 1
+    Number.isFinite(value.mean) &&
+    value.mean >= 0 &&
+    value.mean <= 1 &&
+    value.spread?.min >= 0 &&
+    value.spread.max <= 1 &&
+    value.spread.min <= value.mean &&
+    value.spread.max >= value.mean
   );
 }
 export const masks: Mask[] = ["known", "pseudonym", "anonymous"];

@@ -6,6 +6,8 @@ import "@fontsource/inter/600.css";
 import { mock } from "./api";
 import { ExpertCard } from "./ExpertCard";
 import { LiveWorkspace, Frame } from "./LiveWorkspace";
+import { PublicHome, LoginRequired, WorkspaceHome } from "./Entry";
+import { hasWorkspaceSession } from "./workspace-session";
 const Stage = lazy(() =>
   import("./Extras").then((m) => ({ default: m.Stage })),
 );
@@ -23,6 +25,8 @@ import "./workspace.css";
 import "./polish.css";
 import "./v2.css";
 import "./discovery.css";
+import "./entry.css";
+import "./v3.css";
 
 const MockWorkspace = lazy(() =>
   import("./Workspace").then((m) => ({ default: m.Workspace })),
@@ -53,7 +57,16 @@ class Boundary extends React.Component<
 }
 function Router() {
   const path = location.pathname;
-  if (path === "/" || path === "/radar") return <Radar />;
+  if (path === "/") return <PublicHome />;
+  if (path === "/login") return <PublicHome />;
+  // V3 expert invitations remain no-login links. Team tools use the demo entry gate.
+  const expert = /^\/e\/([^/]+)\/?$/.exec(path);
+  if (expert) return <ExpertCard token={expert[1]} />;
+  const calibration = /^\/me\/([^/]+)\/calibration\/?$/.exec(path);
+  if (calibration) return <Calibration token={calibration[1]} />;
+  if (!hasWorkspaceSession()) return <LoginRequired />;
+  if (path === "/workspace") return <WorkspaceHome />;
+  if (path === "/radar") return <Radar />;
   if (path === "/desk" || path === "/ledger") {
     const page = path === "/desk" ? "desk" : "ledger";
     return mock ? <MockWorkspace page={page} /> : <LiveWorkspace page={page} />;
@@ -70,16 +83,12 @@ function Router() {
   if (path === "/stage") return <Stage />;
   if (path === "/apply") return <Apply />;
   if (path === "/committee") return <Committee />;
-  const expert = /^\/e\/([^/]+)\/?$/.exec(path);
-  if (expert) return <ExpertCard token={expert[1]} />;
-  const calibration = /^\/me\/([^/]+)\/calibration\/?$/.exec(path);
-  if (calibration) return <Calibration token={calibration[1]} />;
   return (
     <Frame
       title="Page not found"
       subtitle="Open Risk Radar to find the right view."
     >
-      <a href="/">Go to Risk Radar</a>
+      <a href="/radar">Go to Risk Radar</a>
     </Frame>
   );
 }

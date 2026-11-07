@@ -209,7 +209,7 @@ export function Discovery({
               ) : (
                 <Empty>
                   No risks for this country are loaded in the connected service.{" "}
-                  <a href="/">Browse Risk Radar</a>.
+                  <a href="/radar">Browse Risk Radar</a>.
                 </Empty>
               )}
             </Section>

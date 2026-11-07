@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./workspace-session";
 import AxeBuilder from "@axe-core/playwright";
 import risks from "../../fixtures/GET_risks.json" with { type: "json" };
 import pulse from "../../fixtures/POST_pulses_response.json" with { type: "json" };
@@ -77,6 +78,19 @@ async function contractApi(page: Page) {
         approved_by: ["admin-a"],
       });
     if (path === "/risks") return respond(risks);
+    if (path.endsWith("/contract"))
+      return respond({
+        ...body,
+        risk_id: "R1043",
+        frozen_at: "2026-11-06T09:00:00Z",
+      });
+    if (path.endsWith("/outcome-report"))
+      return respond({
+        pulse_id: "P-0001",
+        group_mean: 0.69,
+        outcome: "materialised",
+        analyst_decision_summary: "Retained High.",
+      });
     if (path === "/analyst/board") return respond(board);
     if (path === "/pulses" && body) return respond(pulse, 201);
     if (path === "/pulses/P-0001") return respond({ ...pulse, n_answers: 8 });
@@ -88,10 +102,10 @@ async function contractApi(page: Page) {
         claims: [
           {
             claim_id: "c1",
-            text: "The panel probability is 78%.",
+            text: "The equal-weight panel mean is 69%.",
             evidence_kind: "panel",
-            evidence_ref: "P-0001",
-            numbers: [0.78],
+            evidence_ref: "P-0001:mean",
+            numbers: [0.69],
           },
         ],
         skeptic: [
@@ -161,24 +175,42 @@ test("API pulse, SSE, reveal, checked draft, decision and resolution", async ({
     page.getByText("P-0001 · Round 1 · 8 sealed answers", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Reveal round", exact: true }).click();
-  await expect(page.getByText("78%", { exact: true })).toBeVisible();
+  await expect(page.getByText("69%", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Prepare draft" }).click();
   await expect(page.getByText("c1 · supported", { exact: true })).toBeVisible();
   await page
     .getByLabel("Decision note")
     .fill("Reviewed panel and indicator evidence.");
+  await page
+    .getByLabel("Decision to inform", { exact: true })
+    .fill("Pre-position shelter");
+  await page
+    .getByLabel("Decision owner", { exact: true })
+    .fill("NGO preparedness lead");
+  await page
+    .getByLabel("Decision needed by", { exact: true })
+    .fill("2026-11-20");
   await page.getByRole("button", { name: "Edit probability" }).click();
   await page.getByLabel("Edited probability").selectOption("Very High");
   await page.getByRole("button", { name: "Save edited decision" }).click();
   await expect(
     page.getByRole("heading", { name: "Decision log" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Resolve risk and score forecasts" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Freeze question contract" }).click();
+  await expect(
+    page.getByText("Contract frozen and confirmed by the API."),
+  ).toBeVisible();
   await page.getByLabel("Resolution date (UTC)").fill("2026-11-05");
   await page.getByLabel("I confirm this is an observed outcome.").check();
   await page
     .getByRole("button", { name: "Resolve risk and score forecasts" })
     .click();
-  await expect(page.getByRole("status")).toContainText("8 scores written");
+  await expect(
+    page.getByRole("status").filter({ hasText: "8 scores written" }),
+  ).toBeVisible();
   expect(writes.find((w) => w.path === "/pulses")?.body).toEqual({
     risk_id: "R1043",
     reason: "analyst",
@@ -219,8 +251,11 @@ test("ledger suppresses small groups and reports failed verification; calibratio
   await page.getByRole("button", { name: "Verify entry" }).click();
   await expect(page.getByRole("status").first()).toContainText("hash mismatch");
   await page.goto("/me/private-invitation/calibration");
+  await page
+    .getByRole("button", { name: "View my private calibration" })
+    .click();
   await expect(
-    page.getByRole("heading", { name: "Track record for quiet-heron" }),
+    page.getByRole("heading", { name: "Resolved forecast calibration" }),
   ).toBeVisible();
   await expect(page.getByText("0.12", { exact: true })).toBeVisible();
   await page.screenshot({
@@ -247,16 +282,19 @@ test("network errors retry without fixture fallback and expert answers use selec
   await page
     .getByRole("button", { name: "Pseudonym Nickname to peers" })
     .click();
-  await page.getByRole("button", { name: "Seal my answer" }).click();
+  await page.getByRole("button", { name: "Submit" }).click();
   await expect(
-    page.getByRole("heading", { name: "Sealed. You’ll hear how it resolves." }),
+    page.getByRole("heading", {
+      name: "Submitted. You’ll get the group outcome.",
+    }),
   ).toBeVisible();
   expect(writes.find((w) => w.path.endsWith("/answer"))?.body).toMatchObject({
     mask: "pseudonym",
     probability: 0.5,
-    panel_guess: 0.5,
+    panel_share_yes: 0.5,
     changed_mind: false,
-    agree: null,
+    stance: "estimate",
+    round: 1,
     confidence: 3,
     source_tag: null,
   });
@@ -338,7 +376,7 @@ test("a result for another pulse is not revealed on the selected desk", async ({
   await expect(
     page.getByRole("button", { name: "Prepare draft" }),
   ).toBeDisabled();
-  await expect(page.getByText("Weighted panel", { exact: true })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByText("Equal-weight mean", { exact: true }),
+  ).toHaveCount(0);
 });

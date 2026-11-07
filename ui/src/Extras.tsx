@@ -159,18 +159,20 @@ export function Stage() {
   );
 }
 export function Calibration({ token }: { token: string }) {
-  const [report, setReport] = useState<Report | null>(null),
+  const [optedIn, setOptedIn] = useState(false),
+    [report, setReport] = useState<Report | null>(null),
     [error, setError] = useState(""),
-    [busy, setBusy] = useState(true),
+    [busy, setBusy] = useState(false),
     [reload, setReload] = useState(0);
   useEffect(() => {
+    if (!optedIn) return;
     let active = true;
     setBusy(true);
     setError("");
-    const work = mock
+    const job = mock
       ? import("../../fixtures/GET_me_calibration.json").then((m) => m.default)
       : endpoint.calibration(token);
-    work
+    job
       .then((value) => {
         if (active) setReport(value);
       })
@@ -183,89 +185,77 @@ export function Calibration({ token }: { token: string }) {
     return () => {
       active = false;
     };
-  }, [token, reload]);
+  }, [token, optedIn, reload]);
   return (
     <Frame
       title="Your calibration"
-      subtitle="A private view of how your forecasts resolve."
+      subtitle="Private, optional feedback on resolved forecasts."
     >
-      <div className="mode-banner">
-        <LockKeyhole size={16} />
+      <p className="mode-banner">
         {mock
           ? "Synthetic calibration fixture · not linked to your demo answer"
-          : "Private report · accessible through your invitation only"}
-      </div>
-      {busy ? (
-        <p className="workspace-message" role="status">
-          Loading calibration…
-        </p>
+          : "Private opt-in report"}
+      </p>
+      <p className="panel-caption">
+        Available after five resolved forecasts. Anonymous answers cannot be
+        linked to this report or claimed later. Scores never gate expert
+        approval.
+      </p>
+      {!optedIn ? (
+        <Section title="Choose whether to view your report">
+          <p>
+            Opening this report is optional. Free-text observations and
+            abstentions are never scored.
+          </p>
+          <button onClick={() => setOptedIn(true)}>
+            View my private calibration
+          </button>
+        </Section>
+      ) : busy ? (
+        <p role="status">Loading calibration…</p>
       ) : error ? (
         <Section title="Report unavailable">
-          <p role="alert">{error}</p>
+          <p role="alert">
+            {error} The service may withhold this report until five forecasts
+            resolve.
+          </p>
           <button onClick={() => setReload((v) => v + 1)}>Try again</button>
         </Section>
+      ) : report && report.n_resolved >= 5 ? (
+        <Section title="Resolved forecast calibration">
+          <div className="ledger-stats">
+            <div>
+              <span>Resolved forecasts</span>
+              <strong>{report.n_resolved}</strong>
+            </div>
+            <div>
+              <span>Mean Brier score</span>
+              <strong>{report.mean_brier.toFixed(2)}</strong>
+              <small>Lower is better · 0 is perfect</small>
+            </div>
+            <div>
+              <span>Overconfidence index</span>
+              <strong>
+                {report.overconfidence === undefined
+                  ? "Not supplied"
+                  : report.overconfidence.toFixed(2)}
+              </strong>
+            </div>
+          </div>
+          <p className="panel-caption">
+            Brier score is the squared difference between a forecast probability
+            and its observed outcome. This report measures forecasts, not
+            people. Timing comparisons with ACAPS ratings are not supported by
+            the export.
+          </p>
+          <p className="panel-caption">
+            A full calibration curve requires forecast-level observations.
+          </p>
+        </Section>
       ) : (
-        report && (
-          <Section
-            title={
-              report.n_resolved
-                ? `Track record for ${report.pseudonym}`
-                : "No resolved forecasts yet"
-            }
-          >
-            {report.n_resolved ? (
-              <>
-                <div className="ledger-stats">
-                  <div>
-                    <span>Resolved forecasts</span>
-                    <strong>{report.n_resolved}</strong>
-                  </div>
-                  <div>
-                    <span>Mean Brier score</span>
-                    <strong>{report.mean_brier.toFixed(2)}</strong>
-                    <small>Lower is better · 0 is perfect</small>
-                  </div>
-                  <div>
-                    <span>Reliability weight</span>
-                    <strong>{report.reliability_weight.toFixed(2)}×</strong>
-                  </div>
-                </div>
-                <p>{report.note}</p>
-                <p className="panel-caption">
-                  Overconfidence index:{" "}
-                  {report.overconfidence === undefined
-                    ? "Not supplied by the API"
-                    : report.overconfidence.toFixed(2)}
-                  . A full calibration curve requires forecast-level
-                  observations.
-                </p>
-                <div className="calibration-scale">
-                  <span
-                    style={{
-                      left: `${Math.max(0, Math.min(1, report.mean_brier)) * 100}%`,
-                    }}
-                    aria-hidden="true"
-                  />
-                </div>
-                <div className="scale">
-                  <span>0 · Accurate</span>
-                  <span>1 · Incorrect with certainty</span>
-                </div>
-                <p className="panel-caption">
-                  Brier score measures the squared difference between a
-                  probability and the observed outcome. Reliability weights help
-                  combine future forecasts. This report is not published to the
-                  public ledger.
-                </p>
-              </>
-            ) : (
-              <p>
-                Your calibration report will appear after your first risk
-                resolves.
-              </p>
-            )}
-          </Section>
-        )
+        <Section title="Five resolutions required">
+          <p>Your optional report will appear after five forecasts resolve.</p>
+        </Section>
       )}
     </Frame>
   );

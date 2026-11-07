@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./workspace-session";
 test("expert card fits, supports keyboard sliders and seals selected mask", async ({
   page,
 }, info) => {
@@ -25,9 +26,11 @@ test("expert card fits, supports keyboard sliders and seals selected mask", asyn
     path: `test-results/expert-${info.project.name}.png`,
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Seal my answer" }).click();
+  await page.getByRole("button", { name: "Submit" }).click();
   await expect(
-    page.getByRole("heading", { name: "Sealed. You’ll hear how it resolves." }),
+    page.getByRole("heading", {
+      name: "Submitted. You’ll get the group outcome.",
+    }),
   ).toBeVisible();
   await expect(
     page.getByText("Fixture receipt · not a live seal"),
@@ -42,7 +45,7 @@ test("round two and empty invitation render meaningful states", async ({
     page.getByRole("heading", { name: "How the panel answered" }),
   ).toBeVisible();
   await expect(
-    page.getByText("8 synthetic answers · Weighted probability 78%"),
+    page.getByText("8 synthetic answers · Equal-weight mean 69%"),
   ).toBeVisible();
   await page.getByLabel("I changed my mind after seeing the panel").check();
   await page.goto("/e/empty");

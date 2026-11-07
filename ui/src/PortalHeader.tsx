@@ -1,11 +1,12 @@
 import { LockKeyhole, Search, ArrowUpRight } from "lucide-react";
+import { endDemoSession } from "./workspace-session";
 
 export function PortalHeader() {
   const path = location.pathname;
   return (
     <header className="site-header workspace-header portal-header">
       <div className="portal-topline">
-        <a className="brand" href="/">
+        <a className="brand" href="/workspace">
           <span className="brand-mark">
             <LockKeyhole size={19} />
           </span>
@@ -17,11 +18,21 @@ export function PortalHeader() {
         <a className="official-link" href="https://www.acaps.org/en/">
           ACAPS website <ArrowUpRight size={14} aria-hidden="true" />
         </a>
+        <button
+          className="portal-signout"
+          onClick={() => {
+            endDemoSession();
+            location.assign("/");
+          }}
+        >
+          Log out
+        </button>
       </div>
       <div className="portal-navigation">
         <nav aria-label="Main navigation">
           {[
-            ["/", "Radar"],
+            ["/workspace", "Overview"],
+            ["/radar", "Radar"],
             ["/countries", "Countries"],
             ["/analysis", "Analysis"],
             ["/topics", "Topics & data"],

@@ -29,10 +29,9 @@ export function HonestyBox({ value }: { value?: Honesty }) {
           <strong>{percent(value.agreement)}</strong>
         </div>
         <div>
-          <span>Confidence band</span>
+          <span>Forecast spread</span>
           <strong>
-            {percent(value.confidence_band[0])}–
-            {percent(value.confidence_band[1])}
+            {percent(value.spread[0])}–{percent(value.spread[1])}
           </strong>
         </div>
         <div>
@@ -59,10 +58,50 @@ export function HonestyBox({ value }: { value?: Honesty }) {
           </strong>
         </div>
       </div>
+      <div className="honesty-grid">
+        <div>
+          <span>Claims in verification queue</span>
+          <strong>
+            {value.claims_in_verification_queue ?? "Not supplied"}
+          </strong>
+        </div>
+        <div>
+          <span>Recorded misses</span>
+          <strong>{value.misses ?? "Not supplied"}</strong>
+        </div>
+      </div>
+      <div className="decision-use-summary">
+        <h4>What decision could this inform?</h4>
+        {value.decision_use ? (
+          <dl>
+            <div>
+              <dt>Decision</dt>
+              <dd>{value.decision_use.what_decision}</dd>
+            </div>
+            <div>
+              <dt>For whom</dt>
+              <dd>{value.decision_use.for_whom}</dd>
+            </div>
+            <div>
+              <dt>By when</dt>
+              <dd>{value.decision_use.by_when}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p>Decision-use context not supplied.</p>
+        )}
+      </div>
+      {value.panel_view_rejected && (
+        <div className="decision-rejection">
+          <h4>Panel view rejected by the analyst</h4>
+          <p>{value.analyst_rationale || "Analyst rationale not supplied."}</p>
+        </div>
+      )}
       <p className="caveat">{value.caveat}</p>
       <p className="panel-caption">
         One validation layer among others. This view does not automatically
-        change an ACAPS product.
+        change an ACAPS product. Five contributions is a disclosure rule, not an
+        anonymity guarantee.
       </p>
     </section>
   );
@@ -90,10 +129,10 @@ export function IntegrityPanel({ pulseId }: { pulseId: string }) {
     };
   }, [pulseId, reload]);
   return (
-    <Section title="Bias and integrity">
+    <Section title="Integrity notes">
       <p className="panel-caption">
-        Moderator-only evidence. Flags indicate checks to review, not findings
-        about a person.
+        Moderator-only observations for analyst review. These are not diagnoses.
+        No automatic penalties or changes to aggregation follow from a note.
       </p>
       {error ? (
         <>
@@ -104,58 +143,19 @@ export function IntegrityPanel({ pulseId }: { pulseId: string }) {
         </>
       ) : value ? (
         <>
-          <dl className="integrity-grid">
-            <div>
-              <dt>Anchoring shift</dt>
-              <dd>{percent(value.anchoring_shift)}</dd>
-            </div>
-            <div>
-              <dt>Herding</dt>
-              <dd>{value.herding}</dd>
-            </div>
-            <div>
-              <dt>Collusion pairs</dt>
-              <dd>{value.collusion_pairs}</dd>
-            </div>
-            <div>
-              <dt>Recency</dt>
-              <dd>{value.recency}</dd>
-            </div>
-            <div>
-              <dt>Aggregate uses</dt>
-              <dd>Round {value.used_round}</dd>
-            </div>
-          </dl>
-          <h3 className="subheading">Coverage gaps</h3>
-          {value.coverage_gaps.length ? (
-            <ul>
-              {value.coverage_gaps.map((g) => (
-                <li key={g}>{g}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>None reported.</p>
-          )}
-          {value.herding === "suspected" && (
-            <p className="caveat">
-              Herding suspected. Review whether the aggregate uses independent
-              round-one answers.
-            </p>
-          )}
-          <details>
-            <summary>Evidence for each check</summary>
-            {value.evidence ? (
-              Object.entries(value.evidence).map(([key, evidence]) => (
-                <p className="claim" key={key}>
-                  <strong>{key}</strong>
-                  <br />
-                  {evidence}
-                </p>
+          <div className="integrity-notes">
+            {value.integrity_notes?.length ? (
+              value.integrity_notes.map((item, i) => (
+                <article key={i}>
+                  <h3>{item.kind.replaceAll("_", " ")}</h3>
+                  <p>{item.text}</p>
+                  <p className="panel-caption">Evidence: {item.evidence}</p>
+                </article>
               ))
             ) : (
-              <p>No check evidence supplied.</p>
+              <p>No descriptive notes supplied for this round.</p>
             )}
-          </details>
+          </div>
         </>
       ) : (
         <p role="status">Loading integrity checks…</p>

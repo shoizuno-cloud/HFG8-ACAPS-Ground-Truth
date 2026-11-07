@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./workspace-session";
 
 test.beforeAll(async ({ request }) => {
   const response = await request.get("/api/health");
@@ -12,7 +13,7 @@ test.beforeAll(async ({ request }) => {
 test("actual scaffold API flows through the proxy into Radar and desk", async ({
   page,
 }, info) => {
-  await page.goto("/");
+  await page.goto("/radar");
   await expect(
     page.getByText("Source: CSV fallback", { exact: true }),
   ).toBeVisible();
@@ -49,20 +50,30 @@ test("actual scaffold card stays blind, seals synthetic input and opens private 
   page,
 }) => {
   await page.goto("/e/scaffold-synthetic");
-  await expect(page.getByText("Independent first round")).toBeVisible();
+  await expect(
+    page.getByText("Rating hidden until after submission"),
+  ).toBeVisible();
   await expect(
     page.getByText("ACAPS rates this High.", { exact: false }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "I read it" }).click();
-  await page.getByRole("button", { name: "Seal my answer" }).click();
+  await page
+    .getByRole("button", { name: "Pseudonym Nickname to peers" })
+    .click();
+  await page.getByRole("button", { name: "Submit" }).click();
   await expect(
-    page.getByRole("heading", { name: "Sealed. You’ll hear how it resolves." }),
+    page.getByRole("heading", {
+      name: "Submitted. You’ll get the group outcome.",
+    }),
   ).toBeVisible();
   await expect(
-    page.getByText("API seal receipt", { exact: true }),
+    page.getByText("API commitment receipt", { exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("link", { name: "View your private calibration" })
+    .getByRole("link", { name: "Opt in to private calibration" })
+    .click();
+  await page
+    .getByRole("button", { name: "View my private calibration" })
     .click();
   await expect(page.getByText("0.12", { exact: true })).toBeVisible();
   await expect(
