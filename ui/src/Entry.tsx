@@ -11,6 +11,7 @@ import {
   ChartNoAxesCombined,
 } from "lucide-react";
 import { Frame } from "./LiveWorkspace";
+import { DemoSamples } from "./DemoSamples";
 import { checkedOn, publications } from "./acaps-catalog";
 import { startDemoSession, workspaceDestination } from "./workspace-session";
 
@@ -229,6 +230,7 @@ export function WorkspaceHome() {
           </p>
         </div>
       </div>
+      <DemoSamples />
       <div className="workspace-entry-grid">
         {[
           {

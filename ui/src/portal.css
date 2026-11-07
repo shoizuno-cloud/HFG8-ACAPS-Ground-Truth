@@ -1,7 +1,17 @@
+.portal-header,
+main.workspace {
+  --workspace-inset: max(24px, calc((100vw - 1280px) / 2));
+}
+main.workspace {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  padding: 24px var(--workspace-inset) 0;
+}
 .site-header.workspace-header.portal-header {
   display: block;
   height: auto;
-  padding: 0 max(24px, calc((100vw - 1280px) / 2));
+  padding: 0 var(--workspace-inset);
   border-bottom: 1px solid var(--border);
 }
 .portal-topline {
@@ -97,6 +107,10 @@
   }
 }
 @media (max-width: 600px) {
+  .portal-header,
+  main.workspace {
+    --workspace-inset: 20px;
+  }
   .site-header.workspace-header.portal-header {
     padding: 0 20px;
   }

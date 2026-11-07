@@ -333,6 +333,48 @@ main.login-redirect {
   align-items: center;
   font-size: 14px;
 }
+.demo-samples {
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8faf9;
+}
+.demo-samples h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 10px;
+}
+.demo-samples p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.demo-samples .panel-actions {
+  margin-top: 16px;
+}
+.sample-invitations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.sample-invitations a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.workspace td small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+  font-size: 11px;
+}
 .portal-signout {
   margin-left: 8px;
   font-size: 12px;

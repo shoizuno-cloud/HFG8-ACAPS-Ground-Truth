@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { mock } from "./api";
+import { sampleDataEnabled, sampleResult, sampleBoard } from "./demo-data";
 import {
   endpoint,
   validResult,
@@ -188,7 +189,18 @@ export function OutcomeReportPanel({ pulseId }: { pulseId: string }) {
           setReport(null);
           try {
             const [value, result] = mock
-              ? [reportExample, resultExample]
+              ? sampleDataEnabled()
+                ? [
+                    {
+                      ...reportExample,
+                      outcome: "pending",
+                      group_mean: sampleResult.mean,
+                      analyst_decision_summary:
+                        "Synthetic analyst decision recorded. This active round has no observed outcome yet and has not been scored.",
+                    },
+                    sampleResult,
+                  ]
+                : [reportExample, resultExample]
               : await Promise.all([
                   endpoint.outcomeReport(pulseId),
                   endpoint.result(pulseId),
@@ -233,7 +245,9 @@ export function OutcomeReportPanel({ pulseId }: { pulseId: string }) {
 }
 
 export function CommitteeScoring() {
-  const [value, setValue] = useState<Board | null>(null),
+  const [value, setValue] = useState<Board | null>(() =>
+      mock && sampleDataEnabled() ? sampleBoard : null,
+    ),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   return (
@@ -251,10 +265,12 @@ export function CommitteeScoring() {
           setError("");
           try {
             setValue(
-              mock
-                ? (await import("../../fixtures/GET_analyst_board.json"))
-                    .default
-                : await endpoint.board(),
+              mock && sampleDataEnabled()
+                ? sampleBoard
+                : mock
+                  ? (await import("../../fixtures/GET_analyst_board.json"))
+                      .default
+                  : await endpoint.board(),
             );
           } catch (e) {
             setError((e as Error).message);
@@ -289,10 +305,12 @@ export function CommitteeScoring() {
             </tbody>
           </table>
           <p className="panel-caption">
-            These values are supplied by the backend. Equal-weight mean remains
-            primary. Secondary weights start equal, shrink toward a prior and
-            are capped at twice the median; the backend must implement those
-            rules.
+            {mock && sampleDataEnabled()
+              ? "These are synthetic sample forecast scores."
+              : "These values are supplied by the backend."}{" "}
+            Equal-weight mean remains primary. Secondary weights start equal,
+            shrink toward a prior and are capped at twice the median; the
+            backend must implement those rules.
           </p>
         </div>
       )}

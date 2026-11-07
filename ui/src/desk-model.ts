@@ -1,12 +1,27 @@
 import risk from "../../fixtures/GET_risks_R1043.json";
 import pulse from "../../fixtures/POST_pulses_response.json";
-import result from "../../fixtures/GET_pulses_result.json";
-import draft from "../../fixtures/POST_pulses_draft_response.json";
-import board from "../../fixtures/GET_analyst_board.json";
-import ledger from "../../fixtures/GET_ledger.json";
+import resultFixture from "../../fixtures/GET_pulses_result.json";
+import draftFixture from "../../fixtures/POST_pulses_draft_response.json";
+import boardFixture from "../../fixtures/GET_analyst_board.json";
+import ledgerFixture from "../../fixtures/GET_ledger.json";
 import verification from "../../fixtures/POST_ledger_verify_response.json";
 
-export { risk, pulse, result, draft, board };
+import {
+  sampleDataEnabled,
+  sampleResult,
+  sampleDraft,
+  sampleBoard,
+  sampleCurrentEntry,
+  sampleHistory,
+} from "./demo-data";
+const samples = sampleDataEnabled();
+export const result = samples ? sampleResult : resultFixture;
+export const draft = samples ? sampleDraft : draftFixture;
+export const board = samples ? sampleBoard : boardFixture;
+export const demoLedger = samples
+  ? { entries: [sampleCurrentEntry, ...sampleHistory], k_min: 5 }
+  : ledgerFixture;
+export { risk, pulse };
 export type Decision = {
   action: "accept" | "edit" | "reject";
   probability: string;
@@ -32,8 +47,8 @@ export function readDecision(): Decision | null {
   }
 }
 // V2 carries the public contribution count inside the honesty box.
-export const eligibleEntries = ledger.entries.filter(
-  (entry) => entry.honesty.n >= Math.max(5, ledger.k_min),
+export const eligibleEntries = demoLedger.entries.filter(
+  (entry) => (entry.honesty?.n || 0) >= Math.max(5, demoLedger.k_min),
 );
 export function verifyFixture(hash: string) {
   const entry = eligibleEntries.find((item) => item.verify_hash === hash);

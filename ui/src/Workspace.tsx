@@ -1,3 +1,4 @@
+import { sampleDataEnabled, sampleRisks } from "./demo-data";
 import {
   DecisionUseFields,
   emptyDecisionUse,
@@ -554,7 +555,9 @@ function Ledger() {
   const [decision] = useState(readDecision);
   const [verified, setVerified] = useState(false),
     [busy, setBusy] = useState(false),
-    [query, setQuery] = useState(""),
+    [query, setQuery] = useState(
+      new URLSearchParams(location.search).get("risk_id") || "",
+    ),
     [message, setMessage] = useState("");
   const entry = eligibleEntries[0];
   const published = decision && decision.action !== "reject" && entry;
@@ -563,6 +566,15 @@ function Ledger() {
     `${entry.risk_id} ${risk.country} ${risk.title}`
       .toLowerCase()
       .includes(query.toLowerCase());
+  const historyMatches =
+    sampleDataEnabled() &&
+    sampleRisks.some(
+      (r) =>
+        r.risk_id !== risk.risk_id &&
+        `${r.risk_id} ${r.country} ${r.title}`
+          .toLowerCase()
+          .includes(query.toLowerCase()),
+    );
   return (
     <Shell page="ledger">
       <div className="workspace-title">
@@ -619,9 +631,9 @@ function Ledger() {
           <HonestyBox
             context={`${entry.risk_id} / ${entry.pulse_id}`}
             value={{
-              ...entry.honesty,
+              ...entry.honesty!,
               decision_use:
-                decision?.decision_use || entry.honesty.decision_use,
+                decision?.decision_use || entry.honesty!.decision_use,
             }}
           />
           <VerificationTrail
@@ -693,7 +705,7 @@ function Ledger() {
             not a cryptographic proof or blockchain transaction. Anchor: none.
           </p>
         </Panel>
-      ) : (
+      ) : historyMatches ? null : (
         <Panel
           title={
             published ? "No matching risks" : "No approved group views yet"

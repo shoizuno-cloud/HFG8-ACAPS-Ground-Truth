@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { CommitteeScoring } from "./V3Workflow";
 import { mock } from "./api";
+import {
+  sampleDataEnabled,
+  sampleApplications,
+  saveSampleApplication,
+  saveSampleApproval,
+  type SampleApplication,
+} from "./demo-data";
 import { Frame, Section } from "./LiveWorkspace";
 import { endpoint } from "./service";
 import type { Approval } from "./v2-types";
@@ -85,17 +92,26 @@ export function Apply() {
                 }
                 setBusy(true);
                 try {
-                  const value = mock
-                    ? (
-                        await import("../../fixtures/POST_experts_apply_response.json")
-                      ).default
-                    : await endpoint.apply({
-                        geo_tags,
-                        theme_tags: selected,
-                        affiliation_tag: affiliation,
-                        languages: langs,
-                        channel,
-                      });
+                  const value =
+                    mock && sampleDataEnabled()
+                      ? saveSampleApplication({
+                          geo_tags,
+                          theme_tags: selected,
+                          affiliation_tag: affiliation,
+                          languages: langs,
+                          channel,
+                        })
+                      : mock
+                        ? (
+                            await import("../../fixtures/POST_experts_apply_response.json")
+                          ).default
+                        : await endpoint.apply({
+                            geo_tags,
+                            theme_tags: selected,
+                            affiliation_tag: affiliation,
+                            languages: langs,
+                            channel,
+                          });
                   setReceipt(value);
                 } catch (e) {
                   setError((e as Error).message);
@@ -104,6 +120,21 @@ export function Apply() {
                 }
               }}
             >
+              {mock && sampleDataEnabled() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGeo("TCD, SDN");
+                    setSelected(["conflict", "displacement"]);
+                    setAffiliation("research");
+                    setLanguages("en, fr");
+                    setChannel("email");
+                    setSynthetic(true);
+                  }}
+                >
+                  Use sample application
+                </button>
+              )}
               <label htmlFor="geo-tags">
                 Geographic expertise · ISO country codes
               </label>
@@ -218,14 +249,32 @@ export function Apply() {
   );
 }
 export function Committee() {
-  const [id, setId] = useState(
-      new URLSearchParams(location.search).get("expert_id") || "",
+  const samples = mock && sampleDataEnabled();
+  const initialId =
+    new URLSearchParams(location.search).get("expert_id") ||
+    (samples ? "X-SAMPLE-001" : "");
+  const initialApplication = samples
+    ? sampleApplications().find((a) => a.expert_id === initialId)
+    : undefined;
+  const [applications, setApplications] = useState<SampleApplication[]>(() =>
+    samples ? sampleApplications() : [],
+  );
+  const [id, setId] = useState(initialId),
+    [receipt, setReceipt] = useState<Approval | null>(
+      initialApplication
+        ? {
+            expert_id: initialId,
+            status: initialApplication.status,
+            approved_by: initialApplication.approved_by,
+          }
+        : null,
     ),
-    [receipt, setReceipt] = useState<Approval | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [admin, setAdmin] = useState("synthetic-admin-a"),
-    [votes, setVotes] = useState<string[]>([]);
+    [votes, setVotes] = useState<string[]>(
+      initialApplication?.approved_by || [],
+    );
   const approved = receipt?.status === "approved";
   return (
     <Frame
@@ -236,10 +285,69 @@ export function Committee() {
         Moderator-only workspace. Committee access requires authenticated admin
         identity from the backend; this page does not grant access.
       </div>
+      {samples && (
+        <Section title="Sample applications">
+          <p className="panel-caption">
+            Synthetic records stored in this tab. Select one to review its tags
+            and approval progress.
+          </p>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Application</th>
+                  <th>Expertise</th>
+                  <th>Status</th>
+                  <th>Review</th>
+                </tr>
+              </thead>
+              <tbody>
+                {applications.map((a) => (
+                  <tr key={a.expert_id}>
+                    <td>
+                      {a.expert_id}
+                      <small>{a.pseudonym}</small>
+                    </td>
+                    <td>
+                      {a.geo_tags.join(", ")}
+                      <small>{a.theme_tags.join(", ")}</small>
+                    </td>
+                    <td>
+                      {a.status} · {a.approved_by.length}/2 approvals
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => {
+                          setId(a.expert_id);
+                          setReceipt({
+                            expert_id: a.expert_id,
+                            status: a.status,
+                            approved_by: a.approved_by,
+                          });
+                          setVotes(a.approved_by);
+                          setAdmin(
+                            a.approved_by.includes("synthetic-admin-a")
+                              ? "synthetic-admin-b"
+                              : "synthetic-admin-a",
+                          );
+                          setError("");
+                        }}
+                      >
+                        Review {a.expert_id}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Section>
+      )}
       <Section title="Review an application">
         <p>
-          The current API has no applications-list route. Open an application by
-          the ID returned when it was submitted.
+          {samples
+            ? "Review the selected sample application. Approval changes are saved in this tab and never issue real credentials."
+            : "The current API has no applications-list route. Open an application by the ID returned when it was submitted."}
         </p>
         <div className="live-toolbar">
           <label htmlFor="application-id">Application ID</label>
@@ -279,11 +387,13 @@ export function Committee() {
                 if (mock) {
                   const next = Array.from(new Set([...votes, admin]));
                   setVotes(next);
-                  setReceipt({
+                  const approval = {
                     expert_id: id,
                     status: next.length >= 2 ? "approved" : "applied",
                     approved_by: next,
-                  });
+                  };
+                  setReceipt(samples ? saveSampleApproval(id, next) : approval);
+                  if (samples) setApplications(sampleApplications());
                 } else {
                   setReceipt(await endpoint.approve(id.trim()));
                 }
@@ -304,7 +414,13 @@ export function Committee() {
         )}
         {receipt && (
           <div className="decision-log" role="status">
-            <h3>{approved ? "Expert approved" : "Awaiting second approval"}</h3>
+            <h3>
+              {approved
+                ? "Expert approved"
+                : receipt.approved_by?.length === 0
+                  ? "Awaiting first approval"
+                  : "Awaiting second approval"}
+            </h3>
             <p>
               Status: {receipt.status}.{" "}
               {receipt.approved_by

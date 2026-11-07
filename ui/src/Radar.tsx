@@ -4,6 +4,7 @@ import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import countries from "world-atlas/countries-110m.json";
 import type { FeatureCollection, Geometry } from "geojson";
+import { sampleDataEnabled, sampleRisks } from "./demo-data";
 import { mock } from "./api";
 import { endpoint, type Risk } from "./service";
 import { Frame, Section } from "./LiveWorkspace";
@@ -49,7 +50,11 @@ export function Radar() {
     setError("");
     const jobs = mock
       ? Promise.all([
-          import("../../fixtures/GET_risks.json").then((m) => m.default),
+          import("../../fixtures/GET_risks.json").then((m) =>
+            sampleDataEnabled()
+              ? { ...m.default, risks: sampleRisks }
+              : m.default,
+          ),
           import("../../fixtures/GET_radar_status.json").then((m) => m.default),
         ])
       : Promise.all([endpoint.risks(), endpoint.radar()]);
@@ -253,9 +258,15 @@ export function Radar() {
                     </td>
                     <td>
                       <a
-                        href={`/desk?risk_id=${encodeURIComponent(r.risk_id)}`}
+                        href={
+                          mock && sampleDataEnabled() && r.risk_id !== "R1043"
+                            ? `/ledger?risk_id=${encodeURIComponent(r.risk_id)}`
+                            : `/desk?risk_id=${encodeURIComponent(r.risk_id)}`
+                        }
                       >
-                        Review risk
+                        {mock && sampleDataEnabled() && r.risk_id !== "R1043"
+                          ? "View ledger history"
+                          : "Review risk"}
                       </a>
                     </td>
                   </tr>

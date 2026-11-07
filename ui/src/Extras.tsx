@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { ArrowRight, LockKeyhole } from "lucide-react";
 import { mock } from "./api";
+import {
+  sampleDataEnabled,
+  sampleCalibration,
+  sampleForecasts,
+} from "./demo-data";
 import { endpoint, type Calibration as Report } from "./service";
 import { CopyButton, Frame, Section } from "./LiveWorkspace";
 import { en } from "./locales/en";
@@ -20,6 +25,20 @@ export function Stage() {
       title="Stage"
       subtitle="Jury access: display the QR invitation to the expert card."
     >
+      {mock && sampleDataEnabled() && (
+        <Section title="Sample invitations">
+          <p className="panel-caption">
+            These shared links are synthetic examples, not issued expert
+            credentials.
+          </p>
+          <div className="sample-invitations">
+            <a href="/e/demo">Open first-round card</a>
+            <a href="/e/round2">Open optional round-two card</a>
+            <a href="/e/empty">Preview unavailable invitation</a>
+            <a href="/calibration">Open sample calibration</a>
+          </div>
+        </Section>
+      )}
       <div className="stage-grid">
         <Section title="Open the expert card">
           <form
@@ -170,7 +189,9 @@ export function Calibration({ token }: { token: string }) {
     setBusy(true);
     setError("");
     const job = mock
-      ? import("../../fixtures/GET_me_calibration.json").then((m) => m.default)
+      ? import("../../fixtures/GET_me_calibration.json").then((m) =>
+          sampleDataEnabled() ? sampleCalibration : m.default,
+        )
       : endpoint.calibration(token);
     job
       .then((value) => {
@@ -251,6 +272,44 @@ export function Calibration({ token }: { token: string }) {
           <p className="panel-caption">
             A full calibration curve requires forecast-level observations.
           </p>
+          {mock && sampleDataEnabled() && (
+            <>
+              <h3 className="subheading">Five resolved sample forecasts</h3>
+              <p className="panel-caption">
+                Probabilities and dates are illustrative; outcomes come from the
+                export. Each Brier value is (probability − outcome)². The sample
+                overconfidence index is mean stated certainty minus
+                classification accuracy.
+              </p>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Risk / country</th>
+                      <th>Forecast</th>
+                      <th>Outcome</th>
+                      <th>Brier score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sampleForecasts.map((f) => (
+                      <tr key={f.risk_id}>
+                        <td>
+                          {f.risk_id}
+                          <small>{f.country}</small>
+                        </td>
+                        <td>{Math.round(f.probability * 100)}%</td>
+                        <td>
+                          {f.outcome ? "Materialised" : "Not materialised"}
+                        </td>
+                        <td>{f.brier.toFixed(3)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </Section>
       ) : (
         <Section title="Five resolutions required">

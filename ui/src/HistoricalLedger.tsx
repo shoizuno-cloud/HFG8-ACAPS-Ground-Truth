@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { VerificationTrail } from "./VerificationTrail";
-import ledger from "../../fixtures/GET_ledger.json";
+import { demoLedger } from "./desk-model";
+import { sampleRisks, sampleDataEnabled } from "./demo-data";
 import { HonestyBox } from "./V2Panels";
 import { Section, CopyButton } from "./LiveWorkspace";
 import { date, percent } from "./desk-model";
@@ -8,15 +9,31 @@ export function HistoricalLedger({ query }: { query: string }) {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   return (
     <>
-      {ledger.entries
+      {demoLedger.entries
         .filter(
           (e) =>
             e.outcome &&
-            e.honesty.n >= 5 &&
-            e.risk_id.toLowerCase().includes(query.toLowerCase()),
+            (e.honesty?.n || 0) >= 5 &&
+            [
+              e.risk_id,
+              ...(sampleDataEnabled()
+                ? sampleRisks
+                    .filter((r) => r.risk_id === e.risk_id)
+                    .map((r) => `${r.country} ${r.title}`)
+                : []),
+            ]
+              .join(" ")
+              .toLowerCase()
+              .includes(query.toLowerCase()),
         )
         .map((e) => (
           <Section key={e.risk_id} title={`Resolved history / ${e.risk_id}`}>
+            {sampleDataEnabled() && (
+              <p className="panel-caption">
+                {sampleRisks.find((r) => r.risk_id === e.risk_id)?.country} ·
+                Synthetic forecast and decision record
+              </p>
+            )}
             <div className="ledger-stats">
               <div>
                 <span>Group probability</span>
