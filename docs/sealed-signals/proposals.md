@@ -103,8 +103,8 @@ Question contract (now exists); group outcome report route; no extremizing; stan
 ### P25. Consent text for pattern reports and the registry (M for pilot) - team, ask ACAPS
 - A pseudonym is an HMAC of an internal id and the committee holds the registry, so pattern reports are about identifiable people. The sign-up needs a short consent text (what is stored, who sees it, how to see your own report, how to opt out). Ask Alex whether ACAPS legal must review it.
 
-### P26. Deck limit versus the master prompt (M) - decision for the human
-- Lane C item 8a asks for two more slides (hardening; what we did not do). Your rule is at most 8 slides. I kept the 8-slide deck and put the two in `slides/hardening.html` as an appendix for Q&A and the written submission. Say if you would rather fold them into the deck.
+### P26. Deck limit versus the master prompt (resolved 7 Nov: keep as appendix)
+- Lane C item 8a asks for two more slides (hardening; what we did not do). Your rule is at most 8 slides. I kept the 8-slide deck and put the two in `slides/hardening.html` as an appendix for Q&A and the written submission. Decision: they stay outside the 8-slide deck.
 
 ### P27. Master prompt inconsistencies, third batch (M) - file owner
 1. Hard rule 4 says no engagement metrics; 6d lists answer latency (see P22).
