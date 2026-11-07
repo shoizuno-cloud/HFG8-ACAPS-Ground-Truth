@@ -6,6 +6,9 @@ import {
   ShieldCheck,
   Globe2,
   FileCheck2,
+  ClipboardList,
+  QrCode,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { Frame } from "./LiveWorkspace";
 import { checkedOn, publications } from "./acaps-catalog";
@@ -235,16 +238,34 @@ export function WorkspaceHome() {
             icon: <Globe2 size={25} aria-hidden="true" />,
           },
           {
-            href: "/ledger",
-            title: "Ledger & verification",
-            text: "Inspect approved group views, verification hashes and supplied timestamp anchors. Demo fixture checks are not blockchain transactions.",
-            icon: <ShieldCheck size={25} aria-hidden="true" />,
+            href: "/expert",
+            title: "Expert card",
+            text: "Open the phone response card: estimate the risk, choose your mask and submit. The demo invitation needs no login.",
+            icon: <ClipboardList size={25} aria-hidden="true" />,
           },
           {
             href: "/desk",
             title: "Analyst desk",
             text: "Match an expert panel, open a pulse, review evidence and decide on a proposed update.",
             icon: <FileCheck2 size={25} aria-hidden="true" />,
+          },
+          {
+            href: "/ledger",
+            title: "Ledger & verification",
+            text: "Inspect approved group views, verification hashes and supplied timestamp anchors. Demo fixture checks are not blockchain transactions.",
+            icon: <ShieldCheck size={25} aria-hidden="true" />,
+          },
+          {
+            href: "/stage",
+            title: "Stage & jury access",
+            text: "Display the expert invitation QR code for the jury and enlarge it for the projector.",
+            icon: <QrCode size={25} aria-hidden="true" />,
+          },
+          {
+            href: "/calibration",
+            title: "Calibration report",
+            text: "Open the optional private report after five resolved forecasts. Demo mode shows a synthetic example.",
+            icon: <ChartNoAxesCombined size={25} aria-hidden="true" />,
           },
         ].map((item) => (
           <a className="workspace-entry-card" href={item.href} key={item.href}>
@@ -258,13 +279,10 @@ export function WorkspaceHome() {
         ))}
       </div>
       <section className="workspace-research-links">
-        <h2>Research & administration</h2>
+        <h2>Expert administration</h2>
         <div>
-          <a href="/countries">Country context</a>
-          <a href="/analysis">Analysis library</a>
-          <a href="/topics">Topics & data</a>
           <a href="/committee">Expert committee</a>
-          <a href="/stage">Jury access</a>
+          <a href="/apply">Expert application</a>
         </div>
       </section>
     </Frame>

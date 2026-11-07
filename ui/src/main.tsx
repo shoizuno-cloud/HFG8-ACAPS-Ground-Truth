@@ -16,15 +16,12 @@ const Calibration = lazy(() =>
 );
 const Radar = lazy(() => import("./Radar").then((m) => ({ default: m.Radar })));
 import { Apply, Committee } from "./Gateway";
-const Discovery = lazy(() =>
-  import("./Discovery").then((m) => ({ default: m.Discovery })),
-);
 import "./theme.css";
 import "./styles.css";
 import "./workspace.css";
 import "./polish.css";
 import "./v2.css";
-import "./discovery.css";
+import "./portal.css";
 import "./entry.css";
 import "./v3.css";
 import "./verification-trail.css";
@@ -66,21 +63,43 @@ function Router() {
   const calibration = /^\/me\/([^/]+)\/calibration\/?$/.exec(path);
   if (calibration) return <Calibration token={calibration[1]} />;
   if (!hasWorkspaceSession()) return <LoginRequired />;
+  if (/^\/(countries|analysis|topics|search)(\/|$)/.test(path))
+    return <WorkspaceRedirect />;
   if (path === "/workspace") return <WorkspaceHome />;
   if (path === "/radar") return <Radar />;
+  if (path === "/expert")
+    return mock ? (
+      <ExpertCard token="demo" />
+    ) : (
+      <Frame
+        title="Expert card"
+        subtitle="Open the personal invitation sent by your analyst."
+      >
+        <p>
+          Each expert receives their own no-login invitation. The live workspace
+          does not create a shared invitation.
+        </p>
+        <a href="/stage">Open Stage to display an issued invitation</a>
+      </Frame>
+    );
+  if (path === "/calibration")
+    return mock ? (
+      <Calibration token="demo" />
+    ) : (
+      <Frame
+        title="Private calibration"
+        subtitle="Optional feedback after at least five resolved forecasts."
+      >
+        <p>
+          Open your private report from your personal invitation. Anonymous
+          answers cannot be linked to calibration or claimed later.
+        </p>
+      </Frame>
+    );
   if (path === "/desk" || path === "/ledger") {
     const page = path === "/desk" ? "desk" : "ledger";
     return mock ? <MockWorkspace page={page} /> : <LiveWorkspace page={page} />;
   }
-  if (["/countries", "/analysis", "/topics", "/search"].includes(path))
-    return (
-      <Discovery
-        page={path.slice(1) as "countries" | "analysis" | "topics" | "search"}
-      />
-    );
-  const country = /^\/countries\/([A-Za-z]{3})\/?$/.exec(path);
-  if (country)
-    return <Discovery page="countries" iso={country[1].toUpperCase()} />;
   if (path === "/stage") return <Stage />;
   if (path === "/apply") return <Apply />;
   if (path === "/committee") return <Committee />;
@@ -91,6 +110,17 @@ function Router() {
     >
       <a href="/radar">Go to Risk Radar</a>
     </Frame>
+  );
+}
+function WorkspaceRedirect() {
+  React.useEffect(() => {
+    location.replace("/workspace");
+  }, []);
+  return (
+    <main className="login-redirect">
+      <p role="status">Opening the task workspace…</p>
+      <a href="/workspace">Open workspace</a>
+    </main>
   );
 }
 createRoot(document.getElementById("root")!).render(

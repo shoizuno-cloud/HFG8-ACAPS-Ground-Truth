@@ -25,6 +25,53 @@ test("public entry exposes research and Login opens the workspace without creden
     .first()
     .click();
   await expect(page).toHaveURL(/\/workspace$/);
+  const navigation = page.getByRole("navigation", { name: "Main navigation" });
+  for (const name of [
+    "Countries",
+    "Analysis",
+    "Topics & data",
+    "ACAPS website",
+  ])
+    await expect(page.getByRole("link", { name, exact: true })).toHaveCount(0);
+  await expect(page.getByRole("search")).toHaveCount(0);
+  for (const name of [
+    "Expert card",
+    "Analyst desk",
+    "Public ledger",
+    "Stage",
+    "Calibration",
+  ])
+    await expect(
+      navigation.getByRole("link", { name, exact: true }),
+    ).toBeVisible();
+  await expect(page.locator(".workspace-entry-card")).toHaveCount(6);
+  await page.goto("/topics");
+  await expect(page).toHaveURL(/\/workspace$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Your workspace",
+  );
+  await navigation.getByRole("link", { name: "Stage", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Stage");
+  await navigation
+    .getByRole("link", { name: "Calibration", exact: true })
+    .click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Your calibration",
+  );
+  await navigation
+    .getByRole("link", { name: "Expert card", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Submit", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "All pages", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Your workspace",
+  );
+  await page.screenshot({
+    path: test.info().outputPath("workspace-navigation.png"),
+    fullPage: true,
+  });
   await page
     .getByRole("link", { name: "Risk Radar & metrics", exact: false })
     .click();

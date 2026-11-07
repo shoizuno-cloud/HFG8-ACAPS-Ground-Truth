@@ -135,14 +135,22 @@ export function ExpertCard({ token }: { token: string }) {
       <a className="skip-link" href="#expert-content">
         Skip to expert card
       </a>
-      <header className="site-header">
-        <a className="brand" href="/">
+      <header className={`site-header ${mock ? "expert-demo-header" : ""}`}>
+        <a className="brand" href={mock ? "/workspace" : "/"}>
           <span className="brand-mark">
             <LockKeyhole size={19} />
           </span>
           Sealed Signals
         </a>
-        <span className="header-note">Independent expert perspective</span>
+        {mock ? (
+          <nav aria-label="Demo navigation">
+            <a href="/workspace">All pages</a>
+            <a href="/stage">Stage</a>
+            <a href="/calibration">Calibration</a>
+          </nav>
+        ) : (
+          <span className="header-note">Independent expert perspective</span>
+        )}
       </header>
       <main id="expert-content">
         <aside className="intro">
@@ -467,7 +475,27 @@ export function ExpertCard({ token }: { token: string }) {
                       recognised by peers, even under a pseudonym. Anonymous
                       answers cannot be claimed later.
                     </p>
-                    <details className="privacy-detail"><summary>Who can see what?</summary><p>Peers do not see answers before the round opens. After reveal, peers may see pseudonymous reasons only when that mask was chosen. Public output contains aggregates, never individual answers or reasons.</p><p>The pilot uses a restricted identity registry with logged access. Anonymous answers have no identity link. The server stores the committed value; access controls, rather than cryptography, restrict early staff access. A commitment does not hide the answer from the operator.</p><p>At least five contributions is a disclosure rule, not an anonymity guarantee. Distinctive reasons may still identify a contributor to peers.</p></details>
+                    <details className="privacy-detail">
+                      <summary>Who can see what?</summary>
+                      <p>
+                        Peers do not see answers before the round opens. After
+                        reveal, peers may see pseudonymous reasons only when
+                        that mask was chosen. Public output contains aggregates,
+                        never individual answers or reasons.
+                      </p>
+                      <p>
+                        The pilot uses a restricted identity registry with
+                        logged access. Anonymous answers have no identity link.
+                        The server stores the committed value; access controls,
+                        rather than cryptography, restrict early staff access. A
+                        commitment does not hide the answer from the operator.
+                      </p>
+                      <p>
+                        At least five contributions is a disclosure rule, not an
+                        anonymity guarantee. Distinctive reasons may still
+                        identify a contributor to peers.
+                      </p>
+                    </details>
                   </div>
                   {submitError && (
                     <p role="alert" className="error-box">

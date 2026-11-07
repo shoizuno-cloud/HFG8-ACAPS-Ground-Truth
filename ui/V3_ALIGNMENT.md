@@ -23,7 +23,7 @@ Reviewed 7 November 2026 against the changelog, sections 1a, 4, 5, 6a, 8 and 10,
 - **Login** is a button that opens the demo workspace directly. There is no credential form or real authentication. A session marker only controls presentation; it does not secure HTTP endpoints or grant committee roles. Logout returns to the public page.
 - Team tools, including the ledger view, sit behind that entry button for the presentation. This changes how the jury navigates, not the ledger's aggregate-only disclosure rules.
 - `/e/:token` remains a no-login expert invitation as required by v3. Private calibration remains invitation-based and optional. These are the explicit exceptions to the team entry flow.
-- The optional impact/contribution story remains removed. Country/publication discovery is supporting material; the hero remains the expert card, analyst desk and ledger.
+- The optional impact/contribution story remains removed. Country/publication discovery has been removed from the workspace; selected official links remain only on the public landing page. The hero remains the expert card, analyst desk and ledger.
 
 ## Backend/fixture dependencies still open
 

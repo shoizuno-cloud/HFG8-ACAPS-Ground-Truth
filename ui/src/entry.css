@@ -338,6 +338,35 @@ main.login-redirect {
   font-size: 12px;
   min-height: 44px;
 }
+.site-header.expert-demo-header {
+  height: auto;
+  min-height: 96px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.expert-demo-header nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-left: auto;
+}
+.expert-demo-header nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+}
+@media (max-width: 650px) {
+  .site-header.expert-demo-header {
+    padding: 20px;
+  }
+  .expert-demo-header nav {
+    margin-left: 0;
+    width: 100%;
+    gap: 24px;
+  }
+}
 @media (max-width: 1050px) {
   .public-header {
     gap: 24px;
