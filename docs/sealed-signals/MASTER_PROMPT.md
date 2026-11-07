@@ -158,9 +158,28 @@ ACAPS's technical brief on cognitive biases (March 2016) names 38 biases and rec
 | Overconfidence | Outcome scoring of forecasts; group outcome report; consent-gated calibration programme |
 | Key-assumption check | Trigger pick: "which trigger would move your view most?" feeds the analyst's trigger list |
 
-Personas (Emily, Jose, Pierre, Aisha, from the organisers' pack, to be filled in when the PDF arrives): each persona is
-mapped to a contact type and a default channel marked "assumed, to verify in the pilot". Personas are design hypotheses,
-not evidence of channel preference or willingness to be calibrated; only a pilot establishes those. [PERSONAS: pending]
+Two more sentences from the poster, to quote verbatim: at the end of Communicate the outputs are "tailored, relevant and
+readable analysis outputs, providing solid reasoning and **reviewed by subject experts**" with a "**clearly and explicitly
+communicated limit of knowledge and how it impacts confidence in the results**". The first is the expert loop; the second
+is the honesty box. Step numbers for slides: 3.1 Explore item 15 "notice possible signals or stories in your data"; 3.4
+Interpret item 27 "evaluate evidence and assess plausibility"; 3.5 Anticipate item 32 "identify triggers and track new
+developments"; 4 Communicate items 38 "communicate uncertainty and document data and methods" and 39 "(self) edit and
+peer review"; 5 Throughout "organise and document your work: provide an audit trail".
+
+**Personas** (ACAPS's own, from 30 interviews with readers; two axes, global/field × information users/producers; the
+organisers say they are also the kind of experts ACAPS engages). Full mapping in `docs/sealed-signals/personas.md`.
+Design hypotheses, not evidence; every channel below is marked "assumed, to verify in the pilot".
+
+| Persona | Who | What they said that we answer | Role in Sealed Signals | Contact type, assumed channel |
+| --- | --- | --- | --- | --- |
+| Emily | Head of methodology, donor emergency team, HQ, global | "With ACAPS I know what you don't know and what is assumed"; "understanding which sources are more reliable is tricky"; wants "online access to all resources used to build an analysis, even those with different perspectives" | Reader of the ledger and honesty box; panel member on health and nutrition themes; a reviewer who will check the Verify click | HQ methodologist; email, Teams |
+| Jose | Emergency specialist, UN regional office in Jordan, covers Sudan among six countries | Wants "an easy way for field-users to provide quality feedback to HQ level to get a more accurate picture"; "discrepancies between information shared and the real situation"; wants updates "only for the countries I cover" | The expert the pulse is built for: covers Sudan, so the R1043 demo panel; also receives alerts filtered to his countries | Regional desk expert; email with one-click links, Teams; app alert |
+| Pierre | MEAL officer, IFRC, field, deployed for months, now food crisis in Nairobi | Wants reliable sources fast on a new mission, in-depth context, scenario skills; limited resources and time | Field expert on food and displacement; the "outside my area" and voice-note paths exist for him; reader of trigger lists | Field practitioner; WhatsApp, voice note, scheduled call |
+| Aisha | INGO country director, Madagascar, one country, 150 staff | Financial visibility "rarely beyond 6–10 months"; wants "information on political projections" to decide between an emergency and a development team | Reader of the ledger's "what decision, for whom, by when" line (her horizon matches the six-month question); one-country expert, rarely available | Country lead; email weekly, scheduled call; low cadence |
+
+Three design consequences, all already in v3.4: the question horizon is six months because that is the readers' planning
+horizon (Aisha, Pierre); alerts and pulses are filtered by the countries a person covers (Jose); every ledger entry
+lists what fed into it and what is not known (Emily).
 
 ## 1a. Who can learn what (replaces every "sealed" or "nothing leaves the device" claim)
 
@@ -746,7 +765,8 @@ Milestones: expert card mock Sat 12:00 · desk + ledger mock Sat 16:00 · live A
    want to give their view (channel, language, time) → what would make them stop. Use the four personas from the
    organisers' pack (Emily, Jose, Pierre, Aisha) as design hypotheses: map each to a contact type and a default channel
    marked "assumed, to verify in the pilot"; never present a persona as evidence of channel preference or willingness to
-   be calibrated. Fill section 0b when the PDF arrives.
+   be calibrated. Section 0b and docs/sealed-signals/personas.md hold the mapping; the persona slide follows the spine
+   line and shows Jose answering the Chad pulse, Emily reading the honesty box, Aisha reading the decision line.
 2. **Before / after**: ACAPS's own workflow poster (Design → Acquire → Analyse → Communicate) with our modules placed on
    it (section 0b table); the gap stated exactly as in section 0 (ad-hoc checks between scheduled reviews are not
    structured, time-stamped or auditable). One diagram. Never "today there is no record".
