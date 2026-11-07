@@ -25,6 +25,7 @@ import "./portal.css";
 import "./entry.css";
 import "./v3.css";
 import "./verification-trail.css";
+import "./ledger-list.css";
 
 const MockWorkspace = lazy(() =>
   import("./Workspace").then((m) => ({ default: m.Workspace })),

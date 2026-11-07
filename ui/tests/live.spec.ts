@@ -221,6 +221,7 @@ test("ledger suppresses small groups and reports failed verification; calibratio
 }, info) => {
   await contractApi(page);
   await page.goto("/ledger");
+  await page.locator(".ledger-record > summary").first().click();
   await expect(
     page.locator(".ledger-stats").getByText("8 contributions", { exact: true }),
   ).toBeVisible();
@@ -387,6 +388,7 @@ test("verification trail distinguishes backend validity, usable anchors and mism
     }),
   );
   await page.goto("/ledger");
+  await page.locator(".ledger-record > summary").first().click();
   const trail = page.getByRole("region", {
     name: "From contribution to verification",
   });

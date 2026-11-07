@@ -85,6 +85,7 @@ test("actual scaffold ledger has public honesty while unavailable approvals fail
   page,
 }, info) => {
   await page.goto("/ledger");
+  await page.locator(".ledger-record > summary").first().click();
   await expect(
     page.getByRole("region", { name: "Public honesty box" }),
   ).toHaveCount(2);

@@ -94,11 +94,6 @@ function PublicFooter() {
           Official ACAPS website <ArrowUpRight size={14} aria-hidden="true" />
         </a>
       </div>
-      <p className="public-disclaimer">
-        Hackathon prototype of an ACAPS-connected entry point. Official research
-        and services open on acaps.org. Workspace access is a local
-        demonstration.
-      </p>
     </footer>
   );
 }
@@ -225,8 +220,7 @@ export function WorkspaceHome() {
           <h2>Sealed Signals</h2>
           <p>
             Expert validation and a traceable decision record, alongside ACAPS
-            research. This is a demo session with synthetic experts; nothing
-            publishes automatically.
+            research.
           </p>
         </div>
       </div>

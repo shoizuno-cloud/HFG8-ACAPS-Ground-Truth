@@ -26,7 +26,7 @@ export function Stage() {
       subtitle="Jury access: display the QR invitation to the expert card."
     >
       {mock && sampleDataEnabled() && (
-        <Section title="Sample invitations">
+        <Section title="Invitations">
           <p className="panel-caption">
             These shared links are synthetic examples, not issued expert
             credentials.
@@ -212,11 +212,6 @@ export function Calibration({ token }: { token: string }) {
       title="Your calibration"
       subtitle="Private, optional feedback on resolved forecasts."
     >
-      <p className="mode-banner">
-        {mock
-          ? "Synthetic calibration fixture · not linked to your demo answer"
-          : "Private opt-in report"}
-      </p>
       <p className="panel-caption">
         Available after five resolved forecasts. Anonymous answers cannot be
         linked to this report or claimed later. Scores never gate expert
@@ -274,7 +269,7 @@ export function Calibration({ token }: { token: string }) {
           </p>
           {mock && sampleDataEnabled() && (
             <>
-              <h3 className="subheading">Five resolved sample forecasts</h3>
+              <h3 className="subheading">Resolved forecasts</h3>
               <p className="panel-caption">
                 Probabilities and dates are illustrative; outcomes come from the
                 export. Each Brier value is (probability − outcome)². The sample

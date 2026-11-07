@@ -286,7 +286,7 @@ export function Committee() {
         identity from the backend; this page does not grant access.
       </div>
       {samples && (
-        <Section title="Sample applications">
+        <Section title="Applications">
           <p className="panel-caption">
             Synthetic records stored in this tab. Select one to review its tags
             and approval progress.

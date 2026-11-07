@@ -287,7 +287,7 @@ export function CommitteeScoring() {
           <table>
             <thead>
               <tr>
-                <th>Synthetic pseudonym</th>
+                <th>Pseudonym</th>
                 <th>Resolved forecasts</th>
                 <th>Mean Brier score</th>
                 <th>Secondary weight</th>

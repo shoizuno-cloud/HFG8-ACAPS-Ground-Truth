@@ -54,6 +54,7 @@ test("approval gates public ledger, verification is labelled and both screens fi
   });
   await page.getByRole("button", { name: "Accept draft" }).click();
   await page.getByRole("link", { name: "View public ledger" }).click();
+  await page.locator(".ledger-record > summary").first().click();
   await expect(page.getByText("8 synthetic contributions")).toBeVisible();
   await expect(page.getByText("quiet-heron")).toHaveCount(0);
   await page.getByRole("button", { name: "Verify fixture hash" }).click();
@@ -67,20 +68,17 @@ test("approval gates public ledger, verification is labelled and both screens fi
     .getByRole("region", { name: "From contribution to verification" })
     .first();
   await trail
-    .getByRole("button", { name: "Verified Fixture matched", exact: true })
+    .getByRole("button", { name: "Verified Receipt matched", exact: true })
     .click();
   await expect(
-    trail.getByText(
-      "No cryptographic proof or blockchain transaction was performed.",
-      { exact: false },
-    ),
+    trail.getByText("No external proof is attached.", { exact: false }),
   ).toBeVisible();
   await expect(
     trail.getByRole("link", { name: "Open timestamp proof" }),
   ).toHaveCount(0);
   await expect(
     trail.getByRole("button", {
-      name: "Verified Fixture matched",
+      name: "Verified Receipt matched",
       exact: true,
     }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -147,7 +145,9 @@ test("rejection does not publish; editing preserves selected probability after n
     .fill("2026-11-20");
   await page.getByRole("button", { name: "Save edited decision" }).click();
   await page.getByRole("link", { name: "View public ledger" }).click();
+  await page.locator(".ledger-record > summary").first().click();
   await expect(page.getByText("Very High", { exact: true })).toBeVisible();
   await page.reload();
+  await page.locator(".ledger-record > summary").first().click();
   await expect(page.getByText("Very High", { exact: true })).toBeVisible();
 });

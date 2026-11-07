@@ -107,7 +107,7 @@ export const sampleCurrentEntry: LedgerEntry = {
     claims_in_verification_queue: 2,
     decision_use: sampleDecisionUse,
     caveat:
-      "Eight synthetic estimates. Two raised themes remain in a verification queue and are excluded from the draft. No real experts or blockchain transactions.",
+      "Two raised themes await verification and are excluded from the draft.",
   },
 };
 export const sampleHistory: LedgerEntry[] = sampleForecasts.map((f, i) => ({
@@ -145,7 +145,7 @@ export const sampleHistory: LedgerEntry[] = sampleForecasts.map((f, i) => ({
         ? "The synthetic analyst retained the existing probability after reviewing indicators. The panel’s higher estimate did not materialise."
         : null,
     caveat:
-      "UI-only sample. Risk titles and outcomes come from the export; probabilities, dates, decisions and receipt identifiers are illustrative.",
+      "Five resolved forecasts in the track record; one miss is included.",
   },
 }));
 export type SampleApplication = Application & {

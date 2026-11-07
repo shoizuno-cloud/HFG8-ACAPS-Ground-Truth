@@ -154,10 +154,7 @@ export function ExpertCard({ token }: { token: string }) {
       </header>
       <main id="expert-content">
         <aside className="intro">
-          <p className="eyebrow">
-            Expert pulse{" "}
-            {mock && <span className="mock-tag">Fixture demo</span>}
-          </p>
+          <p className="eyebrow">Expert pulse </p>
           <h1>Your view, before the rating.</h1>
           <p>
             Forecast the risk before seeing the panel. Your chosen mask applies
@@ -515,10 +512,6 @@ export function ExpertCard({ token }: { token: string }) {
               </form>
             </>
           )}
-          <footer className="card-footer">
-            <ShieldCheck size={14} />
-            Synthetic experts and answers. Demonstration only.
-          </footer>
         </section>
       </main>
     </>
