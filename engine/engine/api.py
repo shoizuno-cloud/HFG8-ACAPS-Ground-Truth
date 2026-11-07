@@ -45,9 +45,22 @@ def doorbell():
 def card(token: str):
     return fixture("GET_e_token.json")
 
-@app.post("/e/{token}/answer", status_code=201)
+@app.post("/e/{token}/answer", status_code=200)
 def answer(token: str, body: dict):
+    """Draft only. Nothing is committed until /confirm; a link click never commits."""
     return fixture("POST_e_token_answer_response.json")
+
+@app.post("/e/{token}/confirm", status_code=201)
+def confirm(token: str, body: dict):
+    return fixture("POST_e_token_confirm_response.json")
+
+@app.put("/e/{token}/answer")
+def correct(token: str, body: dict):
+    return fixture("PUT_e_token_answer_response.json")
+
+@app.get("/e/{token}/feedback")
+def feedback(token: str):
+    return fixture("GET_e_token_feedback.json")
 
 @app.post("/pulses/{pulse_id}/reveal")
 def reveal(pulse_id: str):
@@ -77,9 +90,13 @@ def verify(body: dict):
 def calibration(token: str):
     return fixture("GET_me_calibration.json")
 
-@app.get("/analyst/board")
-def board():
-    return fixture("GET_analyst_board.json")
+@app.get("/committee/scoring")
+def committee_scoring():
+    return fixture("GET_committee_scoring.json")
+
+@app.get("/committee/patterns/{panel_id}")
+def committee_patterns(panel_id: str):
+    return fixture("GET_committee_patterns_panel.json")
 
 @app.get("/sim/proof")
 def proof():
