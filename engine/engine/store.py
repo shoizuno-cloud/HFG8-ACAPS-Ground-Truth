@@ -139,6 +139,7 @@ class Store:
         self.pulses: dict[str, dict] = {}
         self.drafts: dict[str, dict] = {}
         self.scores: list[dict] = []
+        self.approvals: dict[str, list[str]] = {}
 
     def reset(self) -> None:
         self.experts.clear()
@@ -152,6 +153,7 @@ class Store:
         self.pulses.clear()
         self.drafts.clear()
         self.scores.clear()
+        self.approvals.clear()
 
     # -- experts and tokens -----------------------------------------------------
     def add_expert(self, expert: Expert) -> Expert:

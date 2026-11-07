@@ -25,11 +25,19 @@ make check                   # pytest, UI build, fixture validation
 
 | Path | What it is |
 |------|------------|
-| `/app/alerts` | the Risk Alert Engine: ranked shift events, approve or dismiss, crisis history |
-| `/app/desk` | analyst desk: envelope tray, reveal, distribution, draft, integrity notes, doorbell |
-| `/app/ledger` | public ledger with the honesty box and a working Verify button |
-| `/app/e/<token>` | the expert card; `/demo/links` lists the seeded links |
-| `/docs` | the API, generated from the code |
+| `/` | public entry; Login opens the workspace |
+| `/alerts` | the Risk Alert Engine: ranked shift events, approve or dismiss, crisis history |
+| `/desk` | analyst desk: envelope tray, reveal, distribution, draft, integrity notes |
+| `/ledger` | public ledger with the honesty box and verification trail |
+| `/radar` | the risk list with map, filters and source provenance |
+| `/e/<token>` | the expert card; `/api/demo/links` lists the seeded links |
+| `/api/*` | the engine. `/docs` is the generated API reference |
+
+**The UI owns the root namespace and the engine answers under `/api`.** This is Lane B's layout
+(`ui/src/service.ts` defaults `VITE_API_URL` to `/api`), and it is the only arrangement that works:
+`/ledger` and `/e/{token}` are UI pages in section 8 and API routes in section 5, so they cannot both
+live at the root. Section 5's paths are unchanged, they are just reached under the prefix. The Vite dev
+proxy forwards `/api` without stripping it, so development and production address the engine identically.
 
 The engine refuses to start without `COMMITMENT_SALT` and `PSEUDONYM_KEY`. That is deliberate: a sealing salt that
 silently defaults is worse than one that is missing. `make dev` loads `engine/.env.example` for you; in production the
@@ -159,8 +167,9 @@ asks for. The store is in process and rebuilt on restart; it is not a system of 
 engine/        FastAPI app, store, aggregation, deterministic draft, scripts, tests
   engine/      api.py  store.py  draft.py  data.py  acaps.py  alerts.py  seeding.py  settings.py
   scripts/     seed.py  demo_replay.py
-  tests/       52 tests: disclosure floor, blinding, integrity, ledger, scoring, alert engine
-ui/            Vite + React + TypeScript: expert card, analyst desk, alerts, public ledger
+  tests/       53 tests: disclosure floor, blinding, integrity, ledger, scoring, alert engine
+ui/            Lane B's frontend (React 19 + Vite): entry, workspace, radar, alerts,
+               expert card, analyst desk, public ledger, committee gateway, stage
 data/          ACAPS Risk Radar export, its data dictionary, and cached monthly API editions
 fixtures/      example payloads for every route, validated by make check
 docs/          master prompt, contracts, question contract, privacy engineering

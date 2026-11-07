@@ -28,21 +28,21 @@ def test_reveal_endpoint_returns_409_below_k_min(empty):
     pulse_id = next(iter(STORE.pulses))
     token = next(t for t, (p, _) in STORE.tokens.items() if p == pulse_id)
     for _ in range(3):
-        empty.post(f"/e/{token}/answer", json={"probability": 0.6, "mask": "anonymous"})
-    response = empty.post(f"/pulses/{pulse_id}/reveal")
+        empty.post(f"/api/e/{token}/answer", json={"probability": 0.6, "mask": "anonymous"})
+    response = empty.post(f"/api/pulses/{pulse_id}/reveal")
     assert response.status_code == 409
     assert "needs 5" in response.json()["detail"]
 
 
 def test_no_aggregate_is_served_before_a_reveal(seeded):
     client, pulse_id = seeded
-    assert client.get(f"/pulses/{pulse_id}/result").status_code == 404
+    assert client.get(f"/api/pulses/{pulse_id}/result").status_code == 404
 
 
 # -- what a sealed answer leaks ------------------------------------------------
 def test_tray_shows_commitments_never_values(seeded):
     client, pulse_id = seeded
-    tray = client.get(f"/pulses/{pulse_id}/tray").json()
+    tray = client.get(f"/api/pulses/{pulse_id}/tray").json()
     assert tray["n_answers"] == 8 and tray["revealable"] is True
     flat = str(tray)
     assert "probability" not in flat
@@ -75,12 +75,12 @@ def test_acaps_rating_is_hidden_until_submission(seeded):
 
     token = next(t for t, (p, e) in STORE.tokens.items()
                  if p == pulse_id and not STORE.answered(p, e))
-    card = client.get(f"/e/{token}").json()
+    card = client.get(f"/api/e/{token}").json()
     assert card["rating_hidden_until_submission"] is True
     assert "probability_acaps" not in card["risk"]
     assert "level" not in card["risk"]
 
-    submitted = client.post(f"/e/{token}/answer", json={
+    submitted = client.post(f"/api/e/{token}/answer", json={
         "probability": 0.6, "mask": "pseudonym", "confidence": 3, "source_tag": "read",
         "missing": "test entry", "panel_share_yes": 0.5,
     })
@@ -91,7 +91,7 @@ def test_acaps_rating_is_hidden_until_submission(seeded):
 # -- aggregation ---------------------------------------------------------------
 def test_equal_weight_mean_is_primary_and_weighted_is_secondary(seeded):
     client, pulse_id = seeded
-    result = client.post(f"/pulses/{pulse_id}/reveal").json()
+    result = client.post(f"/api/pulses/{pulse_id}/reveal").json()
     # Six of the eight seeded answers are estimates; two abstain and must not enter the mean.
     assert result["n"] == 8
     assert result["n_estimates"] == 6
@@ -104,7 +104,7 @@ def test_equal_weight_mean_is_primary_and_weighted_is_secondary(seeded):
 
 def test_region_with_one_voice_reports_count_but_no_mean(seeded):
     client, pulse_id = seeded
-    result = client.post(f"/pulses/{pulse_id}/reveal").json()
+    result = client.post(f"/api/pulses/{pulse_id}/reveal").json()
     singles = [row for row in result["agreement_by_region"] if row["n"] < 2]
     assert singles, "the seeded panel has at least one single-voice region"
     assert all(row["mean"] is None for row in singles)
@@ -112,13 +112,13 @@ def test_region_with_one_voice_reports_count_but_no_mean(seeded):
 
 def test_minority_rationale_survives_the_aggregate(seeded):
     client, pulse_id = seeded
-    result = client.post(f"/pulses/{pulse_id}/reveal").json()
+    result = client.post(f"/api/pulses/{pulse_id}/reveal").json()
     assert any("Border raids have slowed" in text for text in result["minority_rationales"])
 
 
 def test_sp_experiment_is_labelled_experimental(seeded):
     client, pulse_id = seeded
-    result = client.post(f"/pulses/{pulse_id}/reveal").json()
+    result = client.post(f"/api/pulses/{pulse_id}/reveal").json()
     assert result["sp_experiment"]["label"] == "experimental"
     assert result["sp_experiment"]["answer"] in ("yes", "no")
 
@@ -126,11 +126,11 @@ def test_sp_experiment_is_labelled_experimental(seeded):
 # -- integrity notes are moderator-only ---------------------------------------
 def test_integrity_notes_are_stripped_from_public_responses(seeded):
     client, pulse_id = seeded
-    revealed = client.post(f"/pulses/{pulse_id}/reveal").json()
+    revealed = client.post(f"/api/pulses/{pulse_id}/reveal").json()
     assert "integrity_notes" not in revealed
-    assert "integrity_notes" not in client.get(f"/pulses/{pulse_id}/result").json()
+    assert "integrity_notes" not in client.get(f"/api/pulses/{pulse_id}/result").json()
 
-    moderator = client.get(f"/integrity/{pulse_id}").json()
+    moderator = client.get(f"/api/integrity/{pulse_id}").json()
     assert moderator["moderator_only"] is True
     assert any(note["kind"] == "shared_origin" for note in moderator["integrity_notes"])
     for note in moderator["integrity_notes"]:
@@ -140,8 +140,8 @@ def test_integrity_notes_are_stripped_from_public_responses(seeded):
 # -- draft, skeptic, judge -----------------------------------------------------
 def test_draft_claims_are_checked_against_their_own_evidence(seeded):
     client, pulse_id = seeded
-    client.post(f"/pulses/{pulse_id}/reveal")
-    drafted = client.post(f"/pulses/{pulse_id}/draft").json()
+    client.post(f"/api/pulses/{pulse_id}/reveal")
+    drafted = client.post(f"/api/pulses/{pulse_id}/draft").json()
     assert drafted["generator"] == "deterministic-template"
     assert drafted["claims"], "a draft with no claims is not a draft"
     assert len(drafted["skeptic"]) == len(drafted["claims"])
@@ -171,41 +171,41 @@ def test_proposed_band_follows_the_panel_not_the_existing_rating():
 # -- decision and ledger -------------------------------------------------------
 def test_accepting_requires_what_decision_for_whom_by_when(seeded):
     client, pulse_id = seeded
-    client.post(f"/pulses/{pulse_id}/reveal")
-    drafted = client.post(f"/pulses/{pulse_id}/draft").json()
-    thin = client.post(f"/drafts/{drafted['id']}/decision", json={"action": "accept"})
+    client.post(f"/api/pulses/{pulse_id}/reveal")
+    drafted = client.post(f"/api/pulses/{pulse_id}/draft").json()
+    thin = client.post(f"/api/drafts/{drafted['id']}/decision", json={"action": "accept"})
     assert thin.status_code == 422
     assert "what_decision" in thin.json()["detail"]
 
 
 def test_rejecting_the_panel_requires_a_rationale_and_publishes_it(seeded):
     client, pulse_id = seeded
-    client.post(f"/pulses/{pulse_id}/reveal")
-    drafted = client.post(f"/pulses/{pulse_id}/draft").json()
+    client.post(f"/api/pulses/{pulse_id}/reveal")
+    drafted = client.post(f"/api/pulses/{pulse_id}/draft").json()
 
-    silent = client.post(f"/drafts/{drafted['id']}/decision", json={"action": "reject"})
+    silent = client.post(f"/api/drafts/{drafted['id']}/decision", json={"action": "reject"})
     assert silent.status_code == 422
 
-    client.post(f"/drafts/{drafted['id']}/decision", json={
+    client.post(f"/api/drafts/{drafted['id']}/decision", json={
         "action": "reject", "note": "Indicators are flat; I am not moving the rating on this.",
     })
-    honesty = client.get("/ledger").json()["entries"][0]["honesty"]
+    honesty = client.get("/api/ledger").json()["entries"][0]["honesty"]
     assert honesty["panel_view_rejected"] is True
     assert "Indicators are flat" in honesty["analyst_rationale"]
 
 
 def test_ledger_entry_verifies_against_its_own_commitments(seeded):
     client, pulse_id = seeded
-    client.post(f"/pulses/{pulse_id}/reveal")
-    drafted = client.post(f"/pulses/{pulse_id}/draft").json()
-    client.post(f"/drafts/{drafted['id']}/decision", json={
+    client.post(f"/api/pulses/{pulse_id}/reveal")
+    drafted = client.post(f"/api/pulses/{pulse_id}/draft").json()
+    client.post(f"/api/drafts/{drafted['id']}/decision", json={
         "action": "accept", "what_decision": "d", "for_whom": "w", "by_when": "2026-12-01",
     })
-    entry = client.get("/ledger").json()["entries"][0]
-    verified = client.post("/ledger/verify", json={"verify_hash": entry["verify_hash"]}).json()
+    entry = client.get("/api/ledger").json()["entries"][0]
+    verified = client.post("/api/ledger/verify", json={"verify_hash": entry["verify_hash"]}).json()
     assert verified["valid"] is True and verified["n_commitments"] == 8
     assert verified["anchor"] is None
-    assert client.post("/ledger/verify", json={"verify_hash": "0" * 64}).status_code == 404
+    assert client.post("/api/ledger/verify", json={"verify_hash": "0" * 64}).status_code == 404
 
 
 def test_verify_hash_is_order_independent():
@@ -214,12 +214,12 @@ def test_verify_hash_is_order_independent():
 
 def test_public_ledger_carries_no_names(seeded):
     client, pulse_id = seeded
-    client.post(f"/pulses/{pulse_id}/reveal")
-    drafted = client.post(f"/pulses/{pulse_id}/draft").json()
-    client.post(f"/drafts/{drafted['id']}/decision", json={
+    client.post(f"/api/pulses/{pulse_id}/reveal")
+    drafted = client.post(f"/api/pulses/{pulse_id}/draft").json()
+    client.post(f"/api/drafts/{drafted['id']}/decision", json={
         "action": "accept", "what_decision": "d", "for_whom": "w", "by_when": "2026-12-01",
     })
-    flat = str(client.get("/ledger").json())
+    flat = str(client.get("/api/ledger").json())
     for expert_id in ("X-syn-01", "X-syn-02", "X-syn-03"):
         assert expert_id not in flat
 
@@ -227,19 +227,19 @@ def test_public_ledger_carries_no_names(seeded):
 # -- scoring -------------------------------------------------------------------
 def test_resolving_without_a_frozen_question_contract_is_refused(seeded):
     client, pulse_id = seeded
-    client.post(f"/pulses/{pulse_id}/reveal")
-    drafted = client.post(f"/pulses/{pulse_id}/draft").json()
-    client.post(f"/drafts/{drafted['id']}/decision", json={
+    client.post(f"/api/pulses/{pulse_id}/reveal")
+    drafted = client.post(f"/api/pulses/{pulse_id}/draft").json()
+    client.post(f"/api/drafts/{drafted['id']}/decision", json={
         "action": "accept", "what_decision": "d", "for_whom": "w", "by_when": "2026-12-01",
     })
-    refused = client.post("/risks/R1043/resolve", json={"outcome": "materialised"})
+    refused = client.post("/api/risks/R1043/resolve", json={"outcome": "materialised"})
     assert refused.status_code == 409
     assert "question contract" in refused.json()["detail"]
 
 
 def test_board_is_empty_until_five_resolutions(seeded):
     client, pulse_id = seeded
-    board = client.get("/analyst/board").json()
+    board = client.get("/api/analyst/board").json()
     assert board["super_estimators"] == []
 
 
@@ -287,7 +287,7 @@ def test_openapi_is_served(seeded):
     client, _ = seeded
     spec = client.get("/openapi.json").json()
     assert spec["info"]["title"] == "Sealed Signals"
-    assert "/pulses/{pulse_id}/reveal" in spec["paths"]
+    assert "/api/pulses/{pulse_id}/reveal" in spec["paths"]
 
 
 def _answer(store: Store, index: int, probability: float):
@@ -310,10 +310,10 @@ def test_spa_deep_links_serve_the_app_not_a_404(seeded):
     if not api.UI_DIST.exists():
         import pytest as _pytest
         _pytest.skip("UI not built; run `make check` or `npm run build` in ui/ first")
-    for path in ("/app/", "/app/desk", "/app/ledger", "/app/e/deadbeef"):
+    for path in ("/", "/desk", "/ledger", "/e/deadbeef", "/alerts", "/radar"):
         response = client.get(path)
         assert response.status_code == 200, path
-        assert "<title>Sealed Signals</title>" in response.text, path
+        assert "<div id=\"root\">" in response.text, path
 
 
 def test_a_used_link_is_known_without_linking_an_anonymous_answer(seeded):
@@ -322,7 +322,7 @@ def test_a_used_link_is_known_without_linking_an_anonymous_answer(seeded):
     from engine.api import STORE
 
     token = next(t for t, (p, e) in STORE.tokens.items() if p == pulse_id and not STORE.answered(p, e))
-    assert client.post(f"/e/{token}/answer",
+    assert client.post(f"/api/e/{token}/answer",
                        json={"probability": 0.6, "mask": "anonymous"}).status_code == 201
     _, expert_id = STORE.tokens[token]
     assert STORE.answered(pulse_id, expert_id) is True
@@ -335,7 +335,7 @@ def test_the_question_does_not_leak_the_acaps_band_before_submission(seeded):
     from engine.api import STORE
 
     token = next(t for t, (p, e) in STORE.tokens.items() if p == pulse_id and not STORE.answered(p, e))
-    card = client.get(f"/e/{token}").json()
+    card = client.get(f"/api/e/{token}").json()
     band = "High"   # R1043's actual ACAPS band
     assert band not in card["pulse"]["question"]
     assert band not in str(card["risk"])
@@ -344,8 +344,8 @@ def test_the_question_does_not_leak_the_acaps_band_before_submission(seeded):
 
 def test_indicator_claims_never_print_a_none_or_a_fake_baseline(seeded):
     client, pulse_id = seeded
-    client.post(f"/pulses/{pulse_id}/reveal")
-    drafted = client.post(f"/pulses/{pulse_id}/draft").json()
+    client.post(f"/api/pulses/{pulse_id}/reveal")
+    drafted = client.post(f"/api/pulses/{pulse_id}/draft").json()
     flat = drafted["rationale_md"] + " ".join(c["text"] for c in drafted["claims"])
     assert "None" not in flat
     assert "baseline of 0" not in flat
@@ -360,3 +360,22 @@ def test_source_urls_survive_the_markdown_escaping_in_the_export():
     for url in urls:
         assert not url.endswith(("\\", ")", ",", ";")), url
         assert url.startswith("http")
+
+
+def test_round_two_shows_the_rating_that_round_one_hides(seeded):
+    """Round 1 is blind so the first answer is independent. Round 2 is the informed round: hiding
+    ACAPS's rating there would withhold the evidence that round exists to add."""
+    client, pulse_id = seeded
+    from engine.api import STORE
+
+    token = next(t for t, (p, e) in STORE.tokens.items() if p == pulse_id and not STORE.answered(p, e))
+    first = client.get(f"/api/e/{token}").json()
+    assert first["round"] == 1 and first["blind"] is True
+    assert "probability_acaps" not in first["risk"]
+
+    client.post(f"/api/pulses/{pulse_id}/reveal")
+    second = client.get(f"/api/e/{token}").json()
+    assert second["round"] == 2
+    assert second["blind"] is False
+    assert second["risk"]["probability_acaps"] == "High"
+    assert second["group_view_if_round2"]["n"] == 8

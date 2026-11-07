@@ -51,14 +51,14 @@ def test_the_same_edition_diffed_twice_yields_no_duplicate_events(engine):
 
 def test_a_dismissed_event_never_pulses(seeded):
     client, _ = seeded
-    replay = client.post("/alerts/replay", json={"month_from": "Mar2026", "month_to": "Apr2026"}).json()
+    replay = client.post("/api/alerts/replay", json={"month_from": "Mar2026", "month_to": "Apr2026"}).json()
     event = next(e for e in replay["events"] if e["crisis_id"] == "TCD005")
 
-    bare = client.post(f"/alerts/{event['id']}/dismiss", json={})
+    bare = client.post(f"/api/alerts/{event['id']}/dismiss", json={})
     assert bare.status_code == 422, "dismissing without a reason should be refused"
 
-    client.post(f"/alerts/{event['id']}/dismiss", json={"note": "Already covered by the open round."})
-    refused = client.post(f"/alerts/{event['id']}/pulse")
+    client.post(f"/api/alerts/{event['id']}/dismiss", json={"note": "Already covered by the open round."})
+    refused = client.post(f"/api/alerts/{event['id']}/pulse")
     assert refused.status_code == 409
     assert "dismissed" in refused.json()["detail"]
 
@@ -66,24 +66,24 @@ def test_a_dismissed_event_never_pulses(seeded):
 # -- propose, never fire -------------------------------------------------------
 def test_running_the_engine_creates_no_pulse(seeded):
     client, _ = seeded
-    before = len(client.get("/alerts").json()["events"])
-    result = client.post("/alerts/replay", json={"month_from": "Mar2026", "month_to": "Apr2026"}).json()
+    before = len(client.get("/api/alerts").json()["events"])
+    result = client.post("/api/alerts/replay", json={"month_from": "Mar2026", "month_to": "Apr2026"}).json()
     assert result["events"], "the April replay should propose something"
     assert all(e["status"] == "proposed" for e in result["events"])
     assert all(e["pulse_id"] is None for e in result["events"])
-    assert len(client.get("/alerts").json()["events"]) >= before
+    assert len(client.get("/api/alerts").json()["events"]) >= before
 
 
 def test_an_approved_alert_becomes_a_pulse_carrying_its_own_numbers(seeded):
     client, _ = seeded
-    replay = client.post("/alerts/replay", json={"month_from": "Mar2026", "month_to": "Apr2026"}).json()
+    replay = client.post("/api/alerts/replay", json={"month_from": "Mar2026", "month_to": "Apr2026"}).json()
     event = next(e for e in replay["events"] if e["crisis_id"] == "TCD005")
 
-    approved = client.post(f"/alerts/{event['id']}/pulse")
+    approved = client.post(f"/api/alerts/{event['id']}/pulse")
     assert approved.status_code == 201
     body = approved.json()
-    assert body["alert"]["status"] == "pulsed"
-    assert body["alert"]["pulse_id"] == body["pulse"]["id"]
+    assert body["status"] == "pulsed"
+    assert body["pulse_id"] == body["pulse"]["id"]
 
     evidence = body["pulse"]["evidence"]
     assert evidence, "the pulse must carry the event's numbers as its evidence"
@@ -92,15 +92,15 @@ def test_an_approved_alert_becomes_a_pulse_carrying_its_own_numbers(seeded):
     assert "rank 1 of 123" in headline["note"]
     assert "Very High" in headline["note"], "the edition's reliability belongs next to the event"
 
-    again = client.post(f"/alerts/{event['id']}/pulse")
+    again = client.post(f"/api/alerts/{event['id']}/pulse")
     assert again.status_code == 409, "approving the same event twice should not open a second round"
 
 
 def test_an_event_with_no_linked_risk_cannot_be_pulsed(seeded):
     client, _ = seeded
-    replay = client.post("/alerts/replay", json={"month_from": "Mar2026", "month_to": "Apr2026"}).json()
+    replay = client.post("/api/alerts/replay", json={"month_from": "Mar2026", "month_to": "Apr2026"}).json()
     unlinked = next(e for e in replay["events"] if e["risk_id"] is None)
-    refused = client.post(f"/alerts/{unlinked['id']}/pulse")
+    refused = client.post(f"/api/alerts/{unlinked['id']}/pulse")
     assert refused.status_code == 422
     assert "link" in refused.json()["detail"]
 
@@ -143,17 +143,17 @@ def test_r1043_links_to_tcd005_on_iso3_plus_driver():
 
 def test_linking_requires_a_real_risk_and_a_real_crisis(seeded):
     client, _ = seeded
-    assert client.post("/risks/R1043/link", json={"crisis_id": "NOPE999"}).status_code == 404
-    assert client.post("/risks/NOPE/link", json={"crisis_id": "TCD005"}).status_code == 404
-    assert client.post("/risks/R1043/link", json={}).status_code == 422
-    ok = client.post("/risks/R1043/link", json={"crisis_id": "TCD005"})
+    assert client.post("/api/risks/R1043/link", json={"crisis_id": "NOPE999"}).status_code == 404
+    assert client.post("/api/risks/NOPE/link", json={"crisis_id": "TCD005"}).status_code == 404
+    assert client.post("/api/risks/R1043/link", json={}).status_code == 422
+    ok = client.post("/api/risks/R1043/link", json={"crisis_id": "TCD005"})
     assert ok.status_code == 201 and ok.json()["how"] == "analyst"
 
 
 # -- the data layer ------------------------------------------------------------
 def test_editions_are_served_from_the_cache_and_say_so(seeded):
     client, _ = seeded
-    status = client.get("/radar/status").json()
+    status = client.get("/api/radar/status").json()
     assert status["token_present"] is False
     assert status["risk_list"]["source"] == "csv"
     assert status["risk_list"]["n"] == 139
@@ -174,13 +174,13 @@ def test_crisis_series_skips_months_rather_than_inventing_them():
 
 def test_crisis_endpoint_carries_the_link_and_the_admin_areas(seeded):
     client, _ = seeded
-    client.post("/risks/R1043/link", json={"crisis_id": "TCD005"})
-    body = client.get("/crises/TCD005").json()
+    client.post("/api/risks/R1043/link", json={"crisis_id": "TCD005"})
+    body = client.get("/api/crises/TCD005").json()
     assert body["crisis_name"] == "Displacement from Sudan to Chad"
     assert "R1043" in body["linked_risks"]
     assert "Ouaddaï" in body["adm1_name"]
     assert "SDN001" in body["connected_crises"]
-    assert client.get("/crises/NOPE999").status_code == 404
+    assert client.get("/api/crises/NOPE999").status_code == 404
 
 
 def test_only_crises_present_in_both_editions_are_diffed():

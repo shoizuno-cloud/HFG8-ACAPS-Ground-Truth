@@ -1,4 +1,4 @@
-.PHONY: dev check seed demo ui install clean
+.PHONY: dev check seed demo ui ui-mock install clean
 SHELL := /bin/sh
 
 # Development secrets come from engine/.env when it exists, otherwise engine/.env.example.
@@ -12,7 +12,7 @@ install:    ## python deps and UI deps, from a clean clone
 	pip install -r engine/requirements.txt
 	cd ui && if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-dev:        ## run the API on :18000 (serves the built UI at /app when ui/dist exists)
+dev:        ## run the API on :18000 (serves the built UI at / when ui/dist exists)
 	cd engine && $(LOADENV) python -m uvicorn engine.api:app --port 18000 --reload
 
 seed:       ## synthetic experts, panel, pulse and one sealed round; prints the magic links
@@ -27,8 +27,11 @@ check:      ## everything a merge must pass
 	cd ui && npm run build
 	python scripts/validate_fixtures.py
 
-ui:         ## frontend dev server on :5173, proxying the API on :18000
-	cd ui && npm run dev
+ui:         ## frontend dev server against the live engine on :18000
+	cd ui && npm run dev:live
+
+ui-mock:    ## frontend dev server on fixtures only, no engine needed
+	cd ui && npm run dev:mock
 
 clean:      ## drop build output and caches
 	rm -rf ui/dist ui/node_modules engine/.pytest_cache reports

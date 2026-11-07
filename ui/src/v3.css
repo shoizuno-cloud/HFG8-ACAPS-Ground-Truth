@@ -1,0 +1,192 @@
+.stance-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stance-picker > .field-label {
+  flex-basis: 100%;
+  margin-bottom: 8px;
+}
+.stance-picker button {
+  min-height: 44px;
+  font-size: 12px;
+}
+.stance-picker button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.abstention-note {
+  margin: 20px 0;
+  padding: 16px;
+  background: var(--accent-soft);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.privacy-detail {
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.privacy-detail summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--accent);
+}
+.privacy-detail p {
+  margin: 12px 0;
+}
+.decision-use-fields {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+}
+.decision-use-fields legend {
+  font-size: 13px;
+  padding: 0 8px;
+}
+.decision-use-fields label,
+.contract-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.decision-use-fields input,
+.contract-form input {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+.contract-form {
+  padding: 0;
+  margin: 20px 0;
+}
+.contract-form fieldset {
+  display: grid;
+  gap: 16px;
+}
+.contract-form button {
+  justify-self: start;
+  margin-top: 8px;
+  min-height: 44px;
+}
+.integrity-notes {
+  display: grid;
+  gap: 16px;
+}
+.integrity-notes article {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.integrity-notes h3 {
+  font-weight: 500;
+  text-transform: capitalize;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.integrity-notes p {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.aggregate-detail {
+  margin: 16px 0 24px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.aggregate-detail h3 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 14px 0 8px;
+}
+.aggregate-detail p + p {
+  margin-top: 10px;
+}
+.decision-use-summary {
+  padding: 20px 0;
+}
+.decision-use-summary h4,
+.decision-rejection h4 {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0 0 14px;
+}
+.decision-use-summary dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+.decision-use-summary dt {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.decision-use-summary dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.decision-rejection {
+  border-left: 2px solid var(--accent);
+  padding: 16px;
+  margin: 16px 0;
+  background: #f8faf9;
+}
+.decision-rejection p,
+.outcome-report p {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.outcome-report {
+  margin-top: 20px;
+  display: grid;
+  gap: 12px;
+}
+.claim-kind {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.public-login-error {
+  font-size: 12px;
+  max-width: 30ch;
+  color: var(--critical);
+}
+@media (max-width: 600px) {
+  .decision-use-summary dl {
+    grid-template-columns: 1fr;
+  }
+  .stance-picker button {
+    flex-grow: 1;
+  }
+}
+.edition-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 20px;
+}
+.edition-sources span {
+  border: 1px solid var(--border, #d9e2e3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+.edition-evidence + .edition-evidence {
+  margin-top: 16px;
+}
+.edition-evidence p {
+  margin: 4px 0;
+}
+.edition-evidence small {
+  display: block;
+  line-height: 1.6;
+}

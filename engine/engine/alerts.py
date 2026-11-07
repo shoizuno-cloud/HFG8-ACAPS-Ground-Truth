@@ -233,9 +233,11 @@ def run(store: AlertStore, month_from: str, month_to: str, record: bool = True) 
                 "month_from": month_from,
                 "month_to": month_to,
                 "metric": metric,
-                "before": row.get(f"{metric}_before") if metric != "category" else row.get("category_before"),
-                "after": row.get(f"{metric}_after") if metric != "category" else row.get("category_after"),
-                "delta": delta,
+                "before": _round(row.get(f"{metric}_before")) if metric != "category"
+                else row.get("category_before"),
+                "after": _round(row.get(f"{metric}_after")) if metric != "category"
+                else row.get("category_after"),
+                "delta": round(delta, 2),
                 "direction": "deterioration" if delta > 0 else "improvement" if delta < 0 else "category",
                 "rank_this_month": position,
                 "rank_by_abs_delta": abs_rank.get((row["crisis_id"], metric)),

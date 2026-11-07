@@ -82,7 +82,8 @@ def build(risk: dict, pulse: dict, result: dict) -> dict:
             "text": _indicator_sentence(item),
             "evidence_kind": "indicator",
             "evidence_ref": item["indicator"],
-            "numbers": [float(item["value"]), float(item["baseline"])],
+            # A completion rate has no baseline, so only the numbers actually present are cited.
+            "numbers": [float(x) for x in (item["value"], item.get("baseline")) if x is not None],
         })
 
     skeptic = _skeptic(claims, result, pulse)
@@ -131,7 +132,7 @@ def _indicator_sentence(item: dict) -> str:
     if str(item["indicator"]).startswith("trigger_completion"):
         return f"{item['source']} puts the trigger '{label}' at {item['value']}% complete."
     sentence = f"{item['source']} reports {label} at {item['value']}"
-    if item.get("baseline"):
+    if item.get("baseline") is not None and item.get("baseline") != 0:
         sentence += f" against a baseline of {item['baseline']}"
     if item.get("z") is not None:
         sentence += f" (z={item['z']})"
@@ -153,7 +154,9 @@ def _skeptic(claims: list[dict], result: dict, pulse: dict) -> list[dict]:
     aggregate_numbers += [float(t["count"]) for t in (result.get("missing_themes") or [])]
     indicator_numbers: list[float] = []
     for item in pulse.get("evidence") or []:
-        indicator_numbers += [float(item["value"]), float(item["baseline"])]
+        indicator_numbers += [
+            float(x) for x in (item.get("value"), item.get("baseline")) if x is not None
+        ]
 
     out = []
     for claim in claims:

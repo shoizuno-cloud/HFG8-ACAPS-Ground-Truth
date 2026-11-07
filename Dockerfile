@@ -5,11 +5,16 @@
 # lockfile mismatch that bites when the builder's npm major differs from the one that wrote the lock.
 
 FROM node:22-alpine AS ui
-WORKDIR /ui
-COPY ui/package.json ui/package-lock.json* ./
+WORKDIR /build
+COPY ui/package.json ui/package-lock.json* ./ui/
+WORKDIR /build/ui
 RUN if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
-COPY ui/tsconfig.json ui/vite.config.ts ui/index.html ./
-COPY ui/src ./src
+WORKDIR /build
+# The UI imports fixtures directly (ui/src/api.ts, demo-data.ts, alerts-service.ts), so they are part
+# of the frontend build input, not just test data. Copy them before building or tsc fails to resolve.
+COPY fixtures ./fixtures
+COPY ui ./ui
+WORKDIR /build/ui
 RUN npm run build
 
 
@@ -35,7 +40,7 @@ COPY engine ./engine
 COPY data ./data
 COPY fixtures ./fixtures
 COPY scripts ./scripts
-COPY --from=ui /ui/dist ./ui/dist
+COPY --from=ui /build/ui/dist ./ui/dist
 
 # Run as a non-root user. Nothing here writes to disk except reports/, which the demo script owns.
 RUN useradd --create-home --uid 10001 app \

@@ -17,9 +17,9 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi import APIRouter, Body, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -73,6 +73,10 @@ app = FastAPI(
                 "behind a mask each expert chooses.",
     lifespan=lifespan,
 )
+# Business routes live on this router and are served under /api. The UI owns the root namespace:
+# /desk, /ledger and /e/{token} are its pages, so they cannot also be API paths.
+api = APIRouter()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -115,7 +119,7 @@ def version():
 
 
 # -- radar and risks -----------------------------------------------------------
-@app.get("/radar/status", tags=["risks"])
+@api.get("/radar/status", tags=["risks"])
 def radar_status():
     """Where every number on screen came from. The badges on the desk read straight off this."""
     csv_status = data.radar_status()
@@ -141,7 +145,7 @@ def radar_status():
     })
 
 
-@app.get("/radar/editions", tags=["radar"])
+@api.get("/radar/editions", tags=["radar"])
 def radar_editions():
     months = acaps.available()
     return envelope({
@@ -161,7 +165,7 @@ def radar_editions():
 
 
 # -- crises --------------------------------------------------------------------
-@app.get("/crises", tags=["radar"])
+@api.get("/crises", tags=["radar"])
 def crises(iso3: str | None = None, limit: int = 400):
     rows = list(acaps.crises().values())
     if iso3:
@@ -170,7 +174,7 @@ def crises(iso3: str | None = None, limit: int = 400):
     return envelope({"crises": rows[:limit], "n": len(rows)})
 
 
-@app.get("/crises/{crisis_id}", tags=["radar"])
+@api.get("/crises/{crisis_id}", tags=["radar"])
 def crisis(crisis_id: str):
     found = acaps.crisis(crisis_id)
     if not found:
@@ -188,7 +192,7 @@ def crisis(crisis_id: str):
 
 
 # -- the risk alert engine -----------------------------------------------------
-@app.post("/alerts/run", tags=["alerts"])
+@api.post("/alerts/run", tags=["alerts"])
 def alerts_run(body: dict = Body(default_factory=dict)):
     """Diff the two most recent cached editions (or those ending at month_to) for every crisis."""
     month_from, month_to = alert_engine.latest_pair(month_to=body.get("month_to"))
@@ -200,7 +204,7 @@ def alerts_run(body: dict = Body(default_factory=dict)):
     return envelope(result)
 
 
-@app.post("/alerts/replay", tags=["alerts"])
+@api.post("/alerts/replay", tags=["alerts"])
 def alerts_replay(body: dict = Body(default_factory=dict)):
     """Reproduce a past month from the cached editions. The demo opens on Mar2026 -> Apr2026."""
     month_from = body.get("month_from") or "Mar2026"
@@ -212,7 +216,7 @@ def alerts_replay(body: dict = Body(default_factory=dict)):
     return envelope(alert_engine.run(ALERTS, month_from, month_to))
 
 
-@app.get("/alerts", tags=["alerts"])
+@api.get("/alerts", tags=["alerts"])
 def list_alerts(status: str | None = None):
     rows = list(ALERTS.events.values())
     if status:
@@ -222,7 +226,7 @@ def list_alerts(status: str | None = None):
     return envelope({"events": rows, "n": len(rows), "rules": alert_engine.RULES})
 
 
-@app.get("/alerts/{alert_id}", tags=["alerts"])
+@api.get("/alerts/{alert_id}", tags=["alerts"])
 def get_alert(alert_id: str):
     found = ALERTS.events.get(alert_id)
     if not found:
@@ -230,7 +234,7 @@ def get_alert(alert_id: str):
     return envelope(found)
 
 
-@app.post("/alerts/{alert_id}/pulse", status_code=201, tags=["alerts"])
+@api.post("/alerts/{alert_id}/pulse", status_code=201, tags=["alerts"])
 async def alert_to_pulse(alert_id: str, body: dict = Body(default_factory=dict)):
     """The analyst approves an event. Only here does an alert become a question for the panel."""
     event = ALERTS.events.get(alert_id)
@@ -255,10 +259,12 @@ async def alert_to_pulse(alert_id: str, body: dict = Body(default_factory=dict))
     await publish("pulse_fired", {"pulse_id": pulse["id"], "risk_id": risk_id, "alert_id": alert_id})
     logging_conf.log(log, "info", "alert approved into a pulse", alert_id=alert_id,
                      pulse_id=pulse["id"], risk_id=risk_id)
-    return envelope({"pulse": pulse, "alert": event})
+    # Returned as the event itself: the UI reads status and pulse_id off the top level, and the
+    # created pulse rides along under "pulse" for callers that want it.
+    return envelope({**event, "pulse": pulse})
 
 
-@app.post("/alerts/{alert_id}/dismiss", tags=["alerts"])
+@api.post("/alerts/{alert_id}/dismiss", tags=["alerts"])
 def dismiss_alert(alert_id: str, body: dict = Body(default_factory=dict)):
     event = ALERTS.events.get(alert_id)
     if not event:
@@ -279,6 +285,18 @@ def _alert_evidence(event: dict) -> list[dict]:
     """The event's own numbers become the pulse's evidence line, so the expert sees what moved."""
     evidence = [{
         "source": "ACAPS INFORM Severity",
+        # The edition fields the UI renders on an evidence line: which dataset, which crisis, which
+        # two months, and where the move ranked. Without these it falls back to a bare value pair.
+        "dataset": "inform-severity-index",
+        "crisis_id": event["crisis_id"],
+        "metric": event["metric"],
+        "month_from": event["month_from"],
+        "month_to": event["month_to"],
+        "before": event["before"],
+        "after": event["after"],
+        "delta": event["delta"],
+        "rank_this_month": event["rank_this_month"],
+        "n_crises_this_month": event["n_crises_this_month"],
         "indicator": f"{event['metric']}:{event['crisis_id']}",
         "value": event["after"],
         "baseline": event["before"],
@@ -295,7 +313,15 @@ def _alert_evidence(event: dict) -> list[dict]:
         if pair[0] is None or pair[1] is None or abs(pair[1] - pair[0]) < 0.3:
             continue
         evidence.append({
-            "source": "ACAPS INFORM Severity",
+            "source": f"ACAPS {name.replace('_', ' ')}",
+            "dataset": "inform-severity-index",
+            "crisis_id": event["crisis_id"],
+            "metric": name,
+            "month_from": event["month_from"],
+            "month_to": event["month_to"],
+            "before": pair[0],
+            "after": pair[1],
+            "delta": round(pair[1] - pair[0], 2),
             "indicator": f"{name}:{event['crisis_id']}",
             "value": pair[1],
             "baseline": pair[0],
@@ -306,7 +332,7 @@ def _alert_evidence(event: dict) -> list[dict]:
     return evidence
 
 
-@app.post("/risks/{risk_id}/link", status_code=201, tags=["alerts"])
+@api.post("/risks/{risk_id}/link", status_code=201, tags=["alerts"])
 def link_risk(risk_id: str, body: dict = Body(default_factory=dict)):
     """The analyst confirms the risk-to-crisis link once. Suggestions are iso3 plus a driver keyword;
     a wrong link would put real ACAPS numbers behind the wrong question."""
@@ -322,20 +348,20 @@ def link_risk(risk_id: str, body: dict = Body(default_factory=dict)):
     return envelope(link)
 
 
-@app.get("/risks/{risk_id}/link", tags=["alerts"])
+@api.get("/risks/{risk_id}/link", tags=["alerts"])
 def get_link(risk_id: str):
     confirmed = ALERTS.links.get(risk_id)
     suggestions = [s for s in alert_engine.suggest_links() if s["risk_id"] == risk_id]
     return envelope({"risk_id": risk_id, "confirmed": confirmed, "suggested": suggestions})
 
 
-@app.get("/risks", tags=["risks"])
+@api.get("/risks", tags=["risks"])
 def risks(status: str = "Active", limit: int = 200):
     rows = data.active_risks() if status.lower() == "active" else data.all_risks()
     return envelope({"risks": rows[:limit], "n": len(rows), "filter": status})
 
 
-@app.get("/risks/{risk_id}", tags=["risks"])
+@api.get("/risks/{risk_id}", tags=["risks"])
 def risk(risk_id: str):
     found = data.get_risk(risk_id)
     if not found:
@@ -343,7 +369,7 @@ def risk(risk_id: str):
     return envelope(found)
 
 
-@app.post("/risks/{risk_id}/contract", status_code=201, tags=["risks"])
+@api.post("/risks/{risk_id}/contract", status_code=201, tags=["risks"])
 def freeze_contract(risk_id: str, body: dict = Body(default_factory=dict)):
     """A frozen question contract is required before any scoring (section 5)."""
     found = data.get_risk(risk_id)
@@ -359,7 +385,7 @@ def freeze_contract(risk_id: str, body: dict = Body(default_factory=dict)):
 
 
 # -- experts and panels --------------------------------------------------------
-@app.post("/experts/apply", status_code=201, tags=["panel"])
+@api.post("/experts/apply", status_code=201, tags=["panel"])
 def experts_apply(body: dict = Body(default_factory=dict)):
     expert = STORE.add_expert(Expert(
         id=f"X-{uuid.uuid4().hex[:8]}",
@@ -377,7 +403,37 @@ def experts_apply(body: dict = Body(default_factory=dict)):
                      "note": "Approval needs two admins before this expert can be matched to a panel."})
 
 
-@app.get("/panels/match", tags=["panel"])
+@api.post("/experts/{expert_id}/approve", status_code=201, tags=["panel"])
+def approve_expert(expert_id: str, body: dict = Body(default_factory=dict)):
+    """Committee approval. Two distinct admins are required, so one admin approving twice does not
+    make a panel member -- the second call from the same admin is refused rather than counted."""
+    expert = STORE.experts.get(expert_id)
+    if not expert:
+        raise HTTPException(404, f"no expert {expert_id}")
+    admin = (body.get("admin") or "").strip()
+    if not admin:
+        raise HTTPException(422, "admin is required: an approval has to be attributable to someone")
+
+    approvals = STORE.approvals.setdefault(expert_id, [])
+    if admin in approvals:
+        raise HTTPException(409, f"{admin} has already approved this expert; a second admin is needed")
+    approvals.append(admin)
+
+    if len(approvals) >= 2 and expert.status != "approved":
+        expert.status = "approved"
+    return envelope({
+        "expert_id": expert_id,
+        "status": expert.status,
+        "approvals": approvals,
+        "approvals_required": 2,
+        "credential_issued": expert.status == "approved",
+        "note": "Approved experts can be matched to a panel."
+        if expert.status == "approved"
+        else f"{2 - len(approvals)} more approval(s) needed, from a different admin.",
+    })
+
+
+@api.get("/panels/match", tags=["panel"])
 def panels_match(risk_id: str = "R1043"):
     """The best-matched approved experts, plus the composition check. Caps matter more than scores:
     a panel of eight from one organisation is not a panel."""
@@ -410,6 +466,9 @@ def panels_match(risk_id: str = "R1043"):
         "experts": [{"expert_id": e.id, "pseudonym": pseudonym_for(e.id, SETTINGS.pseudonym_key),
                      "theme_tags": e.theme_tags, "geo_tags": e.geo_tags,
                      "affiliation_tag": e.affiliation_tag, "region": e.region,
+                     # How well this expert fits: themes matched plus country matched, over what
+                     # the risk asks for. Shown so a panel can be argued with, not just accepted.
+                     "match": round(sum(score(e)) / max(1, len(risk_themes) + 1), 4),
                      "synthetic": e.synthetic} for e in chosen],
         "composition": {
             "max_per_affiliation": 3,
@@ -417,7 +476,15 @@ def panels_match(risk_id: str = "R1043"):
             "theme_cover": sorted(covered & risk_themes),
             "themes_wanted": sorted(risk_themes),
             "themes_uncovered": sorted(risk_themes - covered),
+            "gaps": sorted(risk_themes - covered),
             "geo_spread": sorted({e.region for e in chosen if e.region}),
+            # The panel is only "ok" when it clears k_min, covers every theme the risk names, and
+            # no single organisation holds more than three seats.
+            "ok": (
+                len(chosen) >= STORE.k_min
+                and not (risk_themes - covered)
+                and all(count <= 3 for count in per_affiliation.values())
+            ),
         },
         "n_approved_available": len(approved),
     })
@@ -454,7 +521,7 @@ def _build_pulse(risk: dict, reason: str, question: str | None, evidence: list[d
     return pulse
 
 
-@app.post("/pulses", status_code=201, tags=["pulse"])
+@api.post("/pulses", status_code=201, tags=["pulse"])
 async def create_pulse(body: dict = Body(default_factory=dict)):
     risk_id = body.get("risk_id") or "R1043"
     found = data.get_risk(risk_id)
@@ -476,10 +543,13 @@ def _trigger_evidence(risk: dict) -> list[dict]:
         if trigger.get("completion_rate") is None:
             continue
         evidence.append({
-            "source": "ACAPS Risk Radar",
+            # A completion rate is a single published percentage: it has no baseline and no z-score.
+            # Sending baseline 0 made every renderer print "40 versus 0 baseline", which reads as a
+            # comparison that was never made. The statement goes in the label instead.
+            "source": f"{trigger['title']} - {trigger['completion_rate']}% complete",
             "indicator": f"trigger_completion:{trigger['id']}",
             "value": trigger["completion_rate"],
-            "baseline": 0,
+            "baseline": None,
             "z": None,
             "url": (trigger.get("sources") or [{}])[0].get("url", "https://www.acaps.org/en/countries"),
             "note": trigger["title"],
@@ -487,7 +557,7 @@ def _trigger_evidence(risk: dict) -> list[dict]:
     return evidence
 
 
-@app.get("/pulses/{pulse_id}", tags=["pulse"])
+@api.get("/pulses/{pulse_id}", tags=["pulse"])
 def get_pulse(pulse_id: str):
     pulse = STORE.pulses.get(pulse_id)
     if not pulse:
@@ -495,7 +565,7 @@ def get_pulse(pulse_id: str):
     return envelope({**pulse, "n_answers": STORE.n_answers(pulse_id)})
 
 
-@app.post("/pulses/doorbell/run", tags=["pulse"])
+@api.post("/pulses/doorbell/run", tags=["pulse"])
 async def doorbell_run(threshold: int = 40, fire: bool = False):
     """One pass of the detector over the open triggers of active risks. It watches the risk's own
     triggers, not a generic news feed, which is the whole point of the doorbell."""
@@ -523,7 +593,7 @@ async def doorbell_run(threshold: int = 40, fire: bool = False):
                      "note": "Signal is the ACAPS trigger completion rate. Pass fire=true to open pulses."})
 
 
-@app.get("/pulses/{pulse_id}/tray", tags=["pulse"])
+@api.get("/pulses/{pulse_id}/tray", tags=["pulse"])
 def tray(pulse_id: str):
     """Sealed envelopes: commitment and time, never a value. This is what the desk may show
     before the reveal."""
@@ -535,7 +605,7 @@ def tray(pulse_id: str):
 
 
 # -- the expert card -----------------------------------------------------------
-@app.get("/e/{token}", tags=["expert"])
+@api.get("/e/{token}", tags=["expert"])
 def card(token: str):
     resolved = STORE.resolve_token(token)
     if not resolved:
@@ -551,13 +621,16 @@ def card(token: str):
         result = STORE.results[pulse_id]
         group_view = {"mean": result["mean"], "distribution": result["distribution"],
                       "spread": result["spread"], "n": result["n"]}
-    # ACAPS's own rating is withheld until after submission, so it cannot anchor the answer.
+    # The rating is withheld in round 1 so it cannot anchor a first, independent answer. Round 2 is
+    # the opposite by design (section 8): it is the informed round, and it shows ACAPS's rating and
+    # the group alongside it. Hiding it there would withhold the very evidence round 2 exists to add.
     answered = STORE.answered(pulse_id, expert_id)
+    blind = rnd == 1 and not answered
     public_risk = {key: value for key, value in risk.items()
                    if key not in ("probability_acaps", "level", "probability_assumed_number")}
     return envelope({
         "pulse": {**pulse, "n_answers": STORE.n_answers(pulse_id)},
-        "risk": public_risk if not answered else risk,
+        "risk": public_risk if blind else risk,
         "round": rnd,
         "group_view_if_round2": group_view,
         "already_answered": answered,
@@ -567,12 +640,12 @@ def card(token: str):
         "source_tags": ["saw", "read", "heard"],
         "accuracy_prompt": "Is this something you saw, read, or heard?",
         "elicitation": "What share of this panel will put the probability above 0.5?",
-        "rating_hidden_until_submission": not answered,
-        "blind": True,
+        "rating_hidden_until_submission": blind,
+        "blind": blind,
     })
 
 
-@app.post("/e/{token}/answer", status_code=201, tags=["expert"])
+@api.post("/e/{token}/answer", status_code=201, tags=["expert"])
 async def answer(token: str, body: dict = Body(default_factory=dict)):
     resolved = STORE.resolve_token(token)
     if not resolved:
@@ -603,7 +676,7 @@ async def answer(token: str, body: dict = Body(default_factory=dict)):
 
 
 # -- reveal and aggregate ------------------------------------------------------
-@app.post("/pulses/{pulse_id}/reveal", tags=["round"])
+@api.post("/pulses/{pulse_id}/reveal", tags=["round"])
 async def reveal(pulse_id: str):
     pulse = STORE.pulses.get(pulse_id)
     if not pulse:
@@ -618,7 +691,7 @@ async def reveal(pulse_id: str):
     return envelope(_public_result(result))
 
 
-@app.get("/pulses/{pulse_id}/result", tags=["round"])
+@api.get("/pulses/{pulse_id}/result", tags=["round"])
 def result(pulse_id: str):
     found = STORE.results.get(pulse_id)
     if not found:
@@ -631,7 +704,7 @@ def _public_result(result: dict) -> dict:
     return {key: value for key, value in result.items() if key != "integrity_notes"}
 
 
-@app.get("/integrity/{pulse_id}", tags=["round"])
+@api.get("/integrity/{pulse_id}", tags=["round"])
 def integrity(pulse_id: str):
     found = STORE.results.get(pulse_id)
     if not found:
@@ -645,7 +718,7 @@ def integrity(pulse_id: str):
 
 
 # -- draft and decision --------------------------------------------------------
-@app.post("/pulses/{pulse_id}/draft", tags=["draft"])
+@api.post("/pulses/{pulse_id}/draft", tags=["draft"])
 def make_draft(pulse_id: str):
     pulse = STORE.pulses.get(pulse_id)
     found = STORE.results.get(pulse_id)
@@ -659,7 +732,7 @@ def make_draft(pulse_id: str):
     return envelope(built)
 
 
-@app.post("/drafts/{draft_id}/decision", tags=["draft"])
+@api.post("/drafts/{draft_id}/decision", tags=["draft"])
 async def decide(draft_id: str, body: dict = Body(default_factory=dict)):
     found = STORE.drafts.get(draft_id)
     if not found:
@@ -669,9 +742,15 @@ async def decide(draft_id: str, body: dict = Body(default_factory=dict)):
         raise HTTPException(422, "action must be accept, edit or reject")
     if action == "reject" and not body.get("note"):
         raise HTTPException(422, "rejecting the panel's view requires a rationale; it goes on the public ledger")
+
+    # The UI sends these nested under decision_use; earlier callers send them flat. Accept both.
+    use = {**(body.get("decision_use") or {})}
     for field in ("what_decision", "for_whom", "by_when"):
-        if action in ("accept", "edit") and not body.get(field):
+        use.setdefault(field, body.get(field))
+    for field in ("what_decision", "for_whom", "by_when"):
+        if action in ("accept", "edit") and not use.get(field):
             raise HTTPException(422, f"an accepted update needs {field}: what decision, for whom, by when")
+    body = {**body, **use}
 
     found["status"] = {"accept": "accepted", "edit": "edited", "reject": "rejected"}[action]
     found["decided_by"] = body.get("decided_by") or "analyst"
@@ -703,13 +782,13 @@ async def decide(draft_id: str, body: dict = Body(default_factory=dict)):
 
 
 # -- ledger --------------------------------------------------------------------
-@app.get("/ledger", tags=["ledger"])
+@api.get("/ledger", tags=["ledger"])
 def ledger():
     return envelope({"entries": list(reversed(STORE.ledger)), "k_min": STORE.k_min,
                      "note": "Group views only. No names, and nothing about any individual."})
 
 
-@app.get("/ledger/{risk_id}", tags=["ledger"])
+@api.get("/ledger/{risk_id}", tags=["ledger"])
 def ledger_for(risk_id: str):
     entries = [e for e in STORE.ledger if e["risk_id"].lower() == risk_id.lower()]
     if not entries:
@@ -717,7 +796,7 @@ def ledger_for(risk_id: str):
     return envelope({"entries": entries, "k_min": STORE.k_min})
 
 
-@app.post("/ledger/verify", tags=["ledger"])
+@api.post("/ledger/verify", tags=["ledger"])
 def verify(body: dict = Body(default_factory=dict)):
     wanted = (body.get("verify_hash") or "").strip().lower()
     for entry in STORE.ledger:
@@ -737,7 +816,7 @@ def verify(body: dict = Body(default_factory=dict)):
 
 
 # -- outcome, scoring, calibration ---------------------------------------------
-@app.post("/risks/{risk_id}/resolve", tags=["outcome"])
+@api.post("/risks/{risk_id}/resolve", tags=["outcome"])
 async def resolve(risk_id: str, body: dict = Body(default_factory=dict)):
     outcome = body.get("outcome")
     if outcome not in ("materialised", "not_materialised"):
@@ -777,7 +856,7 @@ async def resolve(risk_id: str, body: dict = Body(default_factory=dict)):
                      "scored_against": "the export's Probability band, never Risk Level"})
 
 
-@app.get("/pulses/{pulse_id}/outcome-report", tags=["outcome"])
+@api.get("/pulses/{pulse_id}/outcome-report", tags=["outcome"])
 def outcome_report(pulse_id: str):
     found = STORE.results.get(pulse_id)
     if not found:
@@ -796,7 +875,7 @@ def outcome_report(pulse_id: str):
     })
 
 
-@app.get("/me/{token}/calibration", tags=["outcome"])
+@api.get("/me/{token}/calibration", tags=["outcome"])
 def calibration(token: str):
     resolved = STORE.resolve_token(token)
     if not resolved:
@@ -816,7 +895,7 @@ def calibration(token: str):
     })
 
 
-@app.get("/analyst/board", tags=["desk"])
+@api.get("/analyst/board", tags=["desk"])
 def board():
     by_expert: dict[str, list[float]] = {}
     for score in STORE.scores:
@@ -843,7 +922,7 @@ def board():
                      "note": "A board entry needs 5 resolved risks. Empty is the honest state early on."})
 
 
-@app.get("/sim/proof", tags=["desk"])
+@api.get("/sim/proof", tags=["desk"])
 def proof():
     path = ROOT / "reports" / "proof.json"
     if not path.exists():
@@ -852,7 +931,7 @@ def proof():
 
 
 # -- events --------------------------------------------------------------------
-@app.get("/events", tags=["desk"])
+@api.get("/events", tags=["desk"])
 async def events(request: Request):
     queue: asyncio.Queue = asyncio.Queue(maxsize=64)
     _subscribers.add(queue)
@@ -877,7 +956,7 @@ async def events(request: Request):
 
 
 # -- demo helpers --------------------------------------------------------------
-@app.get("/demo/links", tags=["desk"])
+@api.get("/demo/links", tags=["desk"])
 def demo_links():
     """The magic links for the seeded synthetic panel, so the desk can open a card on stage."""
     rows = []
@@ -887,15 +966,20 @@ def demo_links():
                      "pseudonym": pseudonym_for(expert_id, SETTINGS.pseudonym_key),
                      "region": expert.region if expert else "",
                      "answered": STORE.answered(pulse_id, expert_id),
-                     "card_url": f"/app/e/{token}"})
+                     "card_url": f"/e/{token}"})
     return envelope({"links": rows, "synthetic": True,
                      "note": "Synthetic experts. Real panels get these by email magic link."})
 
 
 # -- the built UI --------------------------------------------------------------
+app.include_router(api, prefix="/api")
+
+
 @app.get("/", include_in_schema=False)
 def root():
-    return RedirectResponse("/app/" if UI_DIST.exists() else "/docs")
+    if not UI_DIST.exists():
+        return RedirectResponse("/docs")
+    return FileResponse(UI_DIST / "index.html")
 
 
 if UI_DIST.exists():
@@ -912,4 +996,4 @@ if UI_DIST.exists():
                     return await super().get_response("index.html", scope)
                 raise
 
-    app.mount("/app", SinglePageApp(directory=str(UI_DIST), html=True), name="ui")
+    app.mount("/", SinglePageApp(directory=str(UI_DIST), html=True), name="ui")
