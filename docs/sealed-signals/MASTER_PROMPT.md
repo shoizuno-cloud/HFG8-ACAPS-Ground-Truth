@@ -709,14 +709,17 @@ Professional, minimal, modern. The jury should think "this already exists in pro
 
 ## 9a. The three minutes (Lane C owns demo-script.md; deck in pitch/sealed-signals-slides.html; these beats are fixed)
 
-Slide order is the story: 1 the gap (47 %, the exact sentence) · 2 who needs the check (the four ACAPS personas) · 3 the
-whole system on one screen · 4 the Alerts page, April 2026 live · 5 the Reach page, the pulse leaving by email, WhatsApp
-and SMS · 6 the expert screen and the confirm screen · 7 scan, the jury is the Chad panel (60 s for the room), then the
-live desk: reveal at the deadline, four columns, draft with Skeptic marks, accept with "what decision, for whom, by
-when", ledger entry, one click on Verify ("matches: existed at this time, unchanged; timing, not truth") · 8 who can
-learn what, each mechanism with the one thing it proves · 9 pilot and team · close on the spine line. Fallback slides
-B1 and B2 (reveal view, draft and ledger) replace the live desk if it fails; B3 is the sensitivity test for Q&A. Crypto
-gets the Verify click and the chips on slides 3 and 8, nothing more. Nothing is said on stage about a path that is off.
+The deck sells what we built, with proofs. Order: 1 the gap (47 %) · 2 the whole system on one screen, tech chips on each
+node · 3 alert engine: the Alerts page, the real April 2026 move reproduced by replay · 4 Reach: the pulse leaving by six
+channels, consent and STOP visible · 5 psychology layer: the card annotated with the six biases designed out, and the five
+descriptive desk notes · 6 agentic verification: Investigator, Skeptic, Judge with claim-level verdicts, a held claim and a
+rejected claim, the analyst decision · 7 scan, the jury is the Chad panel (60 s), then the live desk: reveal, draft,
+decision, ledger, one click on Verify · 8 cryptographic ledger: the ledger screen with six mechanisms, each "proves /
+does not" · 9 scoring and calibration: committee scoring at panel level, the outcome report, the miss on the page ·
+10 proof it runs: 123, 104, under 60 s, 9 flags, tests, measured, reviewed · 11 why it is different: comparison with an
+email thread, a survey tool and a prediction market · 12 pilot and team · close on the spine line. Q&A and fallback
+slides (B): personas and the ACAPS workflow mapping, the reveal view, the draft and ledger, the sensitivity test.
+Nothing is said on stage about a path that is off.
 
 ## 10. Lanes
 
