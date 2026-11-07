@@ -30,6 +30,7 @@ Start with `README.md`. This file says where each part lives and which test or c
 | The draft checker rejects a number not in a record and holds unsourced claims | `engine/engine/draft.py`; `engine/tests/test_loop.py` |
 | Hardening: encrypt/decrypt round trip, attestation fails on a flipped byte, blind token reuse rejected, anchor pending → anchored, registry reads logged | `engine/tests/hardening/` |
 | Pattern reports never name a person; calibration items never appear on a pulse card | `engine/tests/hardening/test_patterns.py` |
+| The country scan answers the brief's example question, hides ACAPS's view, shuffles per link, reveals at the deadline, keeps added risks out of the result | `engine/tests/test_scan.py` |
 | Every API route has a true example payload | `fixtures/` and `scripts/validate_fixtures.py` |
 | The UI builds and the three screens render | `make check`; `docs/evidence/screens/` |
 | What is live and what is cached | `GET /api/radar/status` reports source and fetched_at per dataset; `data/acaps-api/README.md` |

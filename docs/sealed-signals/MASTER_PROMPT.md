@@ -551,6 +551,46 @@ Routes: `GET/POST /reach/contacts`, `POST /reach/contacts/import`, `POST /reach/
 `POST /inbound/{channel}`, `POST /reach/preferences/{expert_id}` (expert-editable by reply or link; the analyst can only
 suggest, and a suggestion is marked until the expert confirms), `POST /reach/contacts/{id}/stop` (one-word opt-out).
 
+## 6f. Country scan: the brief's example question (built on feature/country-scan and feature/country-scan-ui)
+
+"What are the three biggest risks in Chad that might worsen humanitarian outcomes in the next six months?" A risk pulse
+asks how likely one frozen event is; a country scan asks the panel to rank what ACAPS should be watching in one
+country, and sets that ranking beside ACAPS's own order.
+
+- Candidates (at most 8): the country's active Risk List entries, then the ACAPS-tracked crises in the country that no
+  active risk covers (covered = an analyst-confirmed link, or a shared place word between crisis name and risk title,
+  the country name excluded). Chad: R1043, R1066, Complex crisis, Floods, Drought, CAR displacement, Lac province,
+  Tibesti. TCD005 is not offered twice because R1043 covers it.
+- Card `/s/:token`: the question, candidates as tap targets numbered in tap order (up to three), "outside my area",
+  "not enough evidence", an optional added risk with saw / read / heard, mask per answer with no default, confirmation
+  step, receipt with the commitment. Titles only: ACAPS's level and severity are hidden until the reveal, and the order
+  of candidates is shuffled per link (stable for that link) so list position does not anchor everyone the same way.
+- Same guarantees as a pulse: draft then confirm; salted SHA-256 commitment; correction until the deadline with the
+  earlier version kept; reveal at the deadline; under k_min: insufficient panel, nothing revealed; anonymous answers
+  store no expert id.
+- Aggregate: 3, 2 and 1 points for first, second and third pick; ties by number of top-three mentions, then ACAPS's
+  order. ACAPS's order: Risk List entries by level and impact, then crises by current INFORM severity. Reported: the
+  ranking with points, top-three count and first-choice count; overlap with ACAPS's top three; first-choice agreement;
+  abstentions (never counted); first choices by region only where a region has three or more voices; added risks as a
+  count and themes, their text in the access-logged verification queue.
+- Notes for the analyst, descriptive: a crisis without a Risk List entry in the panel's top three ("a candidate for the
+  analyst to consider, not a finding"); an item in ACAPS's top three that the panel ranked lower. Public view drops
+  the notes and never carries an individual.
+- Analyst view `/scans/:id`: four figures, a slopegraph of panel rank against ACAPS rank (moves into or out of the top
+  three drawn dashed), the notes, the added-risk count, Verify.
+- Routes: `POST /scans {iso3, window_hours | expires_at}`, `GET /scans`, `GET /scans/{id}`, `GET /s/{token}`,
+  `POST /s/{token}/answer`, `POST /s/{token}/confirm`, `POST /scans/{id}/reveal {reason}`,
+  `GET /scans/{id}/result?audience=public|analyst`, `GET /scans/{id}/verification-queue?who&why`,
+  `POST /scans/{id}/verify`, `GET /demo/scan-links`. Module `engine/engine/scan.py`; tests `engine/tests/test_scan.py`
+  (16); UI `ui/src/CountryScan.tsx`, `ui/src/scan.css`.
+- Seeded demo (synthetic): five of the six who rank put Floods in Chad in their top three, a crisis with no current
+  INFORM score and no Risk List entry; ACAPS's third, the complex crisis, makes two top threes. Four open links for the
+  room.
+
+No public scoreboard, by design. The organisers list a super-estimator scoreboard as a could-have; we score forecasts at
+panel level, send every expert the outcome report, and offer private, consent-gated calibration that the expert sees
+first. Recognition is the panel's record and the expert's own report, never a ranking of people.
+
 ## 6d. Pattern reports (panel-level) and the consent-gated calibration programme
 
 **No measurement is hidden in a pulse.** The pulse card asks the question and nothing else. Nothing on it is a test, and

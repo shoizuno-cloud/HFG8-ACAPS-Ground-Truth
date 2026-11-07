@@ -24,6 +24,7 @@ not sign up to a portal to change that; and nobody can see the bias in a panel o
 | 2 Ask | The analyst freezes a question contract (event, place, threshold, deadline) and the eight best-matched vetted experts receive it by email, WhatsApp, Signal, SMS, Teams or a scheduled call. No sign-up, one magic link. | Experts never sign up |
 | 3 Answer | One screen, one required tap, mask chosen per answer. ACAPS's rating is hidden. The answer is committed with a salted SHA-256 hash and a timestamp on confirmation, and all answers are revealed together at the deadline. | Anchoring, herding, social pressure |
 | 4 Check | Equal-weight mean, spread, unattributed disagreement, missing evidence, descriptive bias notes. An Investigator, Skeptic and Judge turn the panel view into a cited draft; a checker rejects any number not exactly in a versioned record. | Bias nobody could see |
+| Country scan | The brief's own example, "What are the three biggest risks in Chad that might worsen humanitarian outcomes in the next six months?": experts tap up to three of the country's ACAPS risks and tracked crises, ACAPS's view hidden and the list shuffled per link; at the deadline the panel's ranking is drawn beside ACAPS's own, and a crisis with no Risk List entry that the panel ranks high is flagged for the analyst. | Knowledge that sits in people before it shows up in a report |
 | 5 Decide and record | The analyst accepts, edits or rejects, with "what decision, for whom, by when". The public ledger keeps the group view, an honesty box, a Verify action and the misses. Scored at panel level when the risk resolves; every expert receives the outcome report. | No trail, no feedback, no misses |
 
 Nothing publishes itself. Sealed Signals is one validation layer among others inside ACAPS's own analysis workflow.
@@ -39,8 +40,10 @@ Nothing publishes itself. Sealed Signals is one validation layer among others in
 Should-haves: sustained engagement without engagement metrics (outcome report to every expert, one pulse a week at most,
 STOP by one word); short contributions (one screen); small trusted groups (eight per panel, committee-vetted,
 affiliation cap). Should-nots respected: no engagement metrics, no chatbot feel (the expert never talks to a model).
-Could-haves: agreement and disagreement by region on the desk; mobile and 2G-friendly expert screen; English and French
-parsing of replies. Can-have: AI behind the scenes only, model-optional, never expert-facing.
+Could-haves: agreement and disagreement by region on the desk and in the country scan; mobile and 2G-friendly expert screen; English and French
+parsing of replies. Can-have: AI behind the scenes only, model-optional, never expert-facing. No public super-estimator scoreboard,
+by design: forecasts are scored at panel level, every expert gets the outcome report, and individual calibration is
+private, consent-gated and seen by the expert first.
 
 ## 4. Architecture
 
@@ -83,6 +86,7 @@ Technology, and where each piece does its work:
 | Verification loop | `engine/engine/draft.py` | Deterministic template by default; Investigator, Skeptic, Judge behind `FF_AGENTS`; exact provenance, uncorroborated claims held in a queue |
 | Reach | `engine/reach/`, `engine/inbound/` | Channels, magic links, inbound parsers (numbers, five-word scale, abstention, mask words, STOP, English and French), voice-note confirmation, cadence caps |
 | Scoring and calibration | `engine/engine/hardening/calibration.py` | Frozen question contract before scoring; Brier at panel level; consent-gated calibration programme (`FF_CALIBRATION`, off) |
+| Country scan | `engine/engine/scan.py`, `ui/src/CountryScan.tsx` | Ranks a country's ACAPS risks and tracked crises by panel vote (3-2-1), beside ACAPS's order, with the same commit-and-reveal, deadline and anonymity rules |
 | Frontend | `ui/` | React and Vite; expert screen, analyst desk, public ledger, Risk Radar; Playwright tests |
 
 ## 5. Run it
