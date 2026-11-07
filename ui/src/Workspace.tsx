@@ -1,4 +1,5 @@
 import { EvidenceLine } from "./Evidence";
+import { Journey, DecisionSnapshot } from "./Journey";
 import { LedgerRecord, LedgerColumns } from "./LedgerRecord";
 import { sampleDataEnabled, sampleRisks } from "./demo-data";
 import {
@@ -214,9 +215,14 @@ function Desk() {
             }
           }}
         >
-          <RotateCcw size={15} /> Reset demo
+          <RotateCcw size={15} /> Reset round
         </button>
       </div>
+      <Journey active={2} />
+      <DecisionSnapshot
+        rating={risk.probability_acaps}
+        result={revealed ? result : null}
+      />
       <div className="risk-strip">
         <div>
           <span className="rating">{risk.level} risk</span>
@@ -232,7 +238,7 @@ function Desk() {
         <div className="desk-main">
           <Panel
             title="Sealed envelope tray"
-            detail={`Round 1 · ${answers} of ${result.n} demo answers`}
+            detail={`Round 1 · ${answers} of ${result.n} answers`}
           >
             <div
               className="envelope-tray"
@@ -263,7 +269,7 @@ function Desk() {
                   })
                 }
               >
-                Load synthetic answers
+                Load answers
               </button>
               <button
                 className="primary"
@@ -284,8 +290,8 @@ function Desk() {
               </a>
             </div>
             <p className="panel-caption">
-              At least five answers are required. This tray is manually replayed
-              from fixtures; live events connect in the next milestone.
+              Answers stay sealed until the round is revealed. At least five are
+              required.
             </p>
           </Panel>
           <Panel
@@ -460,50 +466,58 @@ function Desk() {
           </Panel>
         </div>
         <aside className="desk-side">
-          <QuestionContractPanel
-            riskId={risk.risk_id}
-            onFrozen={setFrozenContract}
-          />
-          <PanelMatch riskId={risk.risk_id} />
-          {revealed && <IntegrityPanel pulseId={pulse.id} />}
           <Panel title="ACAPS edition evidence">
             {pulse.evidence.map((e, i) => (
               <EvidenceLine key={i} value={e} />
             ))}
           </Panel>
-          <Panel
-            title="Agreement by region"
-            detail={revealed ? "Regional minimum n = 3" : "Sealed"}
-          >
-            {revealed ? (
-              <Regions />
-            ) : (
-              <p className="empty-copy">Regional views open with the round.</p>
-            )}
-          </Panel>
-          <Panel
-            title="What the panel is missing"
-            detail={revealed ? "Panel themes" : "Sealed"}
-          >
-            {revealed ? (
-              <ul className="theme-list">
-                {result.missing_themes.map((theme) => (
-                  <li key={theme.theme}>
-                    <span>
-                      {theme.theme}
-                      <small className="theme-provenance">
-                        Origin: {theme.origin} · {theme.corroboration}
-                      </small>
-                    </span>
-                    <strong>{theme.count}</strong>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="empty-copy">Themes appear after reveal.</p>
-            )}
-          </Panel>
-          <OutcomeReportPanel pulseId={pulse.id} />
+          <details className="desk-support">
+            <summary>Question, panel and supporting details</summary>
+            <div>
+              <QuestionContractPanel
+                riskId={risk.risk_id}
+                onFrozen={setFrozenContract}
+              />
+              <PanelMatch riskId={risk.risk_id} />
+              {revealed && <IntegrityPanel pulseId={pulse.id} />}
+
+              <Panel
+                title="Agreement by region"
+                detail={revealed ? "Regional minimum n = 3" : "Sealed"}
+              >
+                {revealed ? (
+                  <Regions />
+                ) : (
+                  <p className="empty-copy">
+                    Regional views open with the round.
+                  </p>
+                )}
+              </Panel>
+              <Panel
+                title="What the panel is missing"
+                detail={revealed ? "Panel themes" : "Sealed"}
+              >
+                {revealed ? (
+                  <ul className="theme-list">
+                    {result.missing_themes.map((theme) => (
+                      <li key={theme.theme}>
+                        <span>
+                          {theme.theme}
+                          <small className="theme-provenance">
+                            Origin: {theme.origin} · {theme.corroboration}
+                          </small>
+                        </span>
+                        <strong>{theme.count}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="empty-copy">Themes appear after reveal.</p>
+                )}
+              </Panel>
+              <OutcomeReportPanel pulseId={pulse.id} />
+            </div>
+          </details>
         </aside>
       </div>
       {error && (
@@ -553,6 +567,7 @@ function Ledger() {
           Go to analyst desk <ArrowRight size={15} />
         </a>
       </div>
+      <Journey active={3} />
       <div className="ledger-toolbar">
         <label htmlFor="ledger-search">Find a risk</label>
         <input

@@ -34,24 +34,20 @@ test("public entry exposes research and Login opens the workspace without creden
   ])
     await expect(page.getByRole("link", { name, exact: true })).toHaveCount(0);
   await expect(page.getByRole("search")).toHaveCount(0);
-  for (const name of [
-    "Expert card",
-    "Analyst desk",
-    "Public ledger",
-    "Stage",
-    "Calibration",
-  ])
+  for (const name of ["Alerts", "Expert card", "Analyst desk", "Ledger"])
     await expect(
       navigation.getByRole("link", { name, exact: true }),
     ).toBeVisible();
-  await expect(page.locator(".workspace-entry-card")).toHaveCount(6);
+  await expect(page.locator(".journey-overview > a")).toHaveCount(4);
   await page.goto("/topics");
   await expect(page).toHaveURL(/\/workspace$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your workspace",
+    "From a signal to an accountable decision",
   );
+  await navigation.getByText("More", { exact: true }).click();
   await navigation.getByRole("link", { name: "Stage", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Stage");
+  await navigation.getByText("More", { exact: true }).click();
   await navigation
     .getByRole("link", { name: "Calibration", exact: true })
     .click();
@@ -64,14 +60,17 @@ test("public entry exposes research and Login opens the workspace without creden
   await expect(
     page.getByRole("button", { name: "Submit", exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "All pages", exact: true }).click();
+  await page.getByRole("link", { name: "Sealed Signals", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your workspace",
+    "From a signal to an accountable decision",
   );
   await page.screenshot({
     path: test.info().outputPath("workspace-navigation.png"),
     fullPage: true,
   });
+  await page
+    .getByText("Workspace data and supporting tools", { exact: true })
+    .click();
   await page
     .getByRole("link", { name: "Risk Radar & metrics", exact: false })
     .click();
@@ -110,7 +109,7 @@ test("expired sessions return to the public page and unsafe destinations are ign
     .click();
   await expect(page).toHaveURL(/\/workspace$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your workspace",
+    "From a signal to an accountable decision",
   );
 });
 

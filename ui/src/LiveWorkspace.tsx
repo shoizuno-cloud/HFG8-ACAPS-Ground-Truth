@@ -1,4 +1,5 @@
 import { EvidenceLine } from "./Evidence";
+import { Journey, DecisionSnapshot } from "./Journey";
 import { LedgerRecord, LedgerColumns } from "./LedgerRecord";
 import {
   DecisionUseFields,
@@ -363,7 +364,9 @@ function LiveDesk() {
   const [note, setNote] = useState(""),
     [edit, setEdit] = useState(false),
     [probability, setProbability] = useState("High"),
-    [pulseId, setPulseId] = useState("");
+    [pulseId, setPulseId] = useState(
+      new URLSearchParams(location.search).get("pulse_id") || "",
+    );
   const [outcome, setOutcome] = useState("materialised"),
     [resolvedAt, setResolvedAt] = useState(""),
     [confirmResolve, setConfirmResolve] = useState(false);
@@ -500,10 +503,18 @@ function LiveDesk() {
       title="Analyst desk"
       subtitle="Independent answers. Cited evidence. Your decision."
     >
-      <div className="mode-banner">
-        <Radio size={16} />
-        <span>API mode · Events: {connection}</span>
-      </div>
+      <Journey active={2} />
+      <DecisionSnapshot
+        rating={risk?.probability_acaps || "Awaiting risk"}
+        result={group}
+      />
+      <details className="connection-detail">
+        <summary>Connection status</summary>
+        <div className="mode-banner">
+          <Radio size={16} />
+          <span>API mode · Events: {connection}</span>
+        </div>
+      </details>
       <div className="live-toolbar">
         <label htmlFor="risk-select">Risk</label>
         <select
@@ -923,16 +934,6 @@ function LiveDesk() {
                 )}
             </div>
             <aside className="desk-side">
-              <QuestionContractPanel
-                key={selected}
-                riskId={selected}
-                onFrozen={setFrozenContract}
-              />
-              <PanelMatch riskId={selected} />
-              {pulse && (
-                <OutcomeReportPanel key={pulse.id} pulseId={pulse.id} />
-              )}
-              {pulse && group && <IntegrityPanel pulseId={pulse.id} />}
               <Section title="ACAPS edition evidence">
                 {pulse?.evidence.length ? (
                   pulse.evidence.map((e, i) => (
@@ -942,45 +943,61 @@ function LiveDesk() {
                   <p>No pulse evidence loaded.</p>
                 )}
               </Section>
-              <Section title="Agreement by region">
-                {group ? (
-                  <>
-                    {group.agreement_by_region
-                      .filter((r) => r.n >= 3 && r.mean !== null)
-                      .map((r) => (
-                        <p className="region-line" key={r.region}>
-                          {r.region}
-                          <strong>{percent(r.mean!)}</strong>
-                          <span>{r.n} answers</span>
+              <details className="desk-support">
+                <summary>Question, panel and supporting details</summary>
+                <div>
+                  <QuestionContractPanel
+                    key={selected}
+                    riskId={selected}
+                    onFrozen={setFrozenContract}
+                  />
+                  <PanelMatch riskId={selected} />
+                  {pulse && (
+                    <OutcomeReportPanel key={pulse.id} pulseId={pulse.id} />
+                  )}
+                  {pulse && group && <IntegrityPanel pulseId={pulse.id} />}
+
+                  <Section title="Agreement by region">
+                    {group ? (
+                      <>
+                        {group.agreement_by_region
+                          .filter((r) => r.n >= 3 && r.mean !== null)
+                          .map((r) => (
+                            <p className="region-line" key={r.region}>
+                              {r.region}
+                              <strong>{percent(r.mean!)}</strong>
+                              <span>{r.n} answers</span>
+                            </p>
+                          ))}
+                        <p className="panel-caption">
+                          Regions below three answers are withheld.
                         </p>
-                      ))}
-                    <p className="panel-caption">
-                      Regions below three answers are withheld.
-                    </p>
-                  </>
-                ) : (
-                  <p>Regional views open after reveal.</p>
-                )}
-              </Section>
-              <Section title="Missing themes">
-                {group ? (
-                  <ul className="theme-list">
-                    {group.missing_themes.map((t) => (
-                      <li key={t.theme}>
-                        <span>
-                          {t.theme}
-                          <small className="theme-provenance">
-                            Origin: {t.origin} · {t.corroboration}
-                          </small>
-                        </span>
-                        <strong>{t.count}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>Themes open after reveal.</p>
-                )}
-              </Section>
+                      </>
+                    ) : (
+                      <p>Regional views open after reveal.</p>
+                    )}
+                  </Section>
+                  <Section title="Missing themes">
+                    {group ? (
+                      <ul className="theme-list">
+                        {group.missing_themes.map((t) => (
+                          <li key={t.theme}>
+                            <span>
+                              {t.theme}
+                              <small className="theme-provenance">
+                                Origin: {t.origin} · {t.corroboration}
+                              </small>
+                            </span>
+                            <strong>{t.count}</strong>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>Themes open after reveal.</p>
+                    )}
+                  </Section>
+                </div>
+              </details>
             </aside>
           </div>
         </>
@@ -1054,6 +1071,7 @@ function LiveLedger() {
       title="Public ledger"
       subtitle="Group forecasts, analyst decisions and observed outcomes."
     >
+      <Journey active={3} />
       <div className="ledger-toolbar">
         <label htmlFor="search">Find a risk</label>
         <input

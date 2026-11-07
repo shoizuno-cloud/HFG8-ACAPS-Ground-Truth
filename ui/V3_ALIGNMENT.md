@@ -46,17 +46,24 @@ Frontend verification covers public entry and logout, no-login invitations, null
 Connect Lane A's completed implementation, run the full offline team demo and team checks, test two real phones on venue Wi-Fi, and verify the projector/QR scan distance. Browser simulations do not substitute for those checks. Lane C owns root README/pitch wording; its old claims should be audited against v3 as well.
 # V3.1 update — 7 November 2026
 
-Synced `origin/demo` through `b2bc37c`, including the v3.1 master prompt and `trust-design.md`. The earlier v3 assessment below is historical; the v3.1 changelog supersedes its phase-2 automation guidance.
+Synced `origin/demo` through `b2bc37c`, including the v3.1 master prompt and `trust-design.md`. The earlier v3 assessment is historical; the v3.1 changelog supersedes its phase-2 automation guidance.
 
 Implemented compatibility: the expert card and both desks render edition evidence (`before`, `after`, `delta`, months and change rank). Radar reads nested `risk_list` status and shows separate API/cache edition sources. Severity remains distinct from forecast probability. Existing legacy evidence remains readable.
 
-Remaining frontend work:
+Three-minute presentation update:
 
-1. Add a task-navigation Alerts page with current-month run and April replay, compact ranked shifts, rule/reliability details, analyst-approved pulse creation and dismissal with a note. No automatic pulse creation.
-2. Add crisis details with monthly severity/component trends, marked changes and linked risks. Add edition history and explicit risk-to-crisis link confirmation.
+- Primary navigation is Alerts, Expert card, Analyst desk and Ledger; supporting tools are under More. The overview presents the same four-step Chad journey.
+- Alerts supports current edition runs, April replay, compact selectable shifts, a marked severity trend, rule/rank/reliability, panel requests and note-required dismissal. API failures preserve the proposed alert; unsupported backend actions never appear successful. The local scaffold still needs the dismissal endpoint.
+- Both desks show the ACAPS band beside the sealed/revealed equal-weight panel mean and spread. The expert card remains blind in round one. Ledger records remain compact and expandable with their existing verification trail.
+- The local sample draft now cites the ACAPS edition change. Shared backend draft provenance remains Lane A's responsibility.
+
+Remaining frontend work beyond this presentation pass:
+
+1. Add dedicated crisis browsing and component time-series (the Alerts detail currently shows severity history and component changes).
+2. Add edition history and explicit risk-to-crisis link confirmation.
 3. Wire the new routes as implemented by Lane A. At this sync the scaffold lacks several specified endpoints (including dismissal, link confirmation and edition history); do not simulate their success in API mode.
-4. Align sample drafts with the new ACAPS edition evidence. The shared draft still cites older ACLED/UNHCR evidence and weighted probability. Preserve approval guards until its provenance is consistent.
+4. The shared draft still cites older ACLED/UNHCR evidence and weighted probability. Preserve API approval guards until its provenance is consistent.
 5. Audit copy against trust-design: no blockchain claims, no promise of anonymity from the operator, no public individual responses or moderator-only rationale. Commitments establish timing/consistency, not factual truth. External indicators remain later enrichment.
 
-Validation: TypeScript and mock production build passed; six expert-card/Radar browser checks passed across phone, desktop and projector widths, including cached edition badges and Radar accessibility.
+Validation: TypeScript, API-mode and mock production builds passed. All 54 frontend browser checks and 33 API-contract checks passed across phone, desktop and projector widths. The final chart-sizing change was checked again with the six Alerts journey cases. Alerts and Radar include accessibility checks. API-contract checks intercept HTTP responses; they do not establish backend security or missing scaffold capabilities.
 

@@ -30,19 +30,30 @@ export const sampleResult = {
   ),
 };
 const claims = draft.claims
-  .filter((c) => c.claim_id !== "C2")
+  .filter((c) => c.claim_id !== "C2" && c.claim_id !== "C4")
   .map((c) =>
     c.claim_id === "C1"
       ? {
           ...c,
-          text: "The equal-weight panel mean is 0.69 from eight synthetic estimates. This is panel judgement, not an observed outcome.",
+          text: "The equal-weight panel mean is 0.69 from eight estimates. This is panel judgement, not an observed outcome.",
           evidence_ref: "P-0001:mean",
           numbers: [0.69, 8],
         }
-      : c,
+      : {
+          ...c,
+          text: "ACAPS INFORM Severity increased from 6.1 in March 2026 to 6.9 in April 2026 for displacement from Sudan to Chad, a change of 0.8 points.",
+          evidence_ref: "inform-severity-index:TCD005:Mar2026:Apr2026",
+          numbers: [6.1, 6.9, 0.8],
+        },
   );
 export const sampleDraft = {
   ...draft,
+  citations: [
+    {
+      text: "ACAPS INFORM Severity · Chad · April 2026",
+      url: "https://api.acaps.org/api/v1/inform-severity-index/Apr2026/",
+    },
+  ],
   judge: {
     ...draft.judge,
     coverage: 1,
@@ -53,16 +64,21 @@ export const sampleDraft = {
   claims,
   rationale_md: claims.map((c) => c.text).join("\n\n"),
   skeptic: draft.skeptic
-    .filter((c) => c.claim_id !== "C2")
+    .filter((c) => c.claim_id !== "C2" && c.claim_id !== "C4")
     .map((c) =>
       c.claim_id === "C1"
         ? {
             ...c,
             checks: [
-              "Synthetic equal-weight mean 0.69 and count 8 match the sample record exactly.",
+              "Equal-weight mean 0.69 and count 8 match the panel record exactly.",
             ],
           }
-        : c,
+        : {
+            ...c,
+            checks: [
+              "Before 6.1, after 6.9 and delta 0.8 match the ACAPS edition evidence on the pulse.",
+            ],
+          },
     ),
 } satisfies Draft;
 export const sampleRisks: Risk[] = [risk, ...historicalRisks];

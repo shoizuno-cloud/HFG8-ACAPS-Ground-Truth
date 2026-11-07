@@ -13,6 +13,66 @@ import seal from "../../fixtures/POST_e_token_answer_response.json" with { type:
 import integrity from "../../fixtures/GET_integrity_pulse.json" with { type: "json" };
 import radar from "../../fixtures/GET_radar_status.json" with { type: "json" };
 import matched from "../../fixtures/GET_panels_match.json" with { type: "json" };
+import alerts from "../../fixtures/GET_alerts.json" with { type: "json" };
+import crisis from "../../fixtures/GET_crises_TCD005.json" with { type: "json" };
+import alertPulse from "../../fixtures/POST_alerts_pulse_response.json" with { type: "json" };
+
+test("alert API failures retain the proposed alert and confirmed pulse opens the desk", async ({
+  page,
+}) => {
+  const writes: { path: string; body: unknown }[] = [];
+  await contractApi(page);
+  await page.route("http://127.0.0.1:18000/alerts**", async (route) => {
+    const request = route.request(),
+      path = new URL(request.url()).pathname;
+    if (request.method() === "OPTIONS")
+      return route.fulfill({
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "content-type",
+          "Access-Control-Allow-Methods": "GET, POST",
+        },
+      });
+    if (request.method() === "POST")
+      writes.push({ path, body: request.postDataJSON() });
+    return route.fulfill({
+      status: path.endsWith("/dismiss") ? 501 : 200,
+      json: path.endsWith("/pulse") ? alertPulse : alerts,
+      headers: { "Access-Control-Allow-Origin": "*" },
+    });
+  });
+  await page.route("http://127.0.0.1:18000/crises/*", (route) =>
+    route.fulfill({
+      json: crisis,
+      headers: { "Access-Control-Allow-Origin": "*" },
+    }),
+  );
+  await page.goto("/alerts");
+  await page.getByRole("button", { name: "Dismiss", exact: true }).click();
+  await page
+    .getByLabel("Why dismiss this change?")
+    .fill("Covered in the current assessment.");
+  await page.getByRole("button", { name: "Save dismissal" }).click();
+  await expect(page.getByRole("alert")).toContainText("not available");
+  await expect(
+    page.getByRole("button", { name: "Ask experts", exact: true }),
+  ).toBeVisible();
+  expect(writes[0]).toEqual({
+    path: "/alerts/S-0001/dismiss",
+    body: { note: "Covered in the current assessment." },
+  });
+  await page.getByRole("button", { name: "Ask experts", exact: true }).click();
+  await page.getByRole("link", { name: "Open analyst desk" }).click();
+  await expect(page.getByLabel("Pulse ID", { exact: true })).toHaveValue(
+    "P-0001",
+  );
+  await page.getByRole("button", { name: "Open pulse", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Reveal round", exact: true }),
+  ).toBeEnabled();
+  expect(writes[1]).toEqual({ path: "/alerts/S-0001/pulse", body: {} });
+});
 
 async function contractApi(page: Page) {
   const writes: { path: string; body: any }[] = [];
@@ -175,6 +235,9 @@ test("API pulse, SSE, reveal, checked draft, decision and resolution", async ({
   await expect(
     page.getByRole("button", { name: "Resolve risk and score forecasts" }),
   ).toBeDisabled();
+  await page
+    .getByText("Question, panel and supporting details", { exact: true })
+    .click();
   await page.getByRole("button", { name: "Freeze question contract" }).click();
   await expect(
     page.getByText("Contract frozen and confirmed by the API."),
@@ -262,9 +325,9 @@ test("network errors retry without fixture fallback and expert answers use selec
   );
   await page.goto("/desk");
   await expect(page.getByRole("alert")).toContainText("Cannot reach the API");
-  await expect(
-    page.getByRole("button", { name: "Load synthetic answers" }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Load answers" })).toHaveCount(
+    0,
+  );
   await page.unrouteAll();
   const writes = await contractApi(page);
   await page.getByRole("button", { name: "Refresh risks" }).click();
@@ -518,6 +581,9 @@ test("v3 aggregate stays primary and mismatched outcome reports are withheld", a
   await expect(
     page.getByText(result.minority_rationales[0], { exact: true }),
   ).toBeVisible();
+  await page
+    .getByText("Question, panel and supporting details", { exact: true })
+    .click();
   await page.getByRole("button", { name: "Open group outcome report" }).click();
   await expect(page.locator(".outcome-report")).toContainText(
     "Equal-weight group mean: 69%",
@@ -555,6 +621,9 @@ test("a successful status without a frozen contract cannot unlock scoring", asyn
   );
   await page.goto("/desk");
   await page.getByRole("button", { name: "Ask panel", exact: true }).click();
+  await page
+    .getByText("Question, panel and supporting details", { exact: true })
+    .click();
   await page.getByRole("button", { name: "Freeze question contract" }).click();
   await expect(page.getByRole("alert")).toContainText(
     "did not confirm this frozen contract",

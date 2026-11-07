@@ -11,8 +11,11 @@ test("populated samples connect every main page and align content with the heade
     .first()
     .click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your workspace",
+    "From a signal to an accountable decision",
   );
+  await page
+    .getByText("Workspace data and supporting tools", { exact: true })
+    .click();
   await expect(
     page.getByText("6 risk records", { exact: false }),
   ).toBeVisible();
@@ -36,6 +39,7 @@ test("populated samples connect every main page and align content with the heade
   ).toHaveCount(0);
   await page.goto("/ledger");
   await expect(page.locator(".honesty-box")).toHaveCount(6);
+  await page.locator(".ledger-record > summary").first().click();
   await expect(
     page.locator(".ledger-entry .ledger-stats strong").first(),
   ).toHaveText("69%");
@@ -100,12 +104,15 @@ test("sample reset opens a fresh analyst round without losing history", async ({
     .getByRole("button", { name: "Login", exact: true })
     .first()
     .click();
+  await page
+    .getByText("Workspace data and supporting tools", { exact: true })
+    .click();
   await page.getByRole("button", { name: "Start a fresh round" }).click();
   await page.goto("/desk");
   await expect(
     page.getByRole("button", { name: "Reveal round 1" }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "Load synthetic answers" }).click();
+  await page.getByRole("button", { name: "Load answers" }).click();
   await page.getByRole("button", { name: "Reveal round 1" }).click();
   await page.getByRole("button", { name: "Prepare draft" }).click();
   await expect(
@@ -127,7 +134,13 @@ test("sample reset opens a fresh analyst round without losing history", async ({
   await page.getByRole("link", { name: "View public ledger" }).click();
   await expect(page.locator(".honesty-box")).toHaveCount(6);
   await page.goto("/workspace");
+  await page
+    .getByText("Workspace data and supporting tools", { exact: true })
+    .click();
   await page.getByRole("button", { name: "Clear records" }).click();
+  await page
+    .getByText("Workspace data and supporting tools", { exact: true })
+    .click();
   await expect(
     page.getByRole("button", { name: "Load records", exact: true }),
   ).toBeVisible();

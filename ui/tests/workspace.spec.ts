@@ -7,7 +7,7 @@ async function draftReady(page: Page) {
   await expect(
     page.getByRole("button", { name: "Reveal round 1" }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "Load synthetic answers" }).click();
+  await page.getByRole("button", { name: "Load answers" }).click();
   await page.getByRole("button", { name: "Reveal round 1" }).click();
   await expect(
     page.getByText("Equal-weight mean", { exact: true }),
@@ -22,6 +22,9 @@ test("approval gates public ledger, verification is labelled and both screens fi
     page.getByRole("heading", { name: "No approved group views yet" }),
   ).toBeVisible();
   await draftReady(page);
+  await page
+    .getByText("Question, panel and supporting details", { exact: true })
+    .click();
   await expect(
     page.getByText("Other regions withheld", { exact: false }),
   ).toBeVisible();
@@ -100,6 +103,7 @@ test("approval gates public ledger, verification is labelled and both screens fi
     page.getByRole("heading", { name: "No matching risks" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Clear search" }).click();
+  await page.locator(".ledger-record > summary").first().click();
   await expect(page.getByText("8 synthetic contributions")).toBeVisible();
 });
 test("rejection does not publish; editing preserves selected probability after navigation", async ({
@@ -120,13 +124,13 @@ test("rejection does not publish; editing preserves selected probability after n
   await expect(
     page.getByRole("heading", { name: "Decision log" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Public ledger", exact: true }).click();
+  await page.getByRole("link", { name: "Ledger", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "No approved group views yet" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Analyst desk", exact: true }).click();
-  await page.getByRole("button", { name: "Reset demo" }).click();
-  await page.getByRole("button", { name: "Load synthetic answers" }).click();
+  await page.getByRole("button", { name: "Reset round" }).click();
+  await page.getByRole("button", { name: "Load answers" }).click();
   await page.getByRole("button", { name: "Reveal round 1" }).click();
   await page.getByRole("button", { name: "Prepare draft" }).click();
   await page.getByRole("button", { name: "Edit probability" }).click();

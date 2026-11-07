@@ -1,4 +1,5 @@
 import { EvidenceLine, evidenceSummary } from "./Evidence";
+import { PortalHeader } from "./PortalHeader";
 import { useEffect, useState, type FormEvent } from "react";
 import * as Slider from "@radix-ui/react-slider";
 import {
@@ -136,23 +137,27 @@ export function ExpertCard({ token }: { token: string }) {
       <a className="skip-link" href="#expert-content">
         Skip to expert card
       </a>
-      <header className={`site-header ${mock ? "expert-demo-header" : ""}`}>
-        <a className="brand" href={mock ? "/workspace" : "/"}>
-          <span className="brand-mark">
-            <LockKeyhole size={19} />
-          </span>
-          Sealed Signals
-        </a>
-        {mock ? (
-          <nav aria-label="Demo navigation">
-            <a href="/workspace">All pages</a>
-            <a href="/stage">Stage</a>
-            <a href="/calibration">Calibration</a>
-          </nav>
-        ) : (
-          <span className="header-note">Independent expert perspective</span>
-        )}
-      </header>
+      {location.pathname === "/expert" ? (
+        <PortalHeader />
+      ) : (
+        <header className={`site-header ${mock ? "expert-demo-header" : ""}`}>
+          <a className="brand" href={mock ? "/workspace" : "/"}>
+            <span className="brand-mark">
+              <LockKeyhole size={19} />
+            </span>
+            Sealed Signals
+          </a>
+          {mock ? (
+            <nav aria-label="Demo navigation">
+              <a href="/workspace">All pages</a>
+              <a href="/stage">Stage</a>
+              <a href="/calibration">Calibration</a>
+            </nav>
+          ) : (
+            <span className="header-note">Independent expert perspective</span>
+          )}
+        </header>
+      )}
       <main id="expert-content">
         <aside className="intro">
           <p className="eyebrow">Expert pulse </p>

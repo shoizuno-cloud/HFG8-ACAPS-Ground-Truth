@@ -8,6 +8,9 @@ import { ExpertCard } from "./ExpertCard";
 import { LiveWorkspace, Frame } from "./LiveWorkspace";
 import { PublicHome, LoginRequired, WorkspaceHome } from "./Entry";
 import { hasWorkspaceSession } from "./workspace-session";
+const Alerts = lazy(() =>
+  import("./Alerts").then((m) => ({ default: m.Alerts })),
+);
 const Stage = lazy(() =>
   import("./Extras").then((m) => ({ default: m.Stage })),
 );
@@ -26,6 +29,7 @@ import "./entry.css";
 import "./v3.css";
 import "./verification-trail.css";
 import "./ledger-list.css";
+import "./journey.css";
 
 const MockWorkspace = lazy(() =>
   import("./Workspace").then((m) => ({ default: m.Workspace })),
@@ -67,6 +71,7 @@ function Router() {
   if (/^\/(countries|analysis|topics|search)(\/|$)/.test(path))
     return <WorkspaceRedirect />;
   if (path === "/workspace") return <WorkspaceHome />;
+  if (path === "/alerts") return <Alerts />;
   if (path === "/radar") return <Radar />;
   if (path === "/expert")
     return mock ? (

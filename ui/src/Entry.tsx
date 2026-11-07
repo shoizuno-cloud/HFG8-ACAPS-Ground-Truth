@@ -1,15 +1,6 @@
+import { Journey, journey } from "./Journey";
 import { useEffect, useState } from "react";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  LockKeyhole,
-  ShieldCheck,
-  Globe2,
-  FileCheck2,
-  ClipboardList,
-  QrCode,
-  ChartNoAxesCombined,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight, LockKeyhole } from "lucide-react";
 import { Frame } from "./LiveWorkspace";
 import { DemoSamples } from "./DemoSamples";
 import { checkedOn, publications } from "./acaps-catalog";
@@ -211,76 +202,48 @@ export function LoginRequired() {
 export function WorkspaceHome() {
   return (
     <Frame
-      title="Your workspace"
-      subtitle="Review the signals. Hear the panel. Keep the decision accountable."
+      title="From a signal to an accountable decision"
+      subtitle="One question. Independent judgement. A record you can check."
     >
-      <div className="workspace-welcome">
-        <ShieldCheck size={26} aria-hidden="true" />
+      <Journey />
+      <section className="journey-intro">
         <div>
-          <h2>Sealed Signals</h2>
-          <p>
-            Expert validation and a traceable decision record, alongside ACAPS
-            research.
-          </p>
+          <span>Chad · R1043</span>
+          <h2>Displacement from Sudan to Chad</h2>
+          <p>A rise in severity raises a question for the expert panel.</p>
+          <a className="button-link primary" href="/alerts">
+            Start with the alert <ArrowRight size={17} />
+          </a>
         </div>
-      </div>
-      <DemoSamples />
-      <div className="workspace-entry-grid">
-        {[
-          {
-            href: "/radar",
-            title: "Risk Radar & metrics",
-            text: "Explore loaded risks, country filters and the source dataset’s summary metrics.",
-            icon: <Globe2 size={25} aria-hidden="true" />,
-          },
-          {
-            href: "/expert",
-            title: "Expert card",
-            text: "Open the phone response card: estimate the risk, choose your mask and submit. The demo invitation needs no login.",
-            icon: <ClipboardList size={25} aria-hidden="true" />,
-          },
-          {
-            href: "/desk",
-            title: "Analyst desk",
-            text: "Match an expert panel, open a pulse, review evidence and decide on a proposed update.",
-            icon: <FileCheck2 size={25} aria-hidden="true" />,
-          },
-          {
-            href: "/ledger",
-            title: "Ledger & verification",
-            text: "Inspect approved group views, verification hashes and supplied timestamp anchors. Demo fixture checks are not blockchain transactions.",
-            icon: <ShieldCheck size={25} aria-hidden="true" />,
-          },
-          {
-            href: "/stage",
-            title: "Stage & jury access",
-            text: "Display the expert invitation QR code for the jury and enlarge it for the projector.",
-            icon: <QrCode size={25} aria-hidden="true" />,
-          },
-          {
-            href: "/calibration",
-            title: "Calibration report",
-            text: "Open the optional private report after five resolved forecasts. Demo mode shows a synthetic example.",
-            icon: <ChartNoAxesCombined size={25} aria-hidden="true" />,
-          },
-        ].map((item) => (
-          <a className="workspace-entry-card" href={item.href} key={item.href}>
-            {item.icon}
-            <h2>{item.title}</h2>
-            <p>{item.text}</p>
-            <span>
-              Open workspace tool <ArrowRight size={16} aria-hidden="true" />
-            </span>
+        <div className="intro-change">
+          <span>INFORM Severity · March → April 2026</span>
+          <strong>
+            6.1 <ArrowRight size={28} /> 6.9
+          </strong>
+          <small>+0.8 points · largest change among 123 crises</small>
+        </div>
+      </section>
+      <div className="journey-overview">
+        {journey.map((step, i) => (
+          <a href={step.href} key={step.href}>
+            <span className="journey-number">{i + 1}</span>
+            <h2>{step.title}</h2>
+            <p>{step.text}</p>
+            <ArrowRight size={18} aria-hidden="true" />
           </a>
         ))}
       </div>
-      <section className="workspace-research-links">
-        <h2>Expert administration</h2>
-        <div>
+      <details className="workspace-support">
+        <summary>Workspace data and supporting tools</summary>
+        <DemoSamples />
+        <div className="support-links">
+          <a href="/radar">Risk Radar & metrics</a>
+          <a href="/stage">Stage & jury access</a>
+          <a href="/calibration">Calibration report</a>
           <a href="/committee">Expert committee</a>
           <a href="/apply">Expert application</a>
         </div>
-      </section>
+      </details>
     </Frame>
   );
 }
