@@ -1,3 +1,4 @@
+import { EvidenceLine } from "./Evidence";
 import { LedgerRecord, LedgerColumns } from "./LedgerRecord";
 import { sampleDataEnabled, sampleRisks } from "./demo-data";
 import {
@@ -465,35 +466,11 @@ function Desk() {
           />
           <PanelMatch riskId={risk.risk_id} />
           {revealed && <IntegrityPanel pulseId={pulse.id} />}
-          {import.meta.env.VITE_FF_DOORBELL === "1" && (
-            <Panel
-              title="Phase-2 indicator replay"
-              detail="Fixture replay · analyst-triggered is primary"
-            >
-              <div className="doorbell-title">
-                <Bell size={18} />
-                <strong>Indicator shift detected</strong>
-              </div>
-              <p className="panel-caption">
-                {date(pulse.fired_at)} · linked to this risk’s triggers
-              </p>
-              {pulse.evidence.map((e) => (
-                <div className="indicator-row" key={e.indicator}>
-                  <a href={e.url} target="_blank" rel="noreferrer">
-                    {e.source} <ArrowRight size={12} />
-                  </a>
-                  <span>{e.indicator.replaceAll("_", " ")}</span>
-                  <strong>
-                    {e.value.toLocaleString("en-GB")}{" "}
-                    <small>
-                      vs {e.baseline.toLocaleString("en-GB")} baseline
-                    </small>
-                  </strong>
-                  <span>z = {e.z}</span>
-                </div>
-              ))}
-            </Panel>
-          )}
+          <Panel title="ACAPS edition evidence">
+            {pulse.evidence.map((e, i) => (
+              <EvidenceLine key={i} value={e} />
+            ))}
+          </Panel>
           <Panel
             title="Agreement by region"
             detail={revealed ? "Regional minimum n = 3" : "Sealed"}

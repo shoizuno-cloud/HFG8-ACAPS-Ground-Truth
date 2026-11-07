@@ -168,3 +168,25 @@
     flex-grow: 1;
   }
 }
+.edition-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 20px;
+}
+.edition-sources span {
+  border: 1px solid var(--border, #d9e2e3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+.edition-evidence + .edition-evidence {
+  margin-top: 16px;
+}
+.edition-evidence p {
+  margin: 4px 0;
+}
+.edition-evidence small {
+  display: block;
+  line-height: 1.6;
+}

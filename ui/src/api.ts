@@ -1,11 +1,18 @@
 import { sampleDataEnabled, sampleResult } from "./demo-data";
 import { endpoint } from "./service";
+import type { EvidenceRecord } from "./Evidence";
 import cardFixture from "../../fixtures/GET_e_token.json";
 import resultFixture from "../../fixtures/GET_pulses_result.json";
 import sealFixture from "../../fixtures/POST_e_token_answer_response.json";
 export type Mask = "known" | "pseudonym" | "anonymous";
 export type Result = Omit<typeof resultFixture, "integrity_notes">;
-export type Card = Omit<typeof cardFixture, "group_view_if_round2" | "risk"> & {
+export type Card = Omit<
+  typeof cardFixture,
+  "group_view_if_round2" | "risk" | "pulse"
+> & {
+  pulse: Omit<typeof cardFixture.pulse, "evidence"> & {
+    evidence: EvidenceRecord[];
+  };
   risk: typeof cardFixture.risk & {
     probability_acaps?: string;
     level?: string;

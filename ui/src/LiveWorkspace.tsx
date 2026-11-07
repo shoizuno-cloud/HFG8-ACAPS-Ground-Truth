@@ -1,3 +1,4 @@
+import { EvidenceLine } from "./Evidence";
 import { LedgerRecord, LedgerColumns } from "./LedgerRecord";
 import {
   DecisionUseFields,
@@ -932,20 +933,10 @@ function LiveDesk() {
                 <OutcomeReportPanel key={pulse.id} pulseId={pulse.id} />
               )}
               {pulse && group && <IntegrityPanel pulseId={pulse.id} />}
-              <Section title="Indicator evidence · phase-2 replay">
+              <Section title="ACAPS edition evidence">
                 {pulse?.evidence.length ? (
-                  pulse.evidence.map((e) => (
-                    <div className="indicator-row" key={e.indicator}>
-                      <a href={safeUrl(e.url)} target="_blank" rel="noreferrer">
-                        {e.source}
-                      </a>
-                      <span>{e.indicator.replaceAll("_", " ")}</span>
-                      <strong>
-                        {e.value.toLocaleString()}{" "}
-                        <small>vs {e.baseline.toLocaleString()} baseline</small>
-                      </strong>
-                      <span>z = {e.z}</span>
-                    </div>
+                  pulse.evidence.map((e, i) => (
+                    <EvidenceLine key={i} value={e} />
                   ))
                 ) : (
                   <p>No pulse evidence loaded.</p>

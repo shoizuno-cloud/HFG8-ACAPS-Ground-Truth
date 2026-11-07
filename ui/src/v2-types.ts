@@ -34,9 +34,23 @@ export type Match = {
   };
 };
 export type RadarStatus = {
-  source: "csv" | "acaps-api";
-  fetched_at: string;
-  n_risks: number;
+  source?: "csv" | "acaps-api";
+  fetched_at?: string;
+  n_risks?: number;
+  risk_list?: {
+    source: string;
+    fetched_at: string;
+    n: number;
+    api_n?: number;
+    api_last_update?: string;
+  };
+  editions?: {
+    dataset: string;
+    month: string;
+    source: "api" | "cache";
+    fetched_at: string;
+  }[];
+  token_present?: boolean;
   live_available?: boolean;
 };
 export type Application = {

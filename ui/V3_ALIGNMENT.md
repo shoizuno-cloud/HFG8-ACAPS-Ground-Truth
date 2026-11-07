@@ -44,3 +44,19 @@ The ledger now includes a five-stage provenance visual with selectable details. 
 Frontend verification covers public entry and logout, no-login invitations, nullable abstention payloads, equal-weight mean vs secondary weighting, opt-in/five-resolution calibration, invalid frozen-contract responses, mismatched outcome reports, proof-link safety, receipt timestamp mismatch, accessible ledger regions and responsive screenshots. The separate real-scaffold suite uses the fetched v3 API through the frontend proxy. This verifies presentation and contract handling, not cryptographic or production security claims.
 
 Connect Lane A's completed implementation, run the full offline team demo and team checks, test two real phones on venue Wi-Fi, and verify the projector/QR scan distance. Browser simulations do not substitute for those checks. Lane C owns root README/pitch wording; its old claims should be audited against v3 as well.
+# V3.1 update — 7 November 2026
+
+Synced `origin/demo` through `b2bc37c`, including the v3.1 master prompt and `trust-design.md`. The earlier v3 assessment below is historical; the v3.1 changelog supersedes its phase-2 automation guidance.
+
+Implemented compatibility: the expert card and both desks render edition evidence (`before`, `after`, `delta`, months and change rank). Radar reads nested `risk_list` status and shows separate API/cache edition sources. Severity remains distinct from forecast probability. Existing legacy evidence remains readable.
+
+Remaining frontend work:
+
+1. Add a task-navigation Alerts page with current-month run and April replay, compact ranked shifts, rule/reliability details, analyst-approved pulse creation and dismissal with a note. No automatic pulse creation.
+2. Add crisis details with monthly severity/component trends, marked changes and linked risks. Add edition history and explicit risk-to-crisis link confirmation.
+3. Wire the new routes as implemented by Lane A. At this sync the scaffold lacks several specified endpoints (including dismissal, link confirmation and edition history); do not simulate their success in API mode.
+4. Align sample drafts with the new ACAPS edition evidence. The shared draft still cites older ACLED/UNHCR evidence and weighted probability. Preserve approval guards until its provenance is consistent.
+5. Audit copy against trust-design: no blockchain claims, no promise of anonymity from the operator, no public individual responses or moderator-only rationale. Commitments establish timing/consistency, not factual truth. External indicators remain later enrichment.
+
+Validation: TypeScript and mock production build passed; six expert-card/Radar browser checks passed across phone, desktop and projector widths, including cached edition badges and Radar accessibility.
+

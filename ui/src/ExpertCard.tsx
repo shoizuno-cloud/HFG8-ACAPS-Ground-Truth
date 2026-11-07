@@ -1,3 +1,4 @@
+import { EvidenceLine, evidenceSummary } from "./Evidence";
 import { useEffect, useState, type FormEvent } from "react";
 import * as Slider from "@radix-ui/react-slider";
 import {
@@ -249,17 +250,11 @@ export function ExpertCard({ token }: { token: string }) {
                 <details className="evidence">
                   <summary>
                     {card.pulse.evidence[0]
-                      ? `${card.pulse.evidence[0].source}: ${card.pulse.evidence[0].value.toLocaleString("en-GB")} versus ${card.pulse.evidence[0].baseline.toLocaleString("en-GB")} baseline`
-                      : "Indicator evidence"}
+                      ? evidenceSummary(card.pulse.evidence[0])
+                      : "Edition evidence"}
                   </summary>
-                  {card.pulse.evidence.map((e) => (
-                    <p key={e.indicator}>
-                      <a href={safeUrl(e.url)} target="_blank" rel="noreferrer">
-                        {e.source}
-                      </a>
-                      : {e.value.toLocaleString("en-GB")} versus{" "}
-                      {e.baseline.toLocaleString("en-GB")} baseline.
-                    </p>
+                  {card.pulse.evidence.map((e, i) => (
+                    <EvidenceLine key={i} value={e} />
                   ))}
                 </details>
               </div>

@@ -36,6 +36,16 @@ test("Radar filters, country map, source badge and matching work", async ({
   await expect(
     page.getByText("Source: CSV fallback", { exact: false }),
   ).toBeVisible();
+  await expect(
+    page.getByText("INFORM Severity · Nov2026 · Cached edition", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Humanitarian access · Nov2026 · Cached edition", {
+      exact: true,
+    }),
+  ).toBeVisible();
   const header = await page.locator(".site-header").boundingBox();
   const title = await page.locator(".workspace-title").boundingBox();
   expect(header!.y + header!.height).toBeLessThanOrEqual(title!.y);

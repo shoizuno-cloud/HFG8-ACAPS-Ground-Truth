@@ -87,6 +87,15 @@ export function Radar() {
       ),
     [risks, level, country, query],
   );
+  const riskList =
+    status?.risk_list ||
+    (status?.source
+      ? {
+          source: status.source,
+          n: status.n_risks || 0,
+          fetched_at: status.fetched_at || "",
+        }
+      : null);
   const byCountry = new Map<string, Risk[]>();
   for (const risk of risks) {
     const key = normalise(risk.country);
@@ -99,24 +108,42 @@ export function Radar() {
     >
       <div className="radar-source">
         <span className="source-badge">
-          {mock ? "Fixture demo · " : ""}Source:{" "}
-          {status?.source === "acaps-api"
+          Source:{" "}
+          {riskList?.source === "acaps-api" || riskList?.source === "api"
             ? "ACAPS API"
-            : status?.source === "csv"
+            : riskList?.source === "csv"
               ? "CSV fallback"
               : "Awaiting source"}
         </span>
         {status && (
           <span>
-            {risks.length} risks loaded · source dataset {status.n_risks}
+            {risks.length} risks loaded · source dataset{" "}
+            {riskList?.n ?? "Unknown"}
             <br />
-            <small>Fetched {date(status.fetched_at)}</small>
+            <small>
+              Fetched{" "}
+              {riskList?.fetched_at
+                ? date(riskList.fetched_at)
+                : "Not supplied"}
+            </small>
           </span>
         )}
         <button disabled={loading} onClick={() => setReload((v) => v + 1)}>
           Refresh Radar
         </button>
       </div>
+      {!!status?.editions?.length && (
+        <div className="edition-sources">
+          {status.editions.map((e) => (
+            <span key={`${e.dataset}-${e.month}`}>
+              {e.dataset === "inform-severity-index"
+                ? "INFORM Severity"
+                : "Humanitarian access"}{" "}
+              · {e.month} · {e.source === "api" ? "API" : "Cached edition"}
+            </span>
+          ))}
+        </div>
+      )}
       {loading && <p role="status">Loading Risk Radar…</p>}
       {error && (
         <p className="error-box" role="alert">
