@@ -46,3 +46,6 @@ yarn.lock
 .env.local
 *.key
 *.pem
+reports/
+ui/package-lock.json.bak
+ui/tsconfig.tsbuildinfo
