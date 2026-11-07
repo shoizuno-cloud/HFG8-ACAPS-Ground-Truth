@@ -25,7 +25,7 @@ What we learned from ACAPS on 6 Nov:
 
 Sealed Signals is our answer: a loop that asks the right people at the right moment, keeps a verifiable record of what they said and when, leaves the decision to the analyst, and publishes its own limits and misses.
 
-More: [impact](docs/sealed-signals/impact.md) | [integrity and honesty](docs/sealed-signals/bias-and-honesty.md) | [privacy engineering](docs/sealed-signals/privacy-engineering.md) | [question contract](docs/sealed-signals/question-contract.md) | [judging checklist](docs/sealed-signals/judging-checklist.md) | [demo script](docs/sealed-signals/demo-script.md) | [future work](docs/sealed-signals/future.md)
+More: [impact](docs/sealed-signals/impact.md) | [integrity and honesty](docs/sealed-signals/bias-and-honesty.md) | [trust design](docs/sealed-signals/trust-design.md) | [privacy engineering](docs/sealed-signals/privacy-engineering.md) | [question contract](docs/sealed-signals/question-contract.md) | [judging checklist](docs/sealed-signals/judging-checklist.md) | [demo script](docs/sealed-signals/demo-script.md) | [future work](docs/sealed-signals/future.md)
 
 ## How it works
 
@@ -74,16 +74,18 @@ Lane A and Lane B own this section and the architecture detail.
 | Alert replay (April 2026) | Real ACAPS editions, real numbers. Shows what the engine would have proposed. Not a claim that ACAPS was late. |
 | Sensitivity test on the 104 resolved risks | Real outcomes, synthetic panels, several scenarios (mixed accuracy, shared bias, correlated errors, pure noise). Tests the software and says nothing about real experts or timing. |
 | Draft update | Deterministic template by default. The agent loop (`FF_AGENTS`) is off unless stable. The demo states which ran. |
+| Hardening stack (`FF_PQ`, `FF_BLIND`, `FF_ZK`, `FF_ANCHOR`) | Built behind flags, each described with its guarantee and its limit in `trust-design.md`. The demo states which are on. Offline, the anchor shows pending, keys are demo keys, and ZK is off unless stable. Post-quantum code uses reference libraries, not audited ones. |
 | Other flags | Default to the offline path. We never claim a path that is off. |
 
 ## Limits
 
 - Everything about expert behaviour is untested with real experts. The pilot is the first real test.
 - The sensitivity test checks the pipeline under assumptions. It does not show that real experts are accurate and makes no claim that the panel moves earlier than ACAPS. The export has no structured rating history.
-- Commitments give timing and consistency, not secrecy from the operator. ACAPS admins can see answers with the mask the expert chose. The identity registry is restricted and logged. `anonymous` answers are stored without identity and cannot be claimed later. Anonymity from ACAPS itself would need blind-signed credentials (phase 2).
+- Commitments give timing and consistency, not secrecy from the operator. ACAPS admins can see answers with the mask the expert chose. The identity registry is restricted and logged. `anonymous` answers are stored without identity and cannot be claimed later. Anonymity from ACAPS itself rests on one-time blind-signed credentials (`FF_BLIND`); they do not cover timing, network details or distinctive wording on a small panel, and only work if the answer is submitted apart from the personal link.
 - An aggregate of 5 or more contributions is a disclosure rule, not an anonymity guarantee. On a small panel a distinctive reason can be recognised by peers; the card says so.
 - A small panel can lean one way. We cap composition, show coverage gaps in public and rely on a committee gateway. We cannot prove independence.
 - Integrity notes describe the data. Seeded tests show the code produces the intended note. They are not a claim about sensitivity or specificity.
+- Per-expert pattern reports are descriptive, committee-side and opt-in for the expert. A pseudonym is not anonymity, so they are treated as personal data and need a consent text. They are never a score and never decide who is approved or removed.
 - The ACAPS risk status that resolves a question is set by ACAPS, which is also the rating under test. We disclose this.
 - The alert is on the displacement crisis (TCD005), while R1043 is about cross-border insecurity. The analyst confirms the link; the pulse says what the alert measures. Monthly editions are blind between releases, and we have two month pairs of evidence on how often the rules fire.
 - Older imported ACAPS risks resolve over much longer periods than six months, so the 84 % and 47 % rates mix time frames.

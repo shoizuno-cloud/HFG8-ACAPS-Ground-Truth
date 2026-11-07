@@ -1,6 +1,6 @@
 # Impact: who gains, what changes, why it matters
 
-Lane C. Status: complete, revised for master prompt v3.1 (7 Nov). v3 changes reflected here: commitments instead of secrecy, equal-weight mean as the headline number, analyst-triggered pulses, descriptive integrity notes, scoring of forecasts not people, no countdown in the product, synthetic results as a sensitivity test.
+Lane C. Status: complete, revised for master prompt v3.2 (7 Nov). v3 changes reflected here: commitments instead of secrecy, equal-weight mean as the headline number, analyst-triggered pulses, descriptive integrity notes, scoring of forecasts not people, no countdown in the product, synthetic results as a sensitivity test.
 
 Labels used in this file:
 - **[data]** computed from `data/risk-radar-export.csv` by us.
@@ -83,6 +83,7 @@ Persona link: closest to Pierre (field MEAL officer who wants a method and has n
 - Being asked too often. Cap: one pulse per expert per 7 days.
 - Hearing nothing back. The group outcome report answers this.
 - A panel they see as stacked, or an app that feels like a chatbot.
+- Reports about their own behaviour that they did not agree to. The v3.2 pattern reports are shown to the committee and, opt-in, to the expert; they need a consent text at sign-up (P25).
 
 ### 1.3 ACAPS readers (UN agencies, INGOs, donors such as ECHO, FCDO and CERF, insurers)
 
@@ -119,6 +120,7 @@ Persona link: none. This is the gatekeeper the mentor named. [mentor]
 - The committee sees panel composition against rules: no more than 3 of 8 from one affiliation tag, geographic spread, theme cover.
 - It sees coverage gaps (a conflict risk with no conflict expert) and decides who to invite.
 - It can pause an expert. Removing an expert never alters past ledger entries.
+- It holds the key to the identity registry (encrypted at rest, every read logged and shown to the committee), issues blind-signed credentials in batches, and signs outcome attestations. Each carries a stated limit: an authorised admin can still read the registry, and the log shows that they did.
 
 **What they get.** An audit trail of who was admitted, when and by whom; a defence against a packed panel; a reliable way to grow the pool by tag rather than by contact lists.
 

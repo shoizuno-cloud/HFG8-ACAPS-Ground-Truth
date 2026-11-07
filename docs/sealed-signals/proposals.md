@@ -85,3 +85,31 @@ Question contract (now exists); group outcome report route; no extremizing; stan
 3. `trust-design.md` section 5 says answers are "sealed"; section 1a says commitments do not hide answers from the operator. Pick "committed" throughout.
 4. `trust-design.md` says "Lane C verifies every citation above before it goes on a slide". Done in `bias-and-honesty.md`; the table row on the loud majority cites the wrong paper until fixed.
 5. The v3.1 changelog calls the 6.1 to 6.9 jump "the largest move". See P16.
+
+## Added for v3.2 (hardening stack, pattern reports)
+
+### P21. Anonymous submission must be apart from the magic link (M) - Lane A + B
+- The card opens with a personal link `/e/{token}`. If the `anonymous` answer posts to `/e/{token}/answer`, the server knows who sent it and the blind credential adds nothing. Post `anonymous` answers to an endpoint that does not see the link token, with no logged IP. Until that holds, do not show the "one-time vetted credential" line on the card. See `privacy-engineering.md` section 3, Q-A1.
+
+### P22. Trim the 6d report fields (S) - Lane A, team decision
+- Drop **answer latency**: a responsiveness metric, close to what the brief says not to optimise (hard rule 4). Replace per-expert **co-movement partners** with a panel-level sentence: "two pairs on this panel moved together after reveal". Show counts and "too few to say" under 5 pulses. Exclude `anonymous` answers. Test the exclusion.
+
+### P23. Key and library wording (M) - Lane A + B
+- `kyber-py` and `dilithium-py` describe themselves as educational and not constant-time. The UI lines must say "demo key, reference implementation". Do not write "signed by ACAPS" while the key is ours. State what "hybrid" means for ML-KEM-768.
+
+### P24. Anchor state on stage (M) - Lane A + B
+- Offline, the anchor stays "pending" for hours. The ledger must say "pending". Nobody says "anchored" unless a receipt confirmed. Pre-record a confirmed example only if labelled as an earlier day's receipt.
+
+### P25. Consent text for pattern reports and the registry (M for pilot) - team, ask ACAPS
+- A pseudonym is an HMAC of an internal id and the committee holds the registry, so pattern reports are about identifiable people. The sign-up needs a short consent text (what is stored, who sees it, how to see your own report, how to opt out). Ask Alex whether ACAPS legal must review it.
+
+### P26. Deck limit versus the master prompt (M) - decision for the human
+- Lane C item 8a asks for two more slides (hardening; what we did not do). Your rule is at most 8 slides. I kept the 8-slide deck and put the two in `slides/hardening.html` as an appendix for Q&A and the written submission. Say if you would rather fold them into the deck.
+
+### P27. Master prompt inconsistencies, third batch (M) - file owner
+1. Hard rule 4 says no engagement metrics; 6d lists answer latency (see P22).
+2. Section 6d says reports are "never a score" yet include Brier-based calibration per pseudonym. Say they report numbers about a forecaster's own record, not a rank.
+3. The v3 changelog item 6 still says "Blind-signed credentials = phase 2; Semaphore = one slide"; v3.2 builds both. Mark item 6 superseded.
+4. v3 changelog item 14 keeps OpenTimestamps and ML-KEM/ML-DSA out of the 3 minutes while v3.2 says each item is "described everywhere" with its wording. We read it as: built and visible in the product, on the appendix slides and trust page, not in the 3-minute talk. Confirm.
+5. Section 1a and `trust-design.md` still say answers "cannot be claimed later" for anonymous and describe `anonymous` as stored without identity; with credentials the wording should say how that is implemented.
+6. Section 6c item 2 says the attestation shows the outcome "was issued by ACAPS's committee key". In the demo the key is ours. Add "(demo key in the hackathon build)".
