@@ -60,6 +60,7 @@ function PublicHeader() {
           Topics & data
         </a>
         <a href="https://www.acaps.org/en/about-us/who-we-are">About ACAPS</a>
+        <a href="/e/demo">Expert card</a>
       </nav>
       <DemoLoginButton />
     </header>
