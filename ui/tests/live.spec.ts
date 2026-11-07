@@ -14,30 +14,6 @@ import integrity from "../../fixtures/GET_integrity_pulse.json" with { type: "js
 import radar from "../../fixtures/GET_radar_status.json" with { type: "json" };
 import matched from "../../fixtures/GET_panels_match.json" with { type: "json" };
 
-test("discovery uses connected risks and retains official links when the service fails", async ({
-  page,
-}) => {
-  await contractApi(page);
-  await page.goto("/countries/TCD");
-  await expect(page.getByRole("link", { name: "Review risk" })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText(
-    "Connected risk service",
-  );
-  await page.route("http://127.0.0.1:18000/risks", (route) => route.abort());
-  await page.reload();
-  await expect(page.getByRole("status")).toContainText(
-    "Risk service unavailable",
-  );
-  await expect(page.getByRole("link", { name: "Review risk" })).toHaveCount(0);
-  await expect(
-    page.getByRole("link", { name: "Official Chad analysis" }),
-  ).toHaveAttribute("href", "https://www.acaps.org/en/countries/chad");
-  await page.goto("/analysis");
-  await expect(page.getByRole("link", { name: "Read on ACAPS" })).toHaveCount(
-    4,
-  );
-});
-
 async function contractApi(page: Page) {
   const writes: { path: string; body: any }[] = [];
   await page.route("http://127.0.0.1:18000/**", async (route) => {
@@ -264,6 +240,18 @@ test("ledger suppresses small groups and reports failed verification; calibratio
     path: `test-results/calibration-${info.project.name}.png`,
     fullPage: true,
   });
+  await page.goto("/calibration");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Private calibration",
+  );
+  await expect(page.getByText("0.12", { exact: true })).toHaveCount(0);
+  await page.goto("/expert");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Expert card",
+  );
+  await expect(
+    page.getByRole("button", { name: "Submit", exact: true }),
+  ).toHaveCount(0);
 });
 test("network errors retry without fixture fallback and expert answers use selected values", async ({
   page,

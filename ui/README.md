@@ -21,6 +21,8 @@ For the backend connection, run `npm run dev:live` and open http://localhost:517
 
 - `/`: compact ACAPS-connected public entry. Login opens the demo workspace without a credential form.
 - `/workspace`: overview of risk metrics, analyst review and ledger verification. A temporary session marker controls presentation only; it does not secure the API.
+- The main navigation keeps Overview, Radar, Expert card, Analyst desk, Public ledger, Stage and Calibration visible. The overview has six matching tool cards; Administration contains committee review and expert applications. Public website navigation and search are not part of the logged-in workspace.
+- `/expert` and `/calibration`: convenient workspace entry links. Mock mode opens the synthetic card/report. API mode explains how to open a personal invitation instead of inventing a shared token. The demo expert card also offers All pages, Stage and Calibration links; the real invitation stays focused.
 - `/radar`: risk table, country map, search and filters, ACAPS API/CSV provenance.
 - `/e/demo`: blind-first expert fixture. `/e/round2` shows ACAPS and the group. `/e/empty` shows a recoverable invitation error. API mode requires a backend-issued token.
 - `/desk`: panel matching, envelope tray, reveal, distribution, sourced themes, moderator-only integrity evidence, cited draft checks and accept/edit/reject. Mock mode uses a manual eight-answer replay. API mode sends real requests and listens to SSE.
@@ -52,11 +54,7 @@ The expert card has no countdown. Stances without an estimate submit null probab
 
 ## Handoff
 
-The ACAPS-connected discovery extension adds `/countries`, `/countries/:ISO`, `/analysis`, `/topics` and `/search?q=…`. Shared workspace navigation includes a Radar view and groups analyst/committee/jury actions under Workspace. Country pages join loaded risks to the analyst desk; analysis supports keyword, country, theme, publication-date and sort filters. Global search covers country profiles, connected risks, selected reports and resources.
-
-Official country/report/topic links were checked on 6 November 2026. The seven-profile, four-report catalogue is a dated editorial snapshot, not a complete archive or live feed. Additional countries come from the connected risk service. Full country coverage, current publications, datasets, downloads, API access and newsletter subscriptions open ACAPS's official services. No publications endpoint, API credentials, severity scores or subscription backend were invented. Update `src/acaps-catalog.ts` to refresh selected metadata; a live catalogue needs a backend feed agreed with Lane A.
-
-See `V2_HANDOFF.md` for the v1-to-v2 comparison, fixture inconsistencies and backend dependencies. In particular, the skeleton has no expert approval, pulse lookup, SSE or resolution implementation yet. The v2 draft contains an uncorroborated claim; API approval is blocked until the backend removes or corroborates it. The integrity and matching fixtures also disagree about thematic coverage.
+The public landing page keeps a small dated selection of official ACAPS publication links. Country, publication, topic and website-search pages have been removed from the task workspace at the user’s request. Old local discovery URLs redirect to `/workspace`. Risk Radar retains its own country filters and risk search.
 
 Fixture verification is a labelled fixture match, not a blockchain transaction. API verification displays only the engine's verdict and supplied timestamp anchor. Full calibration curves, opt-in enforcement, live detector behavior, cryptographic sealing and scoring belong to Lane A. The primary aggregate is an equal-weight mean; SP is experimental and weights affect only a secondary mean. The phase-2 doorbell action and replay log are hidden unless `VITE_FF_DOORBELL=1`. French copy is isolated as a locale starter; English ships first.
 

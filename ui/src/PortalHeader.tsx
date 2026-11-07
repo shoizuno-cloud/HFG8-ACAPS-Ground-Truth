@@ -1,4 +1,4 @@
-import { LockKeyhole, Search, ArrowUpRight } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { endDemoSession } from "./workspace-session";
 
 export function PortalHeader() {
@@ -12,12 +12,7 @@ export function PortalHeader() {
           </span>
           Sealed Signals
         </a>
-        <span className="portal-purpose">
-          Humanitarian analysis · Expert validation
-        </span>
-        <a className="official-link" href="https://www.acaps.org/en/">
-          ACAPS website <ArrowUpRight size={14} aria-hidden="true" />
-        </a>
+        <span className="portal-purpose">Expert validation workspace</span>
         <button
           className="portal-signout"
           onClick={() => {
@@ -33,17 +28,19 @@ export function PortalHeader() {
           {[
             ["/workspace", "Overview"],
             ["/radar", "Radar"],
-            ["/countries", "Countries"],
-            ["/analysis", "Analysis"],
-            ["/topics", "Topics & data"],
+            ["/expert", "Expert card"],
+            ["/desk", "Analyst desk"],
             ["/ledger", "Public ledger"],
+            ["/stage", "Stage"],
+            ["/calibration", "Calibration"],
           ].map(([href, label]) => (
             <a
               key={href}
               href={href}
               aria-current={
                 path === href ||
-                (href === "/countries" && path.startsWith("/countries/"))
+                (href === "/calibration" &&
+                  /^\/me\/[^/]+\/calibration\/?$/.test(path))
                   ? "page"
                   : undefined
               }
@@ -52,12 +49,10 @@ export function PortalHeader() {
             </a>
           ))}
           <details className="workspace-menu">
-            <summary>Workspace</summary>
+            <summary>Administration</summary>
             <div>
               {[
-                ["/desk", "Analyst desk"],
                 ["/committee", "Committee"],
-                ["/stage", "Jury access"],
                 ["/apply", "Apply as an expert"],
               ].map(([href, label]) => (
                 <a
@@ -71,20 +66,6 @@ export function PortalHeader() {
             </div>
           </details>
         </nav>
-        <form action="/search" role="search" className="portal-search">
-          <label className="sr-only" htmlFor="portal-query">
-            Search the portal
-          </label>
-          <input
-            id="portal-query"
-            name="q"
-            placeholder="Search countries, analysis…"
-            defaultValue={new URLSearchParams(location.search).get("q") || ""}
-          />
-          <button aria-label="Search portal">
-            <Search size={18} aria-hidden="true" />
-          </button>
-        </form>
       </div>
     </header>
   );

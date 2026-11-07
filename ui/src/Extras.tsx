@@ -17,8 +17,8 @@ export function Stage() {
   const computerOnly = ["localhost", "127.0.0.1", "[::1]"].includes(qrHost);
   return (
     <Frame
-      title="Jury access"
-      subtitle="One invitation. One focused expert card."
+      title="Stage"
+      subtitle="Jury access: display the QR invitation to the expert card."
     >
       <div className="stage-grid">
         <Section title="Open the expert card">
