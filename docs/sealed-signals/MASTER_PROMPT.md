@@ -1,4 +1,14 @@
-# Sealed Signals — master prompt v3 (team of 3)
+# Sealed Signals — master prompt v3.1 (team of 3)
+
+> **v3.1, Sat 7 Nov midday — the Risk Alert Engine runs on ACAPS's own monthly data.** We verified the ACAPS API with a
+> registered token (data/acaps-api/README.md). `risk-list/` is published history (stale, no R1043); `crises/`,
+> `countries/`, and the **monthly `inform-severity-index/<MonYYYY>/` and `humanitarian-access/<MonYYYY>/` editions are
+> current (Nov 2026)**. Crisis TCD005 "Displacement from Sudan to Chad" (Ennedi Est, Wadi Fira, Ouaddaï, Sila; connected
+> to SDN001) jumped 6.1 → 6.9 in April 2026, the largest move of 123 crises that month: R1043's own story, in ACAPS's own
+> numbers. Changes: (1) the alert engine (section 6b) is primary, deterministic, built on these editions; external feeds
+> (ACLED, UNHCR, GDELT) are a later note. (2) The Radar shows the live editions with source badges. (3) The demo opens
+> with the engine diffing the current month live. (4) The agent loop stays behind `FF_AGENTS`; alerts never use a model.
+> Cached editions are in `data/acaps-api/` so everything runs offline; a token (`ACAPS_API_TOKEN`) makes it live.
 
 > **v3, Fri 6 Nov night — after two independent technical reviews.** The loop stands; the claims around it were
 > over-stated. If your agent is on v2: re-read sections 0, 4, 5, 6, 6a, 7, 8 and 10. Summary of changes:
@@ -130,7 +140,9 @@ engine/                           Python 3.12 · FastAPI · SQLite (Lane A)
   engine/{settings,models,db,anonymity,seal,aggregate,scoring,analyst,api}.py
   engine/agents/{investigator,skeptic,judge,loop}.py   analyst-side verification loop (section 6), model-optional
   engine/doorbell/{connectors.py,trigger_map.py,detect.py,run_daily.py}
-  engine/radar.py                 ACAPS API client (live Risk List, token from env) with CSV fallback; same Risk model either way
+  engine/radar.py                 ACAPS API client: risk-list, crises, countries, inform-severity-index/<Mon>, humanitarian-access/<Mon>;
+                                  token from env, 1 req/s, pages via `next`; reads data/acaps-api/*.json when no token (same models)
+  engine/alerts/{link,diff,rules,run}.py   Risk Alert Engine (section 6b): deterministic month-over-month diffs, no model
   engine/experts.py               sign-up, tags, committee approval, credential issue, panel matching by tags
   engine/integrity/{anchoring,calibration,herding,collusion,recency,coverage,rumour}.py   section 6a, moderator-only
   engine/sim/simulate_panels.py   backtest on the 104 resolved risks → reports/proof.json + proof.png
@@ -178,6 +190,12 @@ LedgerEntry   risk_id, pulse_id, sealed_at, group_probability, acaps_probability
               honesty{n, agreement (0..1), spread [min, max], coverage_gaps[], claims_corroborated (int),
               claims_total (int), claims_in_verification_queue (int), panel_hit_rate (0..1|null), misses (int), caveat (str),
               decision_use {what_decision, for_whom, by_when}, panel_view_rejected (bool), analyst_rationale (str|null)}   # public
+Crisis        crisis_id, crisis_name, iso3[], drivers[], adm1_name[], connected_crises[], active        (from crises/)
+Edition       dataset ("inform-severity-index"|"humanitarian-access"), month ("Nov2026"), fetched_at, source ("api"|"cache")
+SeverityPoint crisis_id, month, index, category, human_impact, conditions, people_in_need, reliability, last_updated
+RiskCrisisLink risk_id, crisis_id, how ("iso3+driver"|"analyst"), confirmed_by, confirmed_at
+ShiftEvent    id, crisis_id, risk_id|null, month_from, month_to, metric ("index"|"human_impact"|"people_in_need"|"access"|"category"),
+              before, after, delta, rank_this_month (1 = largest move), n_crises_this_month, rule_hit (str), pulse_id|null, status ("proposed"|"pulsed"|"dismissed")
 QuestionContract  risk_id, event (one sentence), location, horizon_deadline (date), resolution_source, adjudication_rule,
               frozen_at   # must exist before a pulse can be scored
 Score         expert_internal_id, risk_id, brier, resolved_at, weight_after        # committee-side only
@@ -191,7 +209,15 @@ Every response carries `served_from: "live"` and `generated_at`. Every aggregate
 
 ```
 GET  /health
-GET  /radar/status                {source: "acaps-api"|"csv", fetched_at, n_risks}
+GET  /radar/status                {risk_list: {source, fetched_at, n}, editions: [{dataset, month, source, fetched_at}], token_present}
+GET  /crises · GET /crises/{id}   crisis + linked risks + monthly series (SeverityPoint[] + access)
+GET  /radar/editions              months available per dataset
+POST /alerts/run                  {month_to?} → diff latest two editions for every crisis → ShiftEvent[] ranked; links to active risks
+GET  /alerts                      ShiftEvent[] with status; GET /alerts/{id}
+POST /alerts/{id}/pulse           analyst approves → creates the Pulse with the event's numbers as evidence
+POST /alerts/{id}/dismiss         {note}
+POST /risks/{risk_id}/link        {crisis_id} analyst confirms the risk ↔ crisis link
+POST /alerts/replay               {month_from:"Mar2026", month_to:"Apr2026"} → the April 2026 TCD005 event, for the demo
 GET  /risks                       active risks (live ACAPS API, CSV fallback) · GET /risks/{risk_id}
 POST /experts/apply               {geo_tags, theme_tags, affiliation_tag, languages, channel} → {expert_id, status:"applied"}
 POST /experts/{id}/approve        committee approval (needs 2 admins) → status approved, credential issued
@@ -241,10 +267,9 @@ Example payloads for every route are in `fixtures/` (Lane B starts from these; L
   `outside_my_expertise` and `not_enough_evidence` are never scored. Free text is never scored. Scores never gate approval
   or removal in the pilot.
 - **k-anonymity**: any aggregate needs n ≥ 5; regional breakdowns need n ≥ 3 per region or are merged.
-- **Doorbell**: analyst-triggered pulse is the primary path. Phase 2 (behind `FF_DOORBELL`): the analyst picks indicators
-  per risk from a menu (ACLED events, UNHCR arrivals, GDELT volume), 7-day count vs 90-day baseline, z ≥ 2 or 3×; one
-  pulse per expert per 7 days; connectors with cached fixtures. The eastern Chad replay demonstrates phase 2 only;
-  no timing claim versus ACAPS ratings (the export has no structured rating history).
+- **Pulse triggers**: (1) the Risk Alert Engine (section 6b) proposes; the analyst approves; (2) the analyst asks the
+  panel directly; (3) two experts tap "something is changing". One pulse per expert per 7 days. External feeds (ACLED,
+  UNHCR, GDELT) are a later note, not in the build.
 - **Draft update**: the default path is a deterministic template with traceable fields (every sentence names its
   aggregate, indicator record or source). The agent loop below is behind `FF_AGENTS=false` and is used only if it is
   stable by Saturday 20:00.
@@ -265,6 +290,26 @@ Example payloads for every route are in `fixtures/` (Lane B starts from these; L
   The expert never sees any of this; the ledger stores the Judge scores next to the decision so the audit trail is complete.
   Deterministic fallback when no model is configured: the Investigator composes claims from templates over the aggregates
   and evidence, the Skeptic and Judge run their checks exactly as above.
+
+## 6b. Risk Alert Engine (Lane A builds first; the moat; no model anywhere in it)
+
+Data: ACAPS monthly editions `inform-severity-index/<MonYYYY>/` (index 0–10, category, Human Impact, Conditions of affected
+people, People in need, Reliability, Last updated) and `humanitarian-access/<MonYYYY>/` (ACCESS 0–5 and sub-indicators),
+per crisis; `crises/` for names, drivers, admin-1 areas, connected crises. Cached in `data/acaps-api/`; live with a token.
+
+1. **Link** each active risk (CSV, e.g. R1043) to a crisis: same iso3 and a driver keyword match (displacement / conflict /
+   flood / drought) against `crises[].drivers`; the analyst confirms once (`POST /risks/{id}/link`). R1043 ↔ TCD005.
+2. **Diff** the latest two editions for every crisis: delta of index, Human Impact, People in need, access, and category
+   change. Rank by |delta| across all crises that month; record `rank_this_month` and `n_crises_this_month`.
+3. **Rules** (visible and editable on the desk, per risk): index Δ ≥ 0.5, or a component Δ ≥ 1.0, or a category change, or
+   access Δ ≥ 1. A hit produces a ShiftEvent with the numbers, the crisis, the linked risk and the rule that fired.
+4. **Propose, never fire**: events appear on the desk's Alerts page; the analyst approves (creates the pulse with the
+   event as evidence), or dismisses with a note. Reliability of the edition is shown next to the event.
+5. **Replay**: `POST /alerts/replay {Mar2026, Apr2026}` reproduces the real April event: TCD005 6.1 → 6.9 (+0.8, rank 1 of
+   123; Human Impact 6.0 → 7.6), linked to R1043. This is the demo's opening fact.
+
+Tests: the Mar→Apr 2026 cached editions must yield TCD005 as rank 1 with delta 0.8; a month with no moves yields no
+events; a dismissed event never pulses; the same edition diffed twice yields no duplicate events.
 
 ## 6a. Integrity layer (Lane A builds, Lane B shows on the desk only, Lane C explains)
 
@@ -323,8 +368,10 @@ software and sensitivity test of the pipeline; it says nothing about real expert
 2. **Analyst desk** `/desk` — projector-friendly: live envelope tray (SSE), Reveal button, distribution chart (ACAPS line,
    panel dots, SP highlight), Chad map with agreement by region, digest with cited reasons, draft card with
    Accept / Edit / Reject (with the "what decision, for whom, by when" fields and a rationale box), committee-only
-   scoring view, analyst-trigger button per risk (doorbell log behind the phase-2 flag), and an **integrity notes** panel
-   per round: descriptive sentences with evidence (section 6a), no verdict colours. Plus a
+   scoring view, an **Alerts** page (the engine's ranked ShiftEvents for the current month with "Run engine", "Replay April
+   2026", Approve pulse / Dismiss, the rule that fired, the edition's reliability), an "Ask the panel" button per risk,
+   and an **integrity notes** panel per round: descriptive sentences with evidence (section 6a), no verdict colours.
+   Crisis pages show the monthly severity series as a small line chart with the shift marked. Plus a
    **Radar** view: the live Risk List from the ACAPS API as a table and map with a "source: ACAPS API / CSV" badge, and a
    committee view for expert applications (approve needs two admins).
 3. **Public ledger** `/ledger` — per risk: sealed-at, group probability, ACAPS rating, outcome, **Verify** (turns green),
@@ -387,12 +434,13 @@ Professional, minimal, modern. The jury should think "this already exists in pro
 ## 10. Lanes
 
 ### Lane A — Backend (engine, data, proof)
-Build sections 4–7 in `engine/`, `scripts/seed.py`, SSE. Order: models + db + seed → radar (ACAPS API client with CSV
-fallback) → experts + tags + committee approval + panel matching → analyst-triggered pulses + answer/commit (rating hidden,
-stances, source tag) → reveal + equal-weight aggregate with spread and minority rationales → integrity notes (6a) →
-deterministic draft template + tightened Skeptic checks → decision + ledger with honesty box → question contract +
-resolve + committee-side scoring + outcome report → sensitivity test + chart → phase-2 doorbell behind its flag if time
-remains → agent loop behind its flag only if stable. Keep `fixtures/` true to real responses (regenerate them from the running API).
+Build sections 4–7 in `engine/`, `scripts/seed.py`, SSE. Order: models + db + seed → radar client over data/acaps-api
+(risk-list, crises, countries, editions; live with token) → **Risk Alert Engine (6b) with the April 2026 replay test** →
+experts + tags + committee approval + panel matching → pulses from approved alerts and from the analyst; answer/commit
+(rating hidden, stances, source tag) → reveal + equal-weight aggregate with spread and minority rationales → integrity
+notes (6a) → deterministic draft template citing the INFORM record + tightened Skeptic checks → decision + ledger with
+honesty box → question contract + resolve + committee-side scoring + outcome report → sensitivity test + chart → agent
+loop behind its flag only if stable. Keep `fixtures/` true to real responses (regenerate them from the running API).
 Milestones: API with seeded data Sat 10:00 · full loop Sat 18:00 · proof.png Sat 20:00 · polish Sun.
 
 ### Lane B — Frontend (three screens + demo stage)
