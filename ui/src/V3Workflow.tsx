@@ -185,6 +185,7 @@ export function OutcomeReportPanel({ pulseId }: { pulseId: string }) {
         onClick={async () => {
           setBusy(true);
           setError("");
+          setReport(null);
           try {
             const [value, result] = mock
               ? [reportExample, resultExample]

@@ -37,4 +37,10 @@ Reviewed 7 November 2026 against the changelog, sections 1a, 4, 5, 6a, 8 and 10,
 
 ## Remaining rehearsal checks
 
+The contract editor is available before a pulse; the group outcome report is independent of draft approval. API scoring is available after a recorded analyst decision, including rejection, and still requires a confirmed frozen contract. The mock editor is explicitly local and performs no scoring.
+
+The ledger now includes a five-stage provenance visual with selectable details. It presents counts, the stored seal time, recorded decisions and the backend's verification verdict without inventing reveal/decision/verification timestamps. External anchors are shown as supplied proofs only after a valid receipt and matching timestamp. Demo matches, failed checks, absent anchors and unsafe proof URLs remain visibly distinct. A failed outcome refresh removes the previously displayed report.
+
+Frontend verification covers public entry and logout, no-login invitations, nullable abstention payloads, equal-weight mean vs secondary weighting, opt-in/five-resolution calibration, invalid frozen-contract responses, mismatched outcome reports, proof-link safety, receipt timestamp mismatch, accessible ledger regions and responsive screenshots. The separate real-scaffold suite uses the fetched v3 API through the frontend proxy. This verifies presentation and contract handling, not cryptographic or production security claims.
+
 Connect Lane A's completed implementation, run the full offline team demo and team checks, test two real phones on venue Wi-Fi, and verify the projector/QR scan distance. Browser simulations do not substitute for those checks. Lane C owns root README/pitch wording; its old claims should be audited against v3 as well.

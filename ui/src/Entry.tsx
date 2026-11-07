@@ -6,7 +6,6 @@ import {
   ShieldCheck,
   Globe2,
   FileCheck2,
-  Radio,
 } from "lucide-react";
 import { Frame } from "./LiveWorkspace";
 import { checkedOn, publications } from "./acaps-catalog";

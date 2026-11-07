@@ -6,6 +6,7 @@ import {
   OutcomeReportPanel,
 } from "./V3Workflow";
 import { PortalHeader } from "./PortalHeader";
+import { VerificationTrail } from "./VerificationTrail";
 import { DraftNarrative, pendingClaims } from "./Grounding";
 import { HonestyBox, IntegrityPanel, PanelMatch } from "./V2Panels";
 import { useEffect, useState, type ReactNode } from "react";
@@ -15,7 +16,6 @@ import {
   endpoint,
   safeUrl,
   validResult,
-  type Board,
   type Draft,
   type LedgerEntry,
   type Pulse,
@@ -843,92 +843,97 @@ function LiveDesk() {
                   </>
                 )}
               </Section>
-              {draft && ["accepted", "edited"].includes(draft.status) && (
-                <>
-                  <QuestionContractPanel
-                    key={selected}
-                    riskId={selected}
-                    onFrozen={setFrozenContract}
-                  />
-                  <Section title="Resolve and score">
-                    <p>
-                      Record the observed outcome when this forecast resolves.
-                    </p>
-                    <div className="resolution-form">
-                      <label htmlFor="outcome">Observed outcome</label>
-                      <select
-                        id="outcome"
-                        value={outcome}
-                        onChange={(e) => setOutcome(e.target.value)}
-                      >
-                        <option value="materialised">Materialised</option>
-                        <option value="not_materialised">
-                          Not materialised
-                        </option>
-                      </select>
-                      <label htmlFor="resolved-at">Resolution date (UTC)</label>
-                      <input
-                        id="resolved-at"
-                        type="date"
-                        max={new Date().toISOString().slice(0, 10)}
-                        value={resolvedAt}
-                        onChange={(e) => setResolvedAt(e.target.value)}
-                      />
-                      <label className="changed">
+              {draft &&
+                ["accepted", "edited", "rejected"].includes(draft.status) && (
+                  <>
+                    <Section title="Resolve and score">
+                      <p>
+                        Record the observed outcome when this forecast resolves.
+                      </p>
+                      <div className="resolution-form">
+                        <label htmlFor="outcome">Observed outcome</label>
+                        <select
+                          id="outcome"
+                          value={outcome}
+                          onChange={(e) => setOutcome(e.target.value)}
+                        >
+                          <option value="materialised">Materialised</option>
+                          <option value="not_materialised">
+                            Not materialised
+                          </option>
+                        </select>
+                        <label htmlFor="resolved-at">
+                          Resolution date (UTC)
+                        </label>
                         <input
-                          type="checkbox"
-                          checked={confirmResolve}
-                          onChange={(e) => setConfirmResolve(e.target.checked)}
-                        />{" "}
-                        I confirm this is an observed outcome.
-                      </label>
-                      <button
-                        disabled={
-                          !!busy ||
-                          !confirmResolve ||
-                          !resolvedAt ||
-                          frozenContract?.risk_id !== selected
-                        }
-                        onClick={() =>
-                          void run("Resolving and scoring", async () => {
-                            if (
-                              !frozenContract ||
-                              frozenContract.risk_id !== selected
-                            )
-                              throw new Error(
-                                "Freeze the question contract before scoring.",
+                          id="resolved-at"
+                          type="date"
+                          max={new Date().toISOString().slice(0, 10)}
+                          value={resolvedAt}
+                          onChange={(e) => setResolvedAt(e.target.value)}
+                        />
+                        <label className="changed">
+                          <input
+                            type="checkbox"
+                            checked={confirmResolve}
+                            onChange={(e) =>
+                              setConfirmResolve(e.target.checked)
+                            }
+                          />{" "}
+                          I confirm this is an observed outcome.
+                        </label>
+                        <button
+                          disabled={
+                            !!busy ||
+                            !confirmResolve ||
+                            !resolvedAt ||
+                            frozenContract?.risk_id !== selected
+                          }
+                          onClick={() =>
+                            void run("Resolving and scoring", async () => {
+                              if (
+                                !frozenContract ||
+                                frozenContract.risk_id !== selected
+                              )
+                                throw new Error(
+                                  "Freeze the question contract before scoring.",
+                                );
+                              const value = await endpoint.resolve(
+                                selected,
+                                outcome,
+                                `${resolvedAt}T00:00:00Z`,
                               );
-                            const value = await endpoint.resolve(
-                              selected,
-                              outcome,
-                              `${resolvedAt}T00:00:00Z`,
-                            );
-                            setMessage(
-                              `${value.scores_written} scores written; ${value.weights_updated} reliability weights updated.`,
-                            );
-                            setConfirmResolve(false);
-                          })
-                        }
-                      >
-                        Resolve risk and score forecasts
-                      </button>
-                      {!frozenContract && (
-                        <p className="panel-caption">
-                          Scoring is disabled until the API confirms a frozen
-                          question contract. Abstentions and free text are never
-                          scored.
-                        </p>
-                      )}
-                    </div>
-                  </Section>
-                  {pulse && (
-                    <OutcomeReportPanel key={pulse.id} pulseId={pulse.id} />
-                  )}
-                </>
-              )}
+                              setMessage(
+                                `${value.scores_written} scores written; ${value.weights_updated} reliability weights updated.`,
+                              );
+                              setConfirmResolve(false);
+                            })
+                          }
+                        >
+                          Resolve risk and score forecasts
+                        </button>
+                        {!frozenContract && (
+                          <p className="panel-caption">
+                            Scoring is disabled until the API confirms a frozen
+                            question contract. Abstentions and free text are
+                            never scored.
+                          </p>
+                        )}
+                      </div>
+                    </Section>
+                  </>
+                )}
             </div>
             <aside className="desk-side">
+              <QuestionContractPanel
+                key={selected}
+                riskId={selected}
+                onFrozen={setFrozenContract}
+              />
               <PanelMatch riskId={selected} />
+              {pulse && (
+                <OutcomeReportPanel key={pulse.id} pulseId={pulse.id} />
+              )}
               {pulse && group && <IntegrityPanel pulseId={pulse.id} />}
               <Section title="Indicator evidence · phase-2 replay">
                 {pulse?.evidence.length ? (
@@ -1108,7 +1113,14 @@ function LiveLedger() {
                 {entry.resolved_at && <small>{date(entry.resolved_at)}</small>}
               </div>
             </div>
-            <HonestyBox value={entry.honesty} />
+            <VerificationTrail
+              entry={entry}
+              receipt={receipts[entry.verify_hash]}
+            />
+            <HonestyBox
+              value={entry.honesty}
+              context={`${entry.risk_id} / ${entry.pulse_id}`}
+            />
             <dl className="ledger-details">
               <div>
                 <dt>Sealed at</dt>
@@ -1130,16 +1142,37 @@ function LiveLedger() {
                 onClick={async () => {
                   setBusy("Verifying ledger entry");
                   setError("");
+                  setMessage("");
+                  setReceipts((previous) => {
+                    const next = { ...previous };
+                    delete next[entry.verify_hash];
+                    return next;
+                  });
                   try {
                     const receipt = await endpoint.verify(entry.verify_hash);
+                    if (
+                      typeof receipt.valid !== "boolean" ||
+                      (receipt.anchor !== null &&
+                        typeof receipt.anchor !== "string")
+                    )
+                      throw new Error(
+                        "The API returned an unreadable verification receipt. This record has not been verified.",
+                      );
+                    const timeMatches =
+                      Number.isFinite(Date.parse(receipt.sealed_at)) &&
+                      Date.parse(receipt.sealed_at) ===
+                        Date.parse(entry.sealed_at);
+                    const valid = receipt.valid && timeMatches;
                     setReceipts((v) => ({
                       ...v,
-                      [entry.verify_hash]: receipt,
+                      [entry.verify_hash]: { ...receipt, valid },
                     }));
                     setMessage(
-                      receipt.valid
+                      valid
                         ? "API reports a valid ledger entry."
-                        : "Verification failed. The API reports a hash mismatch.",
+                        : receipt.valid && !timeMatches
+                          ? "Verification failed. The receipt timestamp does not match this ledger entry."
+                          : "Verification failed. The API reports a hash mismatch.",
                     );
                   } catch (e) {
                     setError((e as Error).message);
@@ -1153,24 +1186,6 @@ function LiveLedger() {
               </button>
               <CopyButton value={entry.verify_hash} label="Copy hash" />
             </div>
-            {receipts[entry.verify_hash] && (
-              <p className="panel-caption">
-                {receipts[entry.verify_hash].valid
-                  ? "API verification passed."
-                  : "Verification failed."}{" "}
-                {receipts[entry.verify_hash].anchor ? (
-                  <a
-                    href={
-                      safeUrl(receipts[entry.verify_hash].anchor!) || undefined
-                    }
-                  >
-                    Timestamp anchor: {receipts[entry.verify_hash].anchor}
-                  </a>
-                ) : (
-                  "No blockchain or timestamp anchor is configured."
-                )}
-              </p>
-            )}
           </Section>
         ))}
       {!busy &&
