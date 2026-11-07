@@ -214,14 +214,23 @@ export type Tray = {
 }
 
 export type RadarStatus = {
+  risk_list: {
+    source: string
+    fetched_at: string
+    n: number
+    n_active: number
+    api_n: number
+    api_last_update: string | null
+    note: string
+  }
+  editions: { dataset: string; month: string; source: string; fetched_at: string | null }[]
+  token_present: boolean
+  probability_assumption: Record<string, number>
+  // flat aliases, kept so one shape change cannot blank the badges
   source: string
-  live_available: boolean
-  fetched_at: string
   n_risks: number
   n_active: number
-  n_resolved: number
-  note: string
-  probability_assumption: Record<string, number>
+  live_available: boolean
 }
 
 export type DemoLink = {
@@ -231,4 +240,63 @@ export type DemoLink = {
   region: string
   answered: boolean
   card_url: string
+}
+
+/* -- the Risk Alert Engine (section 6b) ------------------------------------ */
+export type ShiftEvent = {
+  id: string
+  crisis_id: string
+  crisis_name: string
+  risk_id: string | null
+  risk_link_confirmed: boolean
+  month_from: string
+  month_to: string
+  metric: string
+  before: number | string | null
+  after: number | string | null
+  delta: number
+  direction: 'deterioration' | 'improvement' | 'category'
+  rank_this_month: number
+  rank_by_abs_delta: number | null
+  n_crises_this_month: number
+  components: Record<string, (number | null)[]>
+  access: (number | null)[]
+  category: (string | null)[]
+  reliability: string | null
+  last_updated: string | null
+  rule_hit: string
+  adm1: string[]
+  connected_crises: string[]
+  pulse_id: string | null
+  status: 'proposed' | 'pulsed' | 'dismissed'
+  note: string | null
+}
+
+export type AlertRun = {
+  month_from: string
+  month_to: string
+  n_crises: number
+  events: ShiftEvent[]
+  rules: Record<string, number>
+  note: string
+}
+
+export type Crisis = {
+  crisis_id: string
+  crisis_name: string
+  iso3: string[]
+  drivers: string[]
+  adm1_name: string[]
+  connected_crises: string[]
+  active: boolean
+  linked_risks: string[]
+  suggested_risks: string[]
+  series: { month: string; index: number | null; category: string | null }[]
+  access: Record<string, number>
+}
+
+export type Editions = {
+  datasets: { dataset: string; months: string[]; latest: string | null; source: string }[]
+  token_present: boolean
+  note: string
 }

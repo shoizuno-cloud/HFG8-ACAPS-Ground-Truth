@@ -1,6 +1,7 @@
 import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom'
-import { Columns3, ScrollText, ShieldCheck } from 'lucide-react'
+import { BellRing, Columns3, ScrollText, ShieldCheck } from 'lucide-react'
 import { ICON } from './components'
+import Alerts from './screens/Alerts'
 import Desk from './screens/Desk'
 import ExpertCard from './screens/ExpertCard'
 import Ledger from './screens/Ledger'
@@ -20,6 +21,10 @@ export default function App() {
               <Columns3 {...ICON} style={{ verticalAlign: '-3px', marginRight: 6 }} aria-hidden />
               Analyst desk
             </NavLink>
+            <NavLink className="navlink" to="/alerts">
+              <BellRing {...ICON} style={{ verticalAlign: '-3px', marginRight: 6 }} aria-hidden />
+              Risk alerts
+            </NavLink>
             <NavLink className="navlink" to="/ledger">
               <ScrollText {...ICON} style={{ verticalAlign: '-3px', marginRight: 6 }} aria-hidden />
               Public ledger
@@ -29,6 +34,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/desk" replace />} />
           <Route path="/desk" element={<Desk />} />
+          <Route path="/alerts" element={<Alerts />} />
           <Route path="/ledger" element={<Ledger />} />
           <Route path="/e/:token" element={<ExpertCard />} />
           <Route path="*" element={<Navigate to="/desk" replace />} />

@@ -183,11 +183,11 @@ export default function Desk() {
       <main className="page page-wide">
         <div className="row" style={{ marginBottom: 16 }}>
           <h1>Analyst desk</h1>
-          <span className={`chip ${status.live_available ? 'chip-good' : ''}`}>
-            <Radar {...ICON} size={13} aria-hidden /> source: {status.source.toUpperCase()}
+          <span className={`chip ${status.token_present ? 'chip-good' : ''}`}>
+            <Radar {...ICON} size={13} aria-hidden /> source: {status.risk_list.source.toUpperCase()}
           </span>
           <span className="chip">
-            {status.n_risks} risks, {status.n_active} active
+            {status.risk_list.n} risks, {status.risk_list.n_active} active
           </span>
           <span className={`chip ${live ? 'chip-accent' : ''}`}>
             <CircleDot {...ICON} size={13} aria-hidden /> {live ? 'live' : 'listening'}
@@ -678,7 +678,7 @@ export default function Desk() {
           )}
         </section>
       </main>
-      <SyntheticFooter extra={<span>{status.note}</span>} />
+      <SyntheticFooter extra={<span>{status.risk_list.note}</span>} />
     </>
   )
 }

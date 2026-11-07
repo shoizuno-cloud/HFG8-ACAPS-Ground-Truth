@@ -63,6 +63,20 @@ def seed_experts(store: Store) -> list[Expert]:
     return experts
 
 
+DEMO_CRISIS = "TCD005"
+DEMO_REPLAY = ("Mar2026", "Apr2026")
+
+
+def seed_alerts(alert_store, risk_id: str = DEMO_RISK, crisis_id: str = DEMO_CRISIS) -> dict:
+    """Confirm the R1043 - TCD005 link and replay the real April 2026 move, so the desk opens on the
+    fact the demo opens on: ACAPS's own numbers, diffed by our own rules."""
+    from . import alerts as alert_engine
+
+    alert_store.reset()
+    alert_engine.confirm_link(alert_store, risk_id, crisis_id, "seed")
+    return alert_engine.run(alert_store, *DEMO_REPLAY)
+
+
 def seed_demo(store: Store, settings, risk_id: str = DEMO_RISK, seal: bool = True) -> str:
     """Build the panel, open a pulse on the demo risk, and seal one round of answers.
 

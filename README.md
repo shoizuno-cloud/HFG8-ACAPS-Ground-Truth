@@ -25,6 +25,7 @@ make check                   # pytest, UI build, fixture validation
 
 | Path | What it is |
 |------|------------|
+| `/app/alerts` | the Risk Alert Engine: ranked shift events, approve or dismiss, crisis history |
 | `/app/desk` | analyst desk: envelope tray, reveal, distribution, draft, integrity notes, doorbell |
 | `/app/ledger` | public ledger with the honesty box and a working Verify button |
 | `/app/e/<token>` | the expert card; `/demo/links` lists the seeded links |
@@ -37,10 +38,16 @@ platform generates both and sets them before the first start.
 ## Architecture
 
 ```
-ACAPS Risk Radar export (data/, 139 risks)
-        |
-        v
-  doorbell  --------> pulse (the risk's own triggers + ACAPS completion rates)
+ACAPS monthly editions (data/acaps-api/)        ACAPS Risk Radar export (data/, 139 risks)
+  inform-severity-index/<MonYYYY>                        |
+  humanitarian-access/<MonYYYY>                          |
+        |                                                |
+        v                                                |
+  RISK ALERT ENGINE (6b)  -- diff two editions, fixed numeric rules, rank per
+  metric and per direction. Proposes; never fires.       |
+        |                                                |
+        |  analyst approves on /app/alerts               v
+        +--------------------------> pulse <----- doorbell (the risk's own triggers)
                            |
                            v
                     expert card  /app/e/<token>      blind: no ACAPS band shown
@@ -64,6 +71,33 @@ ACAPS Risk Radar export (data/, 139 risks)
 
 One FastAPI process serves the API at the root and the built single-page UI under `/app`. The API keeps the root
 namespace because `/ledger` and `/e/{token}` are API routes in the contract, so they cannot also be HTML pages.
+
+## The Risk Alert Engine
+
+`POST /alerts/replay {"month_from":"Mar2026","month_to":"Apr2026"}` reproduces the real move the demo opens on:
+
+```
+TCD005  Displacement from Sudan to Chad   index 6.1 -> 6.9  (+0.80)
+        rank 1 of 123 crises diffed       rule: index delta >= 0.5
+        Human impact 6.04 -> 7.57         reliability: Very High
+        linked risk R1043                 status: proposed
+```
+
+No model is involved anywhere in it. It diffs two cached ACAPS editions, applies the thresholds in
+`alerts.RULES` (index 0.5, components 1.0, access 1.0, or any category change), and ranks the hits. Then it
+stops: an analyst approves an event into a pulse, or dismisses it with a note that is required, not optional.
+
+**Ranking is per metric and per direction, and this is a deliberate departure from one line of the spec.**
+Section 6b says "rank by |delta|". Ranked that way, April 2026's largest move is PAK007 at −0.90, an
+*improvement*, and TCD005's +0.80 comes second — so an early-warning queue would open with good news, and
+the pitch line "the largest move of 123 crises that month" would be false. Ranking within each metric and
+each direction puts TCD005 at rank 1 of the index deteriorations (matching `fixtures/GET_alerts.json` and
+`POST_alerts_replay_response.json`, which already encode this), and PAK007 at rank 1 of the improvements.
+Every event also carries `rank_by_abs_delta`, so the other ordering is recorded rather than hidden. The
+defensible sentence on stage is **"the largest deterioration of 123 crises that month"**.
+
+Comparing deltas across different metrics is also avoided: a 1.75 move in a sub-component is not "bigger"
+than a 0.80 move in the headline index.
 
 ## Who can learn what
 
@@ -99,7 +133,10 @@ maps each band to its midpoint. ACAPS publishes the bands, not these midpoints, 
 of every draft so nobody can mistake it for an ACAPS figure. Scoring is against Probability, never Risk Level — Risk
 Level is derived from Probability × Impact, so scoring it would score our own arithmetic.
 
-**Not built.** No live ACAPS API (no credential; `/radar/status` reports `source: csv` and the desk shows that badge).
+**Not built.** The live ACAPS API is wired but runs from the cache: `ACAPS_API_TOKEN` is unset, so
+`/radar/status` reports `token_present: false` and every edition is badged `cache` on screen. The published
+`risk-list/` endpoint is history (214 rows, last updated Jul 2025, no R1000+ ids), which is why the active
+risk list comes from the CSV export instead.
 No external timestamp anchor — Verify recomputes the hash from the round's commitments and says exactly that. The agent
 loop behind `FF_AGENTS` is not wired: the draft generator is the deterministic template, which is the default the spec
 asks for. The store is in process and rebuilt on restart; it is not a system of record.
@@ -120,11 +157,11 @@ asks for. The store is in process and rebuilt on restart; it is not a system of 
 
 ```
 engine/        FastAPI app, store, aggregation, deterministic draft, scripts, tests
-  engine/      api.py  store.py  draft.py  data.py  seeding.py  settings.py  logging_conf.py
+  engine/      api.py  store.py  draft.py  data.py  acaps.py  alerts.py  seeding.py  settings.py
   scripts/     seed.py  demo_replay.py
-  tests/       37 tests covering the disclosure floor, blinding, integrity, ledger and scoring
-ui/            Vite + React + TypeScript: expert card, analyst desk, public ledger
-data/          ACAPS Risk Radar export and its data dictionary
+  tests/       52 tests: disclosure floor, blinding, integrity, ledger, scoring, alert engine
+ui/            Vite + React + TypeScript: expert card, analyst desk, alerts, public ledger
+data/          ACAPS Risk Radar export, its data dictionary, and cached monthly API editions
 fixtures/      example payloads for every route, validated by make check
 docs/          master prompt, contracts, question contract, privacy engineering
 app.yaml       deployment contract

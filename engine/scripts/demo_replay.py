@@ -31,20 +31,36 @@ def main() -> int:
     with client:
         pulse_id = seed_demo(STORE, SETTINGS)
 
-        step(1, "doorbell")
+        step(1, "risk alert engine: replay Mar2026 -> Apr2026 on ACAPS's own editions")
+        from engine.api import ALERTS
+        from engine.seeding import seed_alerts
+
+        replay = seed_alerts(ALERTS)
+        top = replay["events"][0]
+        print(f"       {replay['n_crises']} crises diffed, {len(replay['events'])} events")
+        print(f"       rank 1: {top['crisis_id']} {top['crisis_name']} "
+              f"{top['metric']} {top['before']} -> {top['after']} ({top['delta']:+.2f}), "
+              f"rule: {top['rule_hit']}")
+        print(f"       linked risk {top['risk_id']}, reliability {top['reliability']}, "
+              f"status {top['status']} -- proposed, not fired")
+        if not (top["crisis_id"] == "TCD005" and top["rank_this_month"] == 1
+                and abs(top["delta"] - 0.8) < 1e-9):
+            return _fail("the April 2026 replay no longer reproduces the TCD005 event")
+
+        step(2, "doorbell (the risk's own ACAPS triggers)")
         doorbell = client.post("/pulses/doorbell/run?threshold=40").json()
         print(f"       {doorbell['n_shifts']} triggers at or above 40% completion across active risks")
 
-        step(2, f"pulse {pulse_id}")
+        step(3, f"pulse {pulse_id}")
         pulse = client.get(f"/pulses/{pulse_id}").json()
         print(f"       {len(pulse['evidence'])} evidence lines, question: {pulse['question'][:58]}...")
 
-        step(3, "sealed answers")
+        step(4, "sealed answers")
         tray = client.get(f"/pulses/{pulse_id}/tray").json()
         print(f"       {tray['n_answers']} envelopes, revealable={tray['revealable']} (k_min={tray['k_min']})")
         print(f"       first commitment {tray['envelopes'][0]['commitment'][:24]}...")
 
-        step(4, "reveal")
+        step(5, "reveal")
         result = client.post(f"/pulses/{pulse_id}/reveal").json()
         print(f"       n={result['n']} mean={result['mean']} spread="
               f"{result['spread']['min']}-{result['spread']['max']} iqr={result['spread']['iqr']}")
@@ -53,14 +69,14 @@ def main() -> int:
         if "integrity_notes" in result:
             return _fail("integrity notes leaked into the public reveal response")
 
-        step(5, "integrity notes (moderator only)")
+        step(6, "integrity notes (moderator only)")
         notes = client.get(f"/integrity/{pulse_id}").json()["integrity_notes"]
         for note in notes:
             print(f"       [{note['kind']}] {note['text'][:72]}")
         if not notes:
             print("       none on this round")
 
-        step(6, "draft")
+        step(7, "draft")
         drafted = client.post(f"/pulses/{pulse_id}/draft").json()
         print(f"       {drafted['id']} proposes {drafted['proposed_probability']} "
               f"(ACAPS: {drafted['acaps_probability']}), {len(drafted['claims'])} claims")
@@ -68,7 +84,7 @@ def main() -> int:
               f"numbers_match={drafted['judge']['numbers_match']} "
               f"flagged={drafted['judge']['flagged_claim_ids'] or 'none'}")
 
-        step(7, "question contract")
+        step(8, "question contract")
         client.post(f"/risks/R1043/contract", json={
             "event": "Sustained cross-border attacks on eastern Chad border localities",
             "location": "Ouaddai, Wadi Fira and Sila, Chad",
@@ -77,7 +93,7 @@ def main() -> int:
             "adjudication_rule": "Materialised if ACAPS marks the risk materialised by the deadline.",
         })
 
-        step(8, "analyst decision")
+        step(9, "analyst decision")
         decided = client.post(f"/drafts/{drafted['id']}/decision", json={
             "action": "accept", "decided_by": "analyst-demo",
             "what_decision": "Pre-position shelter and cash in Ouaddai",
@@ -86,7 +102,7 @@ def main() -> int:
         }).json()
         print(f"       {decided['status']} by {decided['decided_by']}")
 
-        step(9, "ledger")
+        step(10, "ledger")
         entry = client.get("/ledger").json()["entries"][0]
         print(f"       group={entry['group_probability']} acaps={entry['acaps_probability']} "
               f"verify_hash={entry['verify_hash'][:24]}...")
@@ -95,11 +111,11 @@ def main() -> int:
         if not verified["valid"]:
             return _fail("the ledger entry did not verify against its own commitments")
 
-        step(10, "resolve and score")
+        step(11, "resolve and score")
         resolved = client.post("/risks/R1043/resolve", json={"outcome": "materialised"}).json()
         print(f"       {resolved['scores_written']} scores written, weights updated")
 
-        step(11, "outcome report")
+        step(12, "outcome report")
         report = client.get(f"/pulses/{pulse_id}/outcome-report").json()
         print(f"       outcome={report['outcome']} decision={report['analyst_decision_summary'][:48]}")
 
@@ -116,6 +132,12 @@ def main() -> int:
             "verify_hash": entry["verify_hash"],
             "verify_valid": verified["valid"],
             "integrity_notes": len(notes),
+            "alert_replay": {
+                "months": [replay["month_from"], replay["month_to"]],
+                "n_crises": replay["n_crises"],
+                "rank_1": top["crisis_id"],
+                "delta": top["delta"],
+            },
             "scores_written": resolved["scores_written"],
             "seconds": round(elapsed, 2),
             "offline": True,

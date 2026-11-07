@@ -23,7 +23,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from . import data, draft as draft_builder, logging_conf, settings as settings_mod
+from . import acaps, alerts as alert_engine, data, draft as draft_builder, logging_conf, settings as settings_mod
 from .store import Expert, Store, TooFew, now, pseudonym_for, round_verify_hash
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -33,6 +33,7 @@ UI_DIST = ROOT / "ui" / "dist"
 log = logging.getLogger("sealed_signals")
 SETTINGS = settings_mod.load()
 STORE = Store(k_min=SETTINGS.k_min)
+ALERTS = alert_engine.new_store()
 _subscribers: set[asyncio.Queue] = set()
 
 
@@ -55,10 +56,12 @@ async def lifespan(app: FastAPI):
     logging_conf.log(log, "info", "starting", app_env=SETTINGS.app_env, sha=SETTINGS.git_sha,
                      k_min=SETTINGS.k_min, ui_built=UI_DIST.exists())
     if os.environ.get("SEED_ON_START", "true").lower() == "true":
-        from .seeding import seed_demo
+        from .seeding import seed_alerts, seed_demo
         pulse_id = seed_demo(STORE, SETTINGS)
+        replay = seed_alerts(ALERTS)
         logging_conf.log(log, "info", "seeded synthetic panel", pulse_id=pulse_id,
-                         n_experts=len(STORE.experts), n_answers=STORE.n_answers(pulse_id))
+                         n_experts=len(STORE.experts), n_answers=STORE.n_answers(pulse_id),
+                         n_alerts=len(replay["events"]), replay=f"{replay['month_from']}->{replay['month_to']}")
     yield
     logging_conf.log(log, "info", "shutting down")
 
@@ -114,7 +117,216 @@ def version():
 # -- radar and risks -----------------------------------------------------------
 @app.get("/radar/status", tags=["risks"])
 def radar_status():
-    return envelope(data.radar_status())
+    """Where every number on screen came from. The badges on the desk read straight off this."""
+    csv_status = data.radar_status()
+    api_status = acaps.status()
+    return envelope({
+        "risk_list": {
+            "source": csv_status["source"],
+            "fetched_at": csv_status["fetched_at"],
+            "n": csv_status["n_risks"],
+            "n_active": csv_status["n_active"],
+            "api_n": api_status["api_risk_list"]["n"],
+            "api_last_update": api_status["api_risk_list"]["last_update"],
+            "note": api_status["api_risk_list"]["note"],
+        },
+        "editions": api_status["editions"],
+        "token_present": api_status["token_present"],
+        "probability_assumption": csv_status["probability_assumption"],
+        # Kept so nothing that reads the flat shape breaks; the nested fields above are the contract.
+        "source": csv_status["source"],
+        "n_risks": csv_status["n_risks"],
+        "n_active": csv_status["n_active"],
+        "live_available": api_status["token_present"],
+    })
+
+
+@app.get("/radar/editions", tags=["radar"])
+def radar_editions():
+    months = acaps.available()
+    return envelope({
+        "datasets": [
+            {
+                "dataset": dataset,
+                "months": month_list,
+                "latest": month_list[-1] if month_list else None,
+                "source": "api" if acaps.token_present() else "cache",
+            }
+            for dataset, month_list in months.items()
+        ],
+        "token_present": acaps.token_present(),
+        "note": "Cached editions ship in data/acaps-api/ so this runs with no network. "
+                "Set ACAPS_API_TOKEN to fetch live.",
+    })
+
+
+# -- crises --------------------------------------------------------------------
+@app.get("/crises", tags=["radar"])
+def crises(iso3: str | None = None, limit: int = 400):
+    rows = list(acaps.crises().values())
+    if iso3:
+        wanted = iso3.strip().upper()
+        rows = [c for c in rows if wanted in {code.upper() for code in c["iso3"]}]
+    return envelope({"crises": rows[:limit], "n": len(rows)})
+
+
+@app.get("/crises/{crisis_id}", tags=["radar"])
+def crisis(crisis_id: str):
+    found = acaps.crisis(crisis_id)
+    if not found:
+        raise HTTPException(404, f"no crisis {crisis_id} in the ACAPS registry")
+    linked = [risk_id for risk_id, link in ALERTS.links.items() if link["crisis_id"] == crisis_id]
+    suggested = [s["risk_id"] for s in alert_engine.suggest_links() if s["crisis_id"] == crisis_id]
+    return envelope({
+        **found,
+        "linked_risks": linked,
+        "suggested_risks": [r for r in suggested if r not in linked],
+        "series": acaps.series(crisis_id),
+        "access": acaps.access_by_month(crisis_id),
+        "latest": acaps.severity_point(crisis_id, acaps.latest_month() or ""),
+    })
+
+
+# -- the risk alert engine -----------------------------------------------------
+@app.post("/alerts/run", tags=["alerts"])
+def alerts_run(body: dict = Body(default_factory=dict)):
+    """Diff the two most recent cached editions (or those ending at month_to) for every crisis."""
+    month_from, month_to = alert_engine.latest_pair(month_to=body.get("month_to"))
+    if not month_from or not month_to:
+        raise HTTPException(409, "at least two cached editions are needed before anything can be diffed")
+    result = alert_engine.run(ALERTS, month_from, month_to)
+    logging_conf.log(log, "info", "alert run", month_from=month_from, month_to=month_to,
+                     n_events=len(result["events"]))
+    return envelope(result)
+
+
+@app.post("/alerts/replay", tags=["alerts"])
+def alerts_replay(body: dict = Body(default_factory=dict)):
+    """Reproduce a past month from the cached editions. The demo opens on Mar2026 -> Apr2026."""
+    month_from = body.get("month_from") or "Mar2026"
+    month_to = body.get("month_to") or "Apr2026"
+    available = acaps.available().get(acaps.INFORM, [])
+    missing = [m for m in (month_from, month_to) if m not in available]
+    if missing:
+        raise HTTPException(404, f"no cached edition for {', '.join(missing)}; have {available}")
+    return envelope(alert_engine.run(ALERTS, month_from, month_to))
+
+
+@app.get("/alerts", tags=["alerts"])
+def list_alerts(status: str | None = None):
+    rows = list(ALERTS.events.values())
+    if status:
+        rows = [e for e in rows if e["status"] == status]
+    rows.sort(key=lambda e: (e["metric"] != "index", e["direction"] != "deterioration",
+                             e["rank_this_month"]))
+    return envelope({"events": rows, "n": len(rows), "rules": alert_engine.RULES})
+
+
+@app.get("/alerts/{alert_id}", tags=["alerts"])
+def get_alert(alert_id: str):
+    found = ALERTS.events.get(alert_id)
+    if not found:
+        raise HTTPException(404, f"no alert {alert_id}")
+    return envelope(found)
+
+
+@app.post("/alerts/{alert_id}/pulse", status_code=201, tags=["alerts"])
+async def alert_to_pulse(alert_id: str, body: dict = Body(default_factory=dict)):
+    """The analyst approves an event. Only here does an alert become a question for the panel."""
+    event = ALERTS.events.get(alert_id)
+    if not event:
+        raise HTTPException(404, f"no alert {alert_id}")
+    if event["status"] == "dismissed":
+        raise HTTPException(409, "this event was dismissed; a dismissed event never pulses")
+    if event["status"] == "pulsed":
+        raise HTTPException(409, f"already pulsed as {event['pulse_id']}")
+
+    risk_id = body.get("risk_id") or event.get("risk_id")
+    if not risk_id:
+        raise HTTPException(422, "this event has no linked risk; confirm one with POST /risks/{id}/link")
+    risk = data.get_risk(risk_id)
+    if not risk:
+        raise HTTPException(404, f"no risk {risk_id} in the export")
+
+    pulse = _build_pulse(risk, "doorbell", body.get("question"), _alert_evidence(event))
+    pulse["alert_id"] = alert_id
+    event["status"] = "pulsed"
+    event["pulse_id"] = pulse["id"]
+    await publish("pulse_fired", {"pulse_id": pulse["id"], "risk_id": risk_id, "alert_id": alert_id})
+    logging_conf.log(log, "info", "alert approved into a pulse", alert_id=alert_id,
+                     pulse_id=pulse["id"], risk_id=risk_id)
+    return envelope({"pulse": pulse, "alert": event})
+
+
+@app.post("/alerts/{alert_id}/dismiss", tags=["alerts"])
+def dismiss_alert(alert_id: str, body: dict = Body(default_factory=dict)):
+    event = ALERTS.events.get(alert_id)
+    if not event:
+        raise HTTPException(404, f"no alert {alert_id}")
+    if event["status"] == "pulsed":
+        raise HTTPException(409, "this event already became a pulse and cannot be dismissed")
+    note = (body.get("note") or "").strip()
+    if not note:
+        raise HTTPException(422, "dismissing an event requires a note saying why")
+    event["status"] = "dismissed"
+    event["note"] = note
+    event["dismissed_by"] = body.get("dismissed_by") or "analyst"
+    event["dismissed_at"] = now()
+    return envelope(event)
+
+
+def _alert_evidence(event: dict) -> list[dict]:
+    """The event's own numbers become the pulse's evidence line, so the expert sees what moved."""
+    evidence = [{
+        "source": "ACAPS INFORM Severity",
+        "indicator": f"{event['metric']}:{event['crisis_id']}",
+        "value": event["after"],
+        "baseline": event["before"],
+        "z": None,
+        "url": "https://api.acaps.org/api/v1/inform-severity-index/",
+        "note": (
+            f"{event['crisis_name']}: {event['metric'].replace('_', ' ')} "
+            f"{event['before']} to {event['after']} between {event['month_from']} and "
+            f"{event['month_to']} ({event['rule_hit']}; rank {event['rank_this_month']} of "
+            f"{event['n_crises_this_month']} crises this month; reliability {event['reliability']})"
+        ),
+    }]
+    for name, pair in (event.get("components") or {}).items():
+        if pair[0] is None or pair[1] is None or abs(pair[1] - pair[0]) < 0.3:
+            continue
+        evidence.append({
+            "source": "ACAPS INFORM Severity",
+            "indicator": f"{name}:{event['crisis_id']}",
+            "value": pair[1],
+            "baseline": pair[0],
+            "z": None,
+            "url": "https://api.acaps.org/api/v1/inform-severity-index/",
+            "note": f"{name.replace('_', ' ')} {pair[0]} to {pair[1]}",
+        })
+    return evidence
+
+
+@app.post("/risks/{risk_id}/link", status_code=201, tags=["alerts"])
+def link_risk(risk_id: str, body: dict = Body(default_factory=dict)):
+    """The analyst confirms the risk-to-crisis link once. Suggestions are iso3 plus a driver keyword;
+    a wrong link would put real ACAPS numbers behind the wrong question."""
+    risk = data.get_risk(risk_id)
+    if not risk:
+        raise HTTPException(404, f"no risk {risk_id} in the export")
+    crisis_id = body.get("crisis_id")
+    if not crisis_id:
+        raise HTTPException(422, "crisis_id is required")
+    if not acaps.crisis(crisis_id):
+        raise HTTPException(404, f"no crisis {crisis_id} in the ACAPS registry")
+    link = alert_engine.confirm_link(ALERTS, risk_id, crisis_id, body.get("confirmed_by") or "analyst")
+    return envelope(link)
+
+
+@app.get("/risks/{risk_id}/link", tags=["alerts"])
+def get_link(risk_id: str):
+    confirmed = ALERTS.links.get(risk_id)
+    suggestions = [s for s in alert_engine.suggest_links() if s["risk_id"] == risk_id]
+    return envelope({"risk_id": risk_id, "confirmed": confirmed, "suggested": suggestions})
 
 
 @app.get("/risks", tags=["risks"])
