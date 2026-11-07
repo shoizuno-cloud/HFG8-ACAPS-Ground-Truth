@@ -181,6 +181,18 @@ Three design consequences, all already in v3.4: the question horizon is six mont
 horizon (Aisha, Pierre); alerts and pulses are filtered by the countries a person covers (Jose); every ledger entry
 lists what fed into it and what is not known (Emily).
 
+## 0c. The jury sheet (handed out Saturday evening; every lane reads this)
+
+Scores 1 to 10 per criterion; total = A Concept ×4 (40 %) + B Prototype ×2 (20 %) + C Technology feasibility ×1.5
+(future-proof, ethics, security, legal side of AI) + D Product potential ×1.5 + E Business feasibility ×0.5 + F Wow
+×0.5. The sheet's own challenge check: "the brief's must-haves are easy to use, expert-controlled anonymity and public
+anonymity; weigh them under A and B." Consequences: the live demo is inside the three minutes (B is 20 % and asks "does
+it work"); the three must-haves are named in the jury's words on slide 2 and shown working in the demo (card, mask
+picker, ledger); ethics, security and legal are labelled on slide 3; slide 6 carries one sentence of business model.
+Full mapping and the Q&A answers: docs/sealed-signals/judging-checklist.md. Lane B: the mask picker and the ledger's
+"never an individual" line must be visible without explanation. Lane A: `make demo` must run the full loop live on
+stage in under 75 seconds including the jury's real answers.
+
 ## 1a. Who can learn what (replaces every "sealed" or "nothing leaves the device" claim)
 
 | Party | Before reveal | After reveal | Ever |
@@ -709,16 +721,13 @@ Professional, minimal, modern. The jury should think "this already exists in pro
 
 ## 9a. The three minutes (Lane C owns demo-script.md; deck in pitch/sealed-signals-slides.html; six slides, fixed)
 
-1 The problem: 47 % coin flip; expert checks leave no trail and experts will not sign up; nobody can see the bias or the
-misses (about 25 s). 2 The solution: Alert, Ask, Answer, Check, Decide and record, each with the problem it answers
-(30 s). 3 How it is built: six modules with the technology in each (25 s). 4 Bias designed out on the card, every claim
-checked by the agent loop, a person decides (35 s). 5 Why every stakeholder can trust it: the ledger with Verify and the
-miss on the page; experts, analysts, committee, readers; what we do not claim (35 s). 6 It runs, it is different, pilot
-and team (25 s). Close on the spine line. The live demo runs from the product, not a slide, when the presenter chooses
-(after 4 or after 6): the jury scans the QR on the desk's Reach page, answers on the card, and the reveal, draft,
-decision and ledger happen live. Q&A slides behind B: alerts page, reach page, full psychology layer, verification,
-proof numbers, comparison, pilot, personas and workflow mapping, cryptographic mechanisms, scoring and calibration,
-reveal view, draft and ledger, sensitivity test. Nothing is said on stage about a path that is off.
+0:00 slide 1, the problem (20 s) · 0:20 slide 2, the solution and the three must-haves in the jury's words (25 s) ·
+0:45 live demo from the product (75 s): approve the April alert, send the pulse, the jury scans and answers on the card,
+reveal, draft with Skeptic marks, accept with "what decision, for whom, by when", ledger, one click on Verify · 2:00
+slide 3, how it is built, ethics, security and legal badges (20 s) · 2:20 slide 4, the card against six biases and the
+agent loop (20 s) · 2:40 slide 5, why people can trust it (10 s) · 2:50 slide 6, it runs, it is different, opportunity
+and model (10 s) · close on the spine line. Fallback slides B if the demo fails. Q&A answers in judging-checklist.md.
+Nothing is said on stage about a path that is off.
 
 ## 10. Lanes
 

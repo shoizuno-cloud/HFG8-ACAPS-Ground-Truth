@@ -105,13 +105,13 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
 .prob h3{font-size:42px;font-weight:600;margin:24px 0 18px;line-height:1.15}
 .prob p{font-size:26px;color:var(--muted);line-height:1.4}
 .sol{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;margin-top:20px}
-.sol > div{border-radius:12px;padding:34px 28px;min-height:680px;position:relative;border:2px solid var(--line);background:#fff}
+.sol > div{border-radius:12px;padding:30px 26px;min-height:560px;position:relative;border:2px solid var(--line);background:#fff}
 .sol > div.t{background:var(--teal-soft);border-color:var(--teal)}
 .sol > div.a{background:var(--amber-soft);border-color:var(--amber)}
 .sol .k2{font-size:20px;color:var(--muted);margin-bottom:8px}
 .sol h3{font-size:36px;font-weight:600;line-height:1.1;margin-bottom:14px}
 .sol > div.t h3{color:var(--teal)}.sol > div.a h3{color:var(--amber)}
-.sol p{font-size:25px;line-height:1.45;color:var(--ink)}
+.sol p{font-size:23px;line-height:1.4;color:var(--ink)}
 .sol .fix{position:absolute;left:28px;right:28px;bottom:28px;font-size:21px;color:var(--muted);border-top:1.5px solid var(--line);padding-top:12px}
 
 .ico{width:64px;height:64px;border-radius:16px;background:var(--teal-soft);display:flex;align-items:center;justify-content:center;flex:none}
@@ -198,8 +198,12 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
   <div class="t" data-s="4"><div class="k2">4</div><h3>Check</h3><p>Mean, spread, unattributed disagreement, descriptive bias notes. An Investigator, Skeptic and Judge turn it into a cited draft with every number checked.</p><div class="fix">Answers: bias nobody could see</div></div>
   <div class="a" data-s="5"><div class="k2">5</div><h3>Decide and record</h3><p>The analyst accepts, edits or rejects, with the decision it informs. The ledger keeps the group view, the honesty box, a Verify button and the misses. Scored when the risk resolves.</p><div class="fix">Answers: no trail, no feedback, no misses</div></div>
  </div>
- <div class="legend" data-s="5"><span class="lt">arithmetic</span><span class="la">a person decides</span><span style="margin-left:auto">Nothing publishes itself. One validation layer among others.</span></div>
- <div class="foot"><span>Easier to contribute to, easier to scrutinise, easier to trace</span><span>2</span></div>
+ <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:40px" data-s="5">
+  <div style="border-left:8px solid var(--teal);padding:4px 0 4px 20px"><b style="font-size:27px">Easy to use</b><p class="sub" style="font-size:22px">one screen, one tap, no account, any channel</p></div>
+  <div style="border-left:8px solid var(--teal);padding:4px 0 4px 20px"><b style="font-size:27px">Expert-controlled anonymity</b><p class="sub" style="font-size:22px">mask chosen per answer: named, nickname, or no identity kept</p></div>
+  <div style="border-left:8px solid var(--teal);padding:4px 0 4px 20px"><b style="font-size:27px">Public anonymity</b><p class="sub" style="font-size:22px">the public sees aggregates of five or more, never an individual</p></div>
+ </div>
+ <div class="foot"><span>The three must-haves of the brief, built. Nothing publishes itself; one validation layer among others.</span><span>2</span></div>
 </section>
 <section class="slide" id="s3">
  <div class="line" data-s="0">How it is built: the six modules and the technology in each.</div>
@@ -211,7 +215,14 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
   <div class="node t" data-s="5"><h3>Reveal and check</h3><p>Opened together at the deadline. Mean, spread, unattributed disagreement. Cited draft, every number checked.</p><span class="tech">equal-weight mean</span> <span class="tech">SP experiment</span> <span class="tech">Skeptic, Judge</span><i class="arrow"></i></div>
   <div class="node a" data-s="6"><h3>Decide and record</h3><p>Accept, edit or reject. Ledger with the honesty box. Scored at panel level when the risk resolves.</p><span class="tech">Verify</span> <span class="tech">ML-DSA-65 attestation</span> <span class="tech">OpenTimestamps</span></div>
  </div>
- <div class="legend" data-s="6"><span class="lt">arithmetic</span><span class="la">a person decides</span><span style="margin-left:auto">Registry: ML-KEM-768 key establishment, AES-256-GCM at rest, every read logged</span></div>
+ <div style="display:flex;gap:20px;margin-top:30px;align-items:center" data-s="6">
+  <span class="legend"><span class="lt">arithmetic</span><span class="la">a person decides</span></span>
+  <span style="margin-left:auto;display:flex;gap:14px">
+   <span class="chip t" style="font-size:19px;padding:8px 16px">Ethics: consent first, no profiling, no hidden tests</span>
+   <span class="chip t" style="font-size:19px;padding:8px 16px">Security: quantum-safe registry, logged access</span>
+   <span class="chip t" style="font-size:19px;padding:8px 16px">Legal: AI drafts, a person decides; GDPR consent basis</span>
+  </span>
+ </div>
  <div class="foot"><span>Nothing publishes itself. One validation layer among others.</span><span>3</span></div>
 </section>
 <section class="slide" id="s4">
@@ -299,9 +310,9 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
   <div class="it"><div class="ico a"><svg viewBox="0 0 24 24"><path d="M12 22s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg></div><div><h4>1 crisis</h4><p>eastern Chad</p></div></div>
   <div class="it"><div class="ico a"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="3"/><path d="M15.5 14.5A6 6 0 0 1 22 20"/></svg></div><div><h4>8 experts</h4><p>with consent, from the analyst's contacts</p></div></div>
   <div class="it"><div class="ico a"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><div><h4>3 months</h4><p>ACAPS's Risk Radar manager as the analyst</p></div></div>
-  <div class="sub" style="font-size:19px;margin-left:auto;text-align:right">Zain Ul Haq, backend<br>Saleeta Qadir, frontend<br>Sho Izuno, research and pitch</div>
+  <div style="margin-left:auto;max-width:620px;border-left:8px solid var(--amber);padding-left:20px"><b style="font-size:24px">Opportunity and model</b><p class="sub" style="font-size:19px;line-height:1.35">ACAPS first: the Risk Radar platform it does not have, run inside its existing donor-funded analysis. Then the same loop for INFORM, OCHA and anticipatory-action teams: open-source core, hosted service per organisation, priced per analyst seat.</p></div>
  </div>
- <div class="foot"><span>Easier to contribute to, easier to scrutinise, easier to trace</span><span>6</span></div>
+ <div class="foot"><span>Zain Ul Haq, backend. Saleeta Qadir, frontend. Sho Izuno, research and pitch.</span><span>6</span></div>
 </section>
 <section class="slide dark" id="s7">
  <div style="margin-top:200px"><h1 data-s="0" style="font-size:96px">Easier to contribute to.<br>Easier to scrutinise.<br>Easier to trace.</h1><p class="sub" data-s="1" style="font-size:32px;margin-top:50px">The numbers raise the alert, people make the call, the record shows the misses.</p></div>
