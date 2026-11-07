@@ -10,7 +10,7 @@ test("April alert leads to a human panel request and a readable desk", async ({
     page.getByRole("heading", { name: "Alerts", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Replay April" }).click();
-  await expect(page.locator(".shift-row")).toHaveCount(3);
+  await expect(page.locator(".shift-row")).toHaveCount(9);
   await expect(
     page.getByRole("img", { name: /Severity increased from 6.1/ }),
   ).toBeVisible();
@@ -51,10 +51,10 @@ test("April alert leads to a human panel request and a readable desk", async ({
     .click();
   await expect(
     page.getByRole("region", { name: "Decision at a glance" }),
-  ).toContainText("69%");
+  ).toContainText("66%");
   await expect(
     page.getByRole("region", { name: "Decision at a glance" }),
-  ).toContainText("30–90%");
+  ).toContainText("30–85%");
   await page.screenshot({ path: info.outputPath("desk.png"), fullPage: true });
   expect(
     await page.evaluate(

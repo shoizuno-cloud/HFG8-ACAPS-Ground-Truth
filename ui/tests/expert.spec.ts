@@ -45,7 +45,7 @@ test("round two and empty invitation render meaningful states", async ({
     page.getByRole("heading", { name: "How the panel answered" }),
   ).toBeVisible();
   await expect(
-    page.getByText("8 synthetic answers · Equal-weight mean 69%"),
+    page.getByText("8 synthetic answers · Equal-weight mean 66%"),
   ).toBeVisible();
   await page.getByLabel("I changed my mind after seeing the panel").check();
   await page.goto("/e/empty");

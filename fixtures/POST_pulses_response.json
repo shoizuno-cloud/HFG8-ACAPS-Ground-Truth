@@ -1,29 +1,42 @@
 {
-  "id": "P-0001",
+  "id": "P-0007",
   "risk_id": "R1043",
   "panel_id": "PAN-TCD",
-  "fired_at": "2026-11-07T09:00:00Z",
-  "reason": "alert",
+  "fired_at": "2026-11-07T16:10:54+00:00",
+  "reason": "analyst",
   "round": 1,
   "evidence": [
     {
-      "source": "ACAPS INFORM Severity Index",
-      "dataset": "inform-severity-index",
-      "crisis_id": "TCD005",
-      "month_from": "Mar2026",
-      "month_to": "Apr2026",
-      "metric": "index",
-      "before": 6.1,
-      "after": 6.9,
-      "delta": 0.8,
-      "rank_this_month": 1,
-      "n_crises_this_month": 123,
-      "url": "https://api.acaps.org/api/v1/inform-severity-index/Apr2026/"
+      "source": "Expansion of cross-border attacks and insecurity - 40% complete",
+      "indicator": "trigger_completion:T1",
+      "value": 40,
+      "baseline": null,
+      "z": null,
+      "url": "https://reliefweb.int/report/chad/unfpa-situation-report-chad-humanitarian-response-1-30-april-2026",
+      "note": "Expansion of cross-border attacks and insecurity"
+    },
+    {
+      "source": "Attacks on strategic infrastructure in Chad - 10% complete",
+      "indicator": "trigger_completion:T2",
+      "value": 10,
+      "baseline": null,
+      "z": null,
+      "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions",
+      "note": "Attacks on strategic infrastructure in Chad"
+    },
+    {
+      "source": "Renewed proxy mobilisation and cross-border armed group activity - 20% complete",
+      "indicator": "trigger_completion:T3",
+      "value": 20,
+      "baseline": null,
+      "z": null,
+      "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions",
+      "note": "Renewed proxy mobilisation and cross-border armed group activity"
     }
   ],
-  "question": "ACAPS's severity index for 'Displacement from Sudan to Chad' rose 6.1 to 6.9 in April, the largest move of 123 crises. Give your probability that R1043 materialises within six months. What are we missing?",
-  "expires_at": "2026-11-08T09:00:00Z",
+  "question": "Is the level of concern on this risk still right, and what are we missing? You will see the current ACAPS rating as soon as you submit.",
+  "expires_at": "2026-11-08T16:10:54+00:00",
   "n_answers": 0,
   "served_from": "live",
-  "generated_at": "2026-11-07T09:00:00Z"
+  "generated_at": "2026-11-07T16:10:54+00:00"
 }

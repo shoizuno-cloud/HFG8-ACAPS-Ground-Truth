@@ -1,0 +1,35 @@
+{
+  "pseudonym": "long-ibis",
+  "available": true,
+  "n_pulses": 6,
+  "calibration": {
+    "mean_brier": 0.1747,
+    "n_resolved": 8,
+    "mean_confidence_1_5": 3.17,
+    "scale_note": "Confidence is a 1-5 self-rating, not a probability of being right, so the gap below is a rough comparison. Only a large positive gap is reported as a sentence, and a negative one is never called underconfidence."
+  },
+  "overconfidence": -0.2828,
+  "extremity": 0.0,
+  "agreement_with_acaps": 1.0,
+  "agreement_comparable_pulses": 6,
+  "round2_shift": 0.3,
+  "round2_pulses": 5,
+  "round2_toward_acaps": 5,
+  "source_mix": {
+    "saw": 1,
+    "read": 5,
+    "heard": 0
+  },
+  "abstention_rate": 0.0,
+  "answer_latency_seconds": 0.0,
+  "co_movement": [],
+  "sentences": [
+    "Moves toward the ACAPS band in round 2 on 5 of 5 pulses, by 0.3 on average."
+  ],
+  "never": "Never a score. Never public. Never a reason to approve or remove anyone in the pilot. Never computed from free text.",
+  "note": "Descriptive only. Each sentence is a prompt for a conversation, not a verdict.",
+  "private": true,
+  "note_to_you": "Yours alone. The committee sees the same sentences under your pseudonym, and nothing else.",
+  "served_from": "live",
+  "generated_at": "2026-11-07T16:10:56+00:00"
+}

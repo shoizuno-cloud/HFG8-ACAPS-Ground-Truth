@@ -22,6 +22,9 @@ STANCES = ("estimate", "outside_my_expertise", "not_enough_evidence")
 SOURCE_TAGS = ("saw", "read", "heard")
 BUCKETS = ("0.0-0.2", "0.2-0.4", "0.4-0.6", "0.6-0.8", "0.8-1.0")
 SP_METHOD = "Prelec 2017 / Palley & Soll peer-prediction weighting"
+# Above this similarity two "what are we missing" entries are treated as one origin, not two
+# sources. Both the integrity notes and the corroboration status read it, so they cannot disagree.
+SHARED_ORIGIN_RATIO = 0.85
 WEIGHT_FLOOR, WEIGHT_CEIL = 0.5, 2.0
 
 TRIGGER_THEMES = {
@@ -343,7 +346,7 @@ class Store:
             matched = False
             for j in range(i + 1, len(texts)):
                 ratio = SequenceMatcher(None, texts[i][1].lower(), texts[j][1].lower()).ratio()
-                if ratio >= 0.85:
+                if ratio >= SHARED_ORIGIN_RATIO:
                     notes.append({
                         "kind": "shared_origin",
                         "text": "Two 'what are we missing' entries may share an origin (near-identical wording).",
@@ -433,15 +436,27 @@ def _missing_themes(answers: list[Answer]) -> list[dict]:
             if SequenceMatcher(None, cluster["theme"].lower(), text.lower()).ratio() >= 0.6:
                 cluster["count"] += 1
                 cluster["tags"].append(answer.source_tag)
+                cluster["texts"].append(text)
                 break
         else:
-            clusters.append({"theme": text, "count": 1, "tags": [answer.source_tag]})
+            clusters.append({"theme": text, "count": 1, "tags": [answer.source_tag],
+                             "texts": [text]})
 
     out = []
     for cluster in sorted(clusters, key=lambda c: c["count"], reverse=True):
         tags = [tag for tag in cluster.pop("tags") if tag]
+        texts = cluster.pop("texts")
+        # Two people repeating the same sentence are one origin. Calling that corroborated while
+        # the integrity notes call it a shared origin would be the system contradicting itself in
+        # two panels of the same screen, so the stricter reading wins.
+        repeated = any(
+            SequenceMatcher(None, a.lower(), b.lower()).ratio() >= SHARED_ORIGIN_RATIO
+            for index, a in enumerate(texts) for b in texts[index + 1:]
+        )
         corroboration = "not checked"
-        if cluster["count"] >= 2 and any(tag == "saw" for tag in tags):
+        if repeated:
+            corroboration = "single-source"
+        elif cluster["count"] >= 2 and any(tag == "saw" for tag in tags):
             corroboration = "corroborated"
         elif cluster["count"] >= 2:
             corroboration = "single-source"

@@ -208,7 +208,10 @@ def test_ledger_entry_verifies_against_its_own_commitments(seeded):
     # that is valid here; the attestation does not exist until the risk resolves, and the anchor is
     # pending, which the response has to say rather than imply the round is externally timestamped.
     assert verified["attestation"] is None and "not resolved" in verified["attestation_means"]
-    assert verified["anchor"]["status"] == "pending"
+    # Lane B's receipt guard rejects anything but a URL string or null here, and a pending root
+    # is not a proof anyone can follow, so the link stays null and the root rides beside it.
+    assert verified["anchor"] is None
+    assert verified["anchor_root"]["status"] == "pending"
     assert "proves nothing" in verified["anchor_means"]
     assert "not submitted yet" in verified["anchor_means"]
     assert client.post("/api/ledger/verify", json={"verify_hash": "0" * 64}).status_code == 404
@@ -385,3 +388,17 @@ def test_round_two_shows_the_rating_that_round_one_hides(seeded):
     assert second["blind"] is False
     assert second["risk"]["probability_acaps"] == "High"
     assert second["group_view_if_round2"]["n"] == 8
+
+
+def test_a_repeated_sentence_is_not_corroboration(seeded):
+    """The seeded round has two near-identical 'what are we missing' entries, one tagged saw and
+    one heard. Counting that as corroborated while the integrity notes call it a shared origin
+    would have the same screen contradict itself."""
+    client, pulse_id = seeded
+    result = client.post(f"/api/pulses/{pulse_id}/reveal").json()
+    militia = next(t for t in result["missing_themes"] if "militia" in t["theme"].lower())
+    assert militia["count"] >= 2
+    assert militia["corroboration"] == "single-source"
+
+    notes = client.get(f"/api/integrity/{pulse_id}").json()["integrity_notes"]
+    assert any(note["kind"] == "shared_origin" for note in notes)

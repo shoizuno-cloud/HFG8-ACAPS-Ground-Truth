@@ -4,6 +4,7 @@ import draft from "../../fixtures/POST_pulses_draft_response.json";
 import ledger from "../../fixtures/GET_ledger.json";
 import board from "../../fixtures/GET_analyst_board.json";
 import historicalRisks from "./data/demo-risks.json";
+import integrityFixture from "../../fixtures/GET_integrity_pulse.json";
 import { hasWorkspaceSession } from "./workspace-session";
 import type {
   Risk,
@@ -25,7 +26,9 @@ export const sampleDecisionUse: DecisionUse = {
 };
 export const sampleResult = {
   ...result,
-  integrity_notes: result.integrity_notes.filter(
+  // The public result carries no integrity notes -- the engine strips them (section 4) and the
+  // fixture now matches. They come from /integrity/{pulse_id}, which is where the API serves them.
+  integrity_notes: integrityFixture.integrity_notes.filter(
     (n) => n.kind !== "coverage_gap",
   ),
 };
@@ -35,9 +38,12 @@ const claims = draft.claims
     c.claim_id === "C1"
       ? {
           ...c,
-          text: "The equal-weight panel mean is 0.69 from eight estimates. This is panel judgement, not an observed outcome.",
-          evidence_ref: "P-0001:mean",
-          numbers: [0.69, 8],
+          // Read off the result, not typed in: a sample claim whose number disagrees with the
+          // panel record is exactly what pendingClaims is built to catch, and it caught this one.
+          // Prose rounds to two places; `numbers` carries the exact values the check compares.
+          text: `The equal-weight panel mean is ${result.mean.toFixed(2)} from ${result.n_estimates} estimates. This is panel judgement, not an observed outcome.`,
+          evidence_ref: `${result.pulse_id}:mean`,
+          numbers: [result.mean, result.n],
         }
       : {
           ...c,
@@ -70,7 +76,7 @@ export const sampleDraft = {
         ? {
             ...c,
             checks: [
-              "Equal-weight mean 0.69 and count 8 match the panel record exactly.",
+              `Equal-weight mean ${result.mean} and count ${result.n} match the panel record exactly.`,
             ],
           }
         : {

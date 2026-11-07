@@ -1,22 +1,25 @@
 {
   "pulse_id": "P-0001",
   "n": 8,
-  "mean": 0.69,
+  "n_estimates": 6,
+  "mean": 0.6583,
   "spread": {
     "min": 0.3,
-    "max": 0.9,
-    "iqr": 0.2
+    "max": 0.85,
+    "iqr": 0.25
   },
   "minority_rationales": [
     "Border raids have slowed since mid-September; the pressure is displacement, not attacks."
   ],
-  "weighted_mean": 0.69,
+  "weighted_mean": 0.67,
   "sp_experiment": {
     "answer": "yes",
     "method": "Prelec 2017 / Palley & Soll peer-prediction weighting",
-    "label": "experimental"
+    "label": "experimental",
+    "actual_share_above_0_5": 0.8333,
+    "predicted_share": 0.6417
   },
-  "dissent_index": 0.31,
+  "dissent_index": 0.25,
   "distribution": [
     {
       "bucket": "0.0-0.2",
@@ -28,11 +31,11 @@
     },
     {
       "bucket": "0.4-0.6",
-      "count": 2
+      "count": 1
     },
     {
       "bucket": "0.6-0.8",
-      "count": 3
+      "count": 2
     },
     {
       "bucket": "0.8-1.0",
@@ -41,54 +44,76 @@
   ],
   "agreement_by_region": [
     {
-      "region": "Ouaddaï",
-      "n": 4,
-      "mean": 0.85
+      "region": "Ouaddai",
+      "n": 2,
+      "mean": 0.825
+    },
+    {
+      "region": "Sila",
+      "n": 2,
+      "mean": 0.425
     },
     {
       "region": "Wadi Fira",
-      "n": 3,
-      "mean": 0.6
+      "n": 1,
+      "mean": null
     },
     {
-      "region": "N'Djamena",
+      "region": "unattributed",
       "n": 1,
       "mean": null
     }
   ],
   "missing_themes": [
     {
-      "theme": "night-time militia movement near Adré",
-      "count": 3,
+      "theme": "Night-time militia movement near Adre is not in any public reporting yet.",
+      "count": 2,
       "origin": "many",
       "corroboration": "single-source"
     },
     {
-      "theme": "camp capacity in Ouaddaï",
+      "theme": "Camp capacity in Ouaddai is already past what the sites were planned for.",
       "count": 2,
       "origin": "many",
       "corroboration": "corroborated"
     },
     {
-      "theme": "seasonal access after rains",
+      "theme": "Seasonal access after the rains will decide whether any of this can be reached.",
+      "count": 1,
+      "origin": "single",
+      "corroboration": "not checked"
+    },
+    {
+      "theme": "Border raids have slowed since mid-September; the pressure is displacement, not attacks.",
+      "count": 1,
+      "origin": "single",
+      "corroboration": "not checked"
+    },
+    {
+      "theme": "I work on prices, not protection. Ask me about the market in Abeche.",
+      "count": 1,
+      "origin": "single",
+      "corroboration": "not checked"
+    },
+    {
+      "theme": "Nothing I have seen this week would move me either way.",
       "count": 1,
       "origin": "single",
       "corroboration": "not checked"
     }
   ],
-  "revealed_at": "2026-11-07T10:00:00Z",
-  "integrity_notes": [
+  "abstentions": [
     {
-      "kind": "coverage_gap",
-      "text": "Trigger T2 (new refugee influx) has no panel member tagged displacement.",
-      "evidence": "panel tags: conflict x5, political x3"
+      "stance": "outside_my_expertise",
+      "count": 1
     },
     {
-      "kind": "shared_origin",
-      "text": "Two 'what are we missing' entries may share an origin (near-identical wording).",
-      "evidence": "similarity 0.93"
+      "stance": "not_enough_evidence",
+      "count": 1
     }
   ],
+  "revealed_at": "2026-11-07T16:10:54+00:00",
+  "verify_hash": "608c3b99b60a18e16e40f976dda4e2c24ab61eb32f41265994f772f606dc9be8",
   "served_from": "live",
-  "generated_at": "2026-11-07T09:00:00Z"
+  "generated_at": "2026-11-07T16:10:54+00:00"
 }

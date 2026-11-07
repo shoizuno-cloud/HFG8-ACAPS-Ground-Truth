@@ -2,7 +2,10 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./workspace-session";
 import AxeBuilder from "@axe-core/playwright";
 import risks from "../../fixtures/GET_risks.json" with { type: "json" };
-import pulse from "../../fixtures/POST_pulses_response.json" with { type: "json" };
+// Every P-0001 route in this file is the demo round, so the pulse body must be that round and
+// not whichever pulse POST /pulses created when the fixtures were last regenerated.
+import pulse from "../../fixtures/GET_pulses_demo.json" with { type: "json" };
+import alertPulseFixture from "../../fixtures/POST_alerts_pulse_response.json" with { type: "json" };
 import result from "../../fixtures/GET_pulses_result.json" with { type: "json" };
 import draft from "../../fixtures/POST_pulses_draft_response.json" with { type: "json" };
 import board from "../../fixtures/GET_analyst_board.json" with { type: "json" };
@@ -11,6 +14,10 @@ import calibration from "../../fixtures/GET_me_calibration.json" with { type: "j
 import card from "../../fixtures/GET_e_token.json" with { type: "json" };
 import seal from "../../fixtures/POST_e_token_answer_response.json" with { type: "json" };
 import integrity from "../../fixtures/GET_integrity_pulse.json" with { type: "json" };
+
+/** The group mean as the UI prints it. Derived, because a literal here went stale the moment the
+ *  fixtures were regenerated from the real engine. */
+const meanPercent = `${Math.round(result.mean * 100)}%`;
 import radar from "../../fixtures/GET_radar_status.json" with { type: "json" };
 import matched from "../../fixtures/GET_panels_match.json" with { type: "json" };
 import alerts from "../../fixtures/GET_alerts.json" with { type: "json" };
@@ -64,8 +71,9 @@ test("alert API failures retain the proposed alert and confirmed pulse opens the
   });
   await page.getByRole("button", { name: "Ask experts", exact: true }).click();
   await page.getByRole("link", { name: "Open analyst desk" }).click();
+  // Approving an alert opens a NEW pulse, so the desk shows that one, not the seeded round.
   await expect(page.getByLabel("Pulse ID", { exact: true })).toHaveValue(
-    "P-0001",
+    alertPulseFixture.pulse.id,
   );
   await page.getByRole("button", { name: "Open pulse", exact: true }).click();
   await expect(
@@ -123,7 +131,7 @@ async function contractApi(page: Page) {
     if (path.endsWith("/outcome-report"))
       return respond({
         pulse_id: "P-0001",
-        group_mean: 0.69,
+        group_mean: result.mean,
         outcome: "materialised",
         analyst_decision_summary: "Retained High.",
       });
@@ -138,10 +146,10 @@ async function contractApi(page: Page) {
         claims: [
           {
             claim_id: "c1",
-            text: "The equal-weight panel mean is 69%.",
+            text: `The equal-weight panel mean is ${meanPercent}.`,
             evidence_kind: "panel",
             evidence_ref: "P-0001:mean",
-            numbers: [0.69],
+            numbers: [result.mean, result.n],
           },
         ],
         skeptic: [
@@ -211,7 +219,9 @@ test("API pulse, SSE, reveal, checked draft, decision and resolution", async ({
     page.getByText("P-0001 · Round 1 · 8 sealed answers", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Reveal round", exact: true }).click();
-  await expect(page.getByText("69%", { exact: true }).first()).toBeVisible();
+  await expect(
+    page.getByText(meanPercent, { exact: true }).first(),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Prepare draft" }).click();
   await expect(page.getByText("c1 · supported", { exact: true })).toBeVisible();
   await page
@@ -299,7 +309,9 @@ test("ledger suppresses small groups and reports failed verification; calibratio
   await expect(
     page.getByRole("heading", { name: "Resolved forecast calibration" }),
   ).toBeVisible();
-  await expect(page.getByText("0.12", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(calibration.mean_brier.toFixed(2), { exact: true }),
+  ).toBeVisible();
   await page.screenshot({
     path: `test-results/calibration-${info.project.name}.png`,
     fullPage: true,
@@ -308,7 +320,9 @@ test("ledger suppresses small groups and reports failed verification; calibratio
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Private calibration",
   );
-  await expect(page.getByText("0.12", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByText(calibration.mean_brier.toFixed(2), { exact: true }),
+  ).toHaveCount(0);
   await page.goto("/expert");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Expert card",
@@ -553,7 +567,9 @@ test("v3 abstentions submit null estimates and calibration waits for opt-in and 
     page.getByRole("heading", { name: "Five resolutions required" }),
   ).toBeVisible();
   expect(requests).toBe(1);
-  await expect(page.getByText("0.12", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByText(calibration.mean_brier.toFixed(2), { exact: true }),
+  ).toHaveCount(0);
 });
 
 test("v3 aggregate stays primary and mismatched outcome reports are withheld", async ({
@@ -573,7 +589,7 @@ test("v3 aggregate stays primary and mismatched outcome reports are withheld", a
     page
       .getByText("Equal-weight mean", { exact: true })
       .locator("..")
-      .getByText("69%", { exact: true }),
+      .getByText(meanPercent, { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText("Secondary weighted mean: 83%.", { exact: false }),
@@ -586,13 +602,13 @@ test("v3 aggregate stays primary and mismatched outcome reports are withheld", a
     .click();
   await page.getByRole("button", { name: "Open group outcome report" }).click();
   await expect(page.locator(".outcome-report")).toContainText(
-    "Equal-weight group mean: 69%",
+    `Equal-weight group mean: ${meanPercent}`,
   );
   await page.route("**/pulses/P-0001/outcome-report", (route) =>
     route.fulfill({
       json: {
         pulse_id: "P-other",
-        group_mean: 0.69,
+        group_mean: result.mean,
         outcome: "materialised",
         analyst_decision_summary: "Must not render",
       },

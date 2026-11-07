@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import risksFixture from "../../fixtures/GET_risks.json" with { type: "json" };
 
 test("populated samples connect every main page and align content with the header", async ({
   page,
@@ -42,7 +43,7 @@ test("populated samples connect every main page and align content with the heade
   await page.locator(".ledger-record > summary").first().click();
   await expect(
     page.locator(".ledger-entry .ledger-stats strong").first(),
-  ).toHaveText("69%");
+  ).toHaveText("66%");
   await expect(page.getByText("river-ibis", { exact: true })).toHaveCount(0);
   await page.getByLabel("Find a risk").fill("Haiti");
   await expect(page.locator(".honesty-box")).toHaveCount(1);
@@ -90,7 +91,7 @@ test("populated samples connect every main page and align content with the heade
     .getByRole("link", { name: "Open optional round-two card" })
     .click();
   await expect(
-    page.getByText("8 synthetic answers · Equal-weight mean 69%", {
+    page.getByText("8 synthetic answers · Equal-weight mean 66%", {
       exact: true,
     }),
   ).toBeVisible();
@@ -118,7 +119,7 @@ test("sample reset opens a fresh analyst round without losing history", async ({
   await expect(
     page
       .locator(".draft-text")
-      .getByText("The equal-weight panel mean is 0.69", { exact: false }),
+      .getByText("The equal-weight panel mean is 0.66", { exact: false }),
   ).toBeVisible();
   await page.getByLabel("Decision note").fill("Synthetic review completed.");
   await page
@@ -145,5 +146,6 @@ test("sample reset opens a fresh analyst round without losing history", async ({
     page.getByRole("button", { name: "Load records", exact: true }),
   ).toBeVisible();
   await page.goto("/radar");
-  await expect(page.locator("tbody tr")).toHaveCount(1);
+  // Back on the plain fixture: one row per risk in it, whatever the regeneration kept.
+  await expect(page.locator("tbody tr")).toHaveCount(risksFixture.risks.length);
 });

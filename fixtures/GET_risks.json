@@ -3,40 +3,324 @@
     {
       "risk_id": "R1043",
       "title": "Escalating cross-border insecurity linked to the Sudan conflict increases protection risks and humanitarian needs in eastern Chad",
+      "risk_type": "Marked deterioration in an existing crisis",
       "country_iso": "TCD",
       "country": "Chad",
       "probability_acaps": "High",
+      "probability_assumed_number": 0.75,
       "impact_acaps": 4,
       "level": "High",
       "status": "Active",
+      "trend": "Deteriorated",
       "horizon_months": 6,
       "triggers": [
         {
           "id": "T1",
-          "title": "Cross-border raids and militia activity in Ouaddaï",
-          "description": "Armed incursions from Darfur into border areas around Adré."
+          "acaps_trigger_id": "R1043 - T0618",
+          "title": "Expansion of cross-border attacks and insecurity",
+          "description": "Additional drone strikes, shelling, or armed incursions near the Chad–Sudan border, particularly around Adré, Tina, and other eastern border localities, increase civilian casualties, trigger further displacement into Chad, and constrain humanitarian operations in already fragile border areas. Continued insecurity may also disrupt cross-border trade and movement routes relied upon by refugees and host communities",
+          "completion_rate": 40,
+          "sources": [
+            {
+              "text": "reliefweb.int",
+              "url": "https://reliefweb.int/report/chad/unfpa-situation-report-chad-humanitarian-response-1-30-april-2026"
+            },
+            {
+              "text": "rfi.fr",
+              "url": "https://www.rfi.fr/fr/afrique/20260513-tchad-de-nouvelles-frappes-enregistr%C3%A9es-%C3%A0-la-fronti%C3%A8re-soudanaise-font-craindre-le-pire"
+            },
+            {
+              "text": "reliefweb.int",
+              "url": "https://reliefweb.int/report/chad/chad-food-security-outlook-update-refugee-impacts-are-driving-income-and-consumption-toward-crisis-ipc-phase-3-april-september-2026"
+            }
+          ]
         },
         {
           "id": "T2",
-          "title": "New refugee influx",
-          "description": "Renewed fighting in Darfur drives further arrivals into eastern Chad."
+          "acaps_trigger_id": "R1043 - T0619",
+          "title": "Attacks on strategic infrastructure in Chad",
+          "description": "Threats by Sudanese actors against Chadian airports, border facilities, military positions, or transport infrastructure may materialise into direct attacks on strategic assets in eastern Chad. Any strike against airports such as Amdjarass, military installations, or critical transport corridors would increase the risk of direct confrontation between Chad and Sudanese armed actors, disrupt humanitarian and commercial operations, and further destabilise border regions",
+          "completion_rate": 10,
+          "sources": [
+            {
+              "text": "issafrica.org",
+              "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions"
+            },
+            {
+              "text": "acleddata.com",
+              "url": "https://acleddata.com/update/africa-overview-april-2026"
+            },
+            {
+              "text": "africacenter.org",
+              "url": "https://africacenter.org/wp-content/uploads/2026/04/Chad-Risks-Instability.pdf"
+            }
+          ]
         },
         {
           "id": "T3",
-          "title": "Escalation in Darfur",
-          "description": "RSF/SAF escalation in West and Central Darfur."
+          "acaps_trigger_id": "R1043 - T0620",
+          "title": "Renewed proxy mobilisation and cross-border armed group activity",
+          "description": "Historical patterns of proxy warfare between Chad and Sudan may re-emerge through the mobilisation, arming, or support of rebel groups and allied militias operating along the border. Increased involvement of SAF-aligned groups, RSF-linked actors, Darfuri armed factions, or Chadian rebel networks could expand the conflict beyond isolated border incidents and increase the likelihood of retaliatory attacks on Chadian territory.",
+          "completion_rate": 20,
+          "sources": [
+            {
+              "text": "issafrica.org",
+              "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions"
+            },
+            {
+              "text": "africacenter.org",
+              "url": "https://africacenter.org/wp-content/uploads/2026/04/Chad-Risks-Instability.pdf"
+            },
+            {
+              "text": "globalinitiative.net",
+              "url": "https://globalinitiative.net/analysis/how-border-criminal-economies-are-drawing-chad-further-into-sudans-conflict/"
+            }
+          ]
         }
       ],
       "sources": [
         {
-          "text": "ACAPS Risk List, Chad",
-          "url": "https://www.acaps.org/en/countries/chad"
+          "text": "africacenter.org",
+          "url": "https://africacenter.org/wp-content/uploads/2026/04/Chad-Risks-Instability.pdf"
+        },
+        {
+          "text": "acleddata.com",
+          "url": "https://acleddata.com/update/africa-overview-april-2026"
+        },
+        {
+          "text": "globalinitiative.net",
+          "url": "https://globalinitiative.net/analysis/how-border-criminal-economies-are-drawing-chad-further-into-sudans-conflict/"
+        },
+        {
+          "text": "issafrica.org",
+          "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions"
+        },
+        {
+          "text": "rfi.fr",
+          "url": "https://www.rfi.fr/fr/afrique/20260513-tchad-de-nouvelles-frappes-enregistr%C3%A9es-%C3%A0-la-fronti%C3%A8re-soudanaise-font-craindre-le-pire"
+        },
+        {
+          "text": "reliefweb.int",
+          "url": "https://reliefweb.int/report/chad/core-emergency-situation-chad-update-arrivals-sudan-17-may-2026"
         }
       ],
-      "served_from": "live",
-      "generated_at": "2026-11-07T09:00:00Z"
+      "materialised": null
+    },
+    {
+      "risk_id": "R1062",
+      "title": "Continued attacks between Pakistan and Afghanistan increase protection risks, food security needs, and access constraints in Afghanistan’s border provinces",
+      "risk_type": "Marked deterioration in an existing crisis",
+      "country_iso": "AFG",
+      "country": "Afghanistan",
+      "probability_acaps": "Very High",
+      "probability_assumed_number": 0.95,
+      "impact_acaps": 4,
+      "level": "High",
+      "status": "Active",
+      "trend": "Deteriorated",
+      "horizon_months": 6,
+      "triggers": [
+        {
+          "id": "T1",
+          "acaps_trigger_id": "R1062 - T0667",
+          "title": "Lethal militant attack in a major Pakistani urban centre.",
+          "description": "A confirmed TTP attack targeting Pakistani security forces or government installations in cities such as Karachi, Peshawar, or Islamabad is likely to trigger further Pakistani airstrikes or ground operations in Afghan border provinces. Historically, such events have served as the primary political trigger for Pakistani retaliatory airstrikes and ground operations in Afghan border provinces like Paktia and Paktika. The 28 June attack was carried out by Pakistan, according to Pakistani authorities, in retaliation for an alleged TTP attack on security personnel in Karachi days earlier.",
+          "completion_rate": null,
+          "sources": []
+        },
+        {
+          "id": "T2",
+          "acaps_trigger_id": "R1062 - T0668",
+          "title": "Cross-border hostilities",
+          "description": "Clashes between army forces in bordering areas and the closure of borders will limit movement, constrain access of humanitarian aid, interrupt livelihoods and trade between communities. In past border closures food security and livelihoods have been significantly impacted.",
+          "completion_rate": null,
+          "sources": []
+        }
+      ],
+      "sources": [
+        {
+          "text": "cfr.org",
+          "url": "https://www.cfr.org/articles/why-are-the-afghan-taliban-and-pakistan-in-an-open-war"
+        },
+        {
+          "text": "theguardian.com",
+          "url": "https://www.theguardian.com/world/2026/jun/29/pakistan-deadly-airstrikes-afghanistan-border"
+        },
+        {
+          "text": "hrw.org",
+          "url": "https://www.hrw.org/news/2026/07/15/pakistani-strikes-in-afghanistan-raise-civilian-casualty-concerns"
+        },
+        {
+          "text": "unama.unmissions.org",
+          "url": "https://unama.unmissions.org/sites/default/files/2026-05/English%20-%20UNAMA%20HRS%20paper%20on%20cross-border%20civilian%20casualties%20-%20Jan-Mar%202026_Updated_11.05.26.pdf"
+        },
+        {
+          "text": "reliefweb.int",
+          "url": "https://reliefweb.int/report/afghanistan/food-security-under-pressure-impacts-middle-east-crisis-and-pakistan-conflict-afghanistan-june-2026"
+        },
+        {
+          "text": "reliefweb.int",
+          "url": "https://reliefweb.int/report/afghanistan/afghanistan-situation-update-4-humanitarian-impact-afghanistan-pakistan-military-escalation-28-april-2026"
+        }
+      ],
+      "materialised": null
+    },
+    {
+      "risk_id": "R1067",
+      "title": "Escalating clashes between Interim Taliban Authority forces and armed opposition groups in Badakhshan deteriorates food security and increases protection risks",
+      "risk_type": "New emerging risk",
+      "country_iso": "AFG",
+      "country": "Afghanistan",
+      "probability_acaps": "High",
+      "probability_assumed_number": 0.75,
+      "impact_acaps": 4,
+      "level": "High",
+      "status": "Active",
+      "trend": "Stable",
+      "horizon_months": 6,
+      "triggers": [
+        {
+          "id": "T1",
+          "acaps_trigger_id": "R1067 - T0671",
+          "title": "Expanded ITA disarmament order or offensive in the north of Afghanistan",
+          "description": "Further efforts by the ITA to disarm opposition groups and consolidate control over local commanders could trigger armed resistance and renewed clashes in Badakhshan, particularly in areas where armed groups retain influence.",
+          "completion_rate": 60,
+          "sources": [
+            {
+              "text": "thediplomat.com",
+              "url": "https://thediplomat.com/2026/08/is-badakhshan-becoming-the-epicenter-of-anti-taliban-resistance/"
+            }
+          ]
+        },
+        {
+          "id": "T2",
+          "acaps_trigger_id": "R1067 - T0672",
+          "title": "Armed group offensives could restrict and attacks in districts centres",
+          "description": "Renewed attacks or attempts by armed groups to seize district centres could disrupt movement, displace civilians, and restrict humanitarian access to affected communities.",
+          "completion_rate": 30,
+          "sources": [
+            {
+              "text": "acleddata.com",
+              "url": "https://acleddata.com/report/five-years-seizing-power-afghanistan-internal-tensions-test-talibans-vulnerabilities"
+            },
+            {
+              "text": "arabnews.com",
+              "url": "https://www.arabnews.com/opinion/the-key-challenges-the-taliban-face-in-badakhshan-2656168"
+            },
+            {
+              "text": "zantimes.com",
+              "url": "https://zantimes.com/2026/04/20/even-breathing-in-nature-is-forbidden-for-women/"
+            }
+          ]
+        },
+        {
+          "id": "T3",
+          "acaps_trigger_id": "R1067 - T0673",
+          "title": "Cross border conflicts.",
+          "description": "Cross border interest because of proximity with China, and cross border conflicts with Pakistan, could increase the presence of armed actors and affect local communities. Badakhshan is considered a key route for drug trafficking because of its geography and long border with Tajikistan.",
+          "completion_rate": 40,
+          "sources": [
+            {
+              "text": "arabnews.com",
+              "url": "https://www.arabnews.com/opinion/the-key-challenges-the-taliban-face-in-badakhshan-2656168"
+            },
+            {
+              "text": "afintl.com",
+              "url": "https://www.afintl.com/en/202608269265"
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "text": "acleddata.com",
+          "url": "https://acleddata.com/expert-comment/taliban-losing-control-northern-afghanistan"
+        },
+        {
+          "text": "8am.media",
+          "url": "https://8am.media/eng/badakhshan-health-centers-mothers-children/"
+        },
+        {
+          "text": "amu.tv",
+          "url": "https://amu.tv/240020/#google_vignette"
+        },
+        {
+          "text": "acleddata.com",
+          "url": "https://acleddata.com/report/five-years-seizing-power-afghanistan-internal-tensions-test-talibans-vulnerabilities"
+        },
+        {
+          "text": "afintl.com",
+          "url": "https://www.afintl.com/en/202608171939"
+        },
+        {
+          "text": "acleddata.com",
+          "url": "https://acleddata.com/platform/trends"
+        }
+      ],
+      "materialised": null
+    },
+    {
+      "risk_id": "R1066",
+      "title": "Escalating insecurity across the Lake Chad Basin increases displacement, protection risks, and humanitarian access constraints",
+      "risk_type": "Marked deterioration in an existing crisis",
+      "country_iso": "TCD, NER, CMR, NGA",
+      "country": "Chad, Niger, Cameroon, Nigeria",
+      "probability_acaps": "Very High",
+      "probability_assumed_number": 0.95,
+      "impact_acaps": 4,
+      "level": "High",
+      "status": "Active",
+      "trend": "Deteriorated",
+      "horizon_months": 6,
+      "triggers": [
+        {
+          "id": "T1",
+          "acaps_trigger_id": "R1066 - T0669",
+          "title": "Retaliatory violence following the killing of senior ISWAP leader Abu-Bilal al-Minuki",
+          "description": "The reported killing of senior ISWAP leader Abu-Bilal al-Minuki by US and Nigerian forces on 15 May 2026 could trigger retaliatory attacks by ISWAP, while intensifying competition with JAS/Boko Haram for territorial influence and operational relevance. Escalating attacks against military positions, civilians, and strategic infrastructure—particularly in Borno State—could increase displacement and humanitarian needs, while military pressure and cross-border armed group movements may generate spillover effects into Niger’s Diffa region, Cameroon’s Far North, and Chad’s Lac Province.",
+          "completion_rate": 50,
+          "sources": []
+        },
+        {
+          "id": "T2",
+          "acaps_trigger_id": "R1066 - T0670",
+          "title": "Expansion of military counteroffensives and emergency security measures",
+          "description": "Nigerian and regional security forces may intensify military operations, including cross-border operations and emergency security measures, in response to rising insurgent activity. Expanded military deployments, movement restrictions, and operations around Lake Chad and border areas could increase civilian displacement, disrupt livelihoods, and further constrain humanitarian access, particularly if armed groups respond with additional attacks or shift operations across borders",
+          "completion_rate": 40,
+          "sources": []
+        }
+      ],
+      "sources": [
+        {
+          "text": "crisisgroup.org",
+          "url": "https://www.crisisgroup.org/oth/chad-cuba-horn-africa-pakistan/horizon-july-december-2026"
+        },
+        {
+          "text": "reliefweb.int",
+          "url": "https://reliefweb.int/report/nigeria/lake-chad-basin-humanitarian-overview-2026-29-june-2026"
+        },
+        {
+          "text": "unocha.org",
+          "url": "https://www.unocha.org/publications/report/nigeria/lake-chad-basin-humanitarian-overview-29-april-2026"
+        },
+        {
+          "text": "rfi.fr",
+          "url": "https://www.rfi.fr/fr/afrique/20260623-aux-confins-nord-du-cameroun-une-commune-enclav%C3%A9e-sous-une-pression-jihadiste-constante"
+        },
+        {
+          "text": "aljazeera.com",
+          "url": "https://www.aljazeera.com/news/2026/5/18/how-iswap-and-boko-haram-are-reshaping-the-lake-chad-basin"
+        },
+        {
+          "text": "reliefweb.int",
+          "url": "https://reliefweb.int/report/cameroon/lake-chad-basin-regional-protection-and-displacement-crisis-humanitarian-priorities-and-funding-needs-across-cameroon-chad-niger-and-nigeria-june-december-2026"
+        }
+      ],
+      "materialised": null
     }
   ],
+  "n": 28,
+  "filter": "Active",
   "served_from": "live",
-  "generated_at": "2026-11-07T09:00:00Z"
+  "generated_at": "2026-11-07T16:10:53+00:00"
 }

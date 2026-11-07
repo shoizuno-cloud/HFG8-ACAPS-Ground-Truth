@@ -6,11 +6,16 @@ test("public entry exposes research and Login opens the workspace without creden
 }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "See the crisis.Change the outcome.",
+    "One question.Independent judgement.",
   );
+  // ACAPS is credited as the data source, never imitated: one outbound link, in the footer, and
+  // a banner saying what this is. No reproduction of their navigation.
   await expect(
-    page.getByRole("link", { name: "Countries", exact: true }),
-  ).toHaveAttribute("href", "https://www.acaps.org/en/countries");
+    page.getByRole("link", { name: "Official ACAPS website" }),
+  ).toHaveAttribute("href", "https://www.acaps.org/en/");
+  await expect(
+    page.getByRole("complementary", { name: "Prototype notice" }),
+  ).toContainText("Not an ACAPS service");
   await expect(
     page.getByText("Equal-weight mean", { exact: true }),
   ).toHaveCount(0);

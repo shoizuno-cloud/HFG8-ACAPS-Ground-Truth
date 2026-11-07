@@ -1,0 +1,27 @@
+{
+  "roots": [
+    {
+      "day": "2026-11-07",
+      "merkle_root": "205b5852e02e9377f3dba5a0c6c9e4977ac584a65a96e3faa33cad388fe8ec8d",
+      "n_commitments": 54,
+      "submitted_at": null,
+      "status": "pending",
+      "receipt": null,
+      "calendar": null,
+      "anchored_at": null,
+      "note": "",
+      "means": "Computed from this day's commitments and not submitted yet, so it proves nothing outside this service.",
+      "guarantees": "Independent proof the commitments existed by that time, once the status reads anchored",
+      "does_not": "Anything else; no tokens, no chain logic, no cost. A pending root proves nothing yet"
+    }
+  ],
+  "calendars": [
+    "https://a.pool.opentimestamps.org",
+    "https://b.pool.opentimestamps.org"
+  ],
+  "enabled": true,
+  "guarantees": "Independent proof the commitments existed by that time, once the status reads anchored",
+  "does_not": "Anything else; no tokens, no chain logic, no cost. A pending root proves nothing yet",
+  "served_from": "live",
+  "generated_at": "2026-11-07T16:10:54+00:00"
+}

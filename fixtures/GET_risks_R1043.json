@@ -1,36 +1,108 @@
 {
   "risk_id": "R1043",
   "title": "Escalating cross-border insecurity linked to the Sudan conflict increases protection risks and humanitarian needs in eastern Chad",
+  "risk_type": "Marked deterioration in an existing crisis",
   "country_iso": "TCD",
   "country": "Chad",
   "probability_acaps": "High",
+  "probability_assumed_number": 0.75,
   "impact_acaps": 4,
   "level": "High",
   "status": "Active",
+  "trend": "Deteriorated",
   "horizon_months": 6,
   "triggers": [
     {
       "id": "T1",
-      "title": "Cross-border raids and militia activity in Ouaddaï",
-      "description": "Armed incursions from Darfur into border areas around Adré."
+      "acaps_trigger_id": "R1043 - T0618",
+      "title": "Expansion of cross-border attacks and insecurity",
+      "description": "Additional drone strikes, shelling, or armed incursions near the Chad–Sudan border, particularly around Adré, Tina, and other eastern border localities, increase civilian casualties, trigger further displacement into Chad, and constrain humanitarian operations in already fragile border areas. Continued insecurity may also disrupt cross-border trade and movement routes relied upon by refugees and host communities",
+      "completion_rate": 40,
+      "sources": [
+        {
+          "text": "reliefweb.int",
+          "url": "https://reliefweb.int/report/chad/unfpa-situation-report-chad-humanitarian-response-1-30-april-2026"
+        },
+        {
+          "text": "rfi.fr",
+          "url": "https://www.rfi.fr/fr/afrique/20260513-tchad-de-nouvelles-frappes-enregistr%C3%A9es-%C3%A0-la-fronti%C3%A8re-soudanaise-font-craindre-le-pire"
+        },
+        {
+          "text": "reliefweb.int",
+          "url": "https://reliefweb.int/report/chad/chad-food-security-outlook-update-refugee-impacts-are-driving-income-and-consumption-toward-crisis-ipc-phase-3-april-september-2026"
+        }
+      ]
     },
     {
       "id": "T2",
-      "title": "New refugee influx",
-      "description": "Renewed fighting in Darfur drives further arrivals into eastern Chad."
+      "acaps_trigger_id": "R1043 - T0619",
+      "title": "Attacks on strategic infrastructure in Chad",
+      "description": "Threats by Sudanese actors against Chadian airports, border facilities, military positions, or transport infrastructure may materialise into direct attacks on strategic assets in eastern Chad. Any strike against airports such as Amdjarass, military installations, or critical transport corridors would increase the risk of direct confrontation between Chad and Sudanese armed actors, disrupt humanitarian and commercial operations, and further destabilise border regions",
+      "completion_rate": 10,
+      "sources": [
+        {
+          "text": "issafrica.org",
+          "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions"
+        },
+        {
+          "text": "acleddata.com",
+          "url": "https://acleddata.com/update/africa-overview-april-2026"
+        },
+        {
+          "text": "africacenter.org",
+          "url": "https://africacenter.org/wp-content/uploads/2026/04/Chad-Risks-Instability.pdf"
+        }
+      ]
     },
     {
       "id": "T3",
-      "title": "Escalation in Darfur",
-      "description": "RSF/SAF escalation in West and Central Darfur."
+      "acaps_trigger_id": "R1043 - T0620",
+      "title": "Renewed proxy mobilisation and cross-border armed group activity",
+      "description": "Historical patterns of proxy warfare between Chad and Sudan may re-emerge through the mobilisation, arming, or support of rebel groups and allied militias operating along the border. Increased involvement of SAF-aligned groups, RSF-linked actors, Darfuri armed factions, or Chadian rebel networks could expand the conflict beyond isolated border incidents and increase the likelihood of retaliatory attacks on Chadian territory.",
+      "completion_rate": 20,
+      "sources": [
+        {
+          "text": "issafrica.org",
+          "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions"
+        },
+        {
+          "text": "africacenter.org",
+          "url": "https://africacenter.org/wp-content/uploads/2026/04/Chad-Risks-Instability.pdf"
+        },
+        {
+          "text": "globalinitiative.net",
+          "url": "https://globalinitiative.net/analysis/how-border-criminal-economies-are-drawing-chad-further-into-sudans-conflict/"
+        }
+      ]
     }
   ],
   "sources": [
     {
-      "text": "ACAPS Risk List, Chad",
-      "url": "https://www.acaps.org/en/countries/chad"
+      "text": "africacenter.org",
+      "url": "https://africacenter.org/wp-content/uploads/2026/04/Chad-Risks-Instability.pdf"
+    },
+    {
+      "text": "acleddata.com",
+      "url": "https://acleddata.com/update/africa-overview-april-2026"
+    },
+    {
+      "text": "globalinitiative.net",
+      "url": "https://globalinitiative.net/analysis/how-border-criminal-economies-are-drawing-chad-further-into-sudans-conflict/"
+    },
+    {
+      "text": "issafrica.org",
+      "url": "https://issafrica.org/iss-today/urgent-au-action-could-defuse-rising-chad-sudan-tensions"
+    },
+    {
+      "text": "rfi.fr",
+      "url": "https://www.rfi.fr/fr/afrique/20260513-tchad-de-nouvelles-frappes-enregistr%C3%A9es-%C3%A0-la-fronti%C3%A8re-soudanaise-font-craindre-le-pire"
+    },
+    {
+      "text": "reliefweb.int",
+      "url": "https://reliefweb.int/report/chad/core-emergency-situation-chad-update-arrivals-sudan-17-may-2026"
     }
   ],
+  "materialised": null,
   "served_from": "live",
-  "generated_at": "2026-11-07T09:00:00Z"
+  "generated_at": "2026-11-07T16:10:53+00:00"
 }

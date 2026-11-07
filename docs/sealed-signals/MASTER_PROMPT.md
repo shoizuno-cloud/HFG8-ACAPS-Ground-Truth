@@ -11,8 +11,11 @@
 > registered token (data/acaps-api/README.md). `risk-list/` is published history (stale, no R1043); `crises/`,
 > `countries/`, and the **monthly `inform-severity-index/<MonYYYY>/` and `humanitarian-access/<MonYYYY>/` editions are
 > current (Nov 2026)**. Crisis TCD005 "Displacement from Sudan to Chad" (Ennedi Est, Wadi Fira, Ouaddaï, Sila; connected
-> to SDN001) jumped 6.1 → 6.9 in April 2026, the largest move of 123 crises that month: R1043's own story, in ACAPS's own
-> numbers. Changes: (1) the alert engine (section 6b) is primary, deterministic, built on these editions; external feeds
+> to SDN001) jumped 6.1 → 6.9 in April 2026, the largest **deterioration** of 123 crises that month: R1043's own story,
+> in ACAPS's own numbers. (Not the largest move in absolute terms — PAK007 fell 7.3 → 6.4, −0.9 — but that one improved,
+> and a panel is not asked about a crisis getting better. The engine ranks within a metric *and* a direction, and records
+> the absolute ordering separately as `rank_by_abs_delta`; the fixtures already give both TCD005 and PAK007
+> `rank_this_month: 1`.) Changes: (1) the alert engine (section 6b) is primary, deterministic, built on these editions; external feeds
 > (ACLED, UNHCR, GDELT) are a later note. (2) The Radar shows the live editions with source badges. (3) The demo opens
 > with the engine diffing the current month live. (4) The agent loop stays behind `FF_AGENTS`; alerts never use a model.
 > Cached editions are in `data/acaps-api/` so everything runs offline; a token (`ACAPS_API_TOKEN`) makes it live.
@@ -202,7 +205,9 @@ Edition       dataset ("inform-severity-index"|"humanitarian-access"), month ("N
 SeverityPoint crisis_id, month, index, category, human_impact, conditions, people_in_need, reliability, last_updated
 RiskCrisisLink risk_id, crisis_id, how ("iso3+driver"|"analyst"), confirmed_by, confirmed_at
 ShiftEvent    id, crisis_id, risk_id|null, month_from, month_to, metric ("index"|"human_impact"|"people_in_need"|"access"|"category"),
-              before, after, delta, rank_this_month (1 = largest move), n_crises_this_month, rule_hit (str), pulse_id|null, status ("proposed"|"pulsed"|"dismissed")
+              before, after, delta, rank_this_month (1 = largest move of this metric in this direction),
+              rank_by_abs_delta (1 = largest |delta| of this metric, either direction), n_crises_this_month,
+              rule_hit (str), pulse_id|null, status ("proposed"|"pulsed"|"dismissed")
 QuestionContract  risk_id, event (one sentence), location, horizon_deadline (date), resolution_source, adjudication_rule,
               frozen_at   # must exist before a pulse can be scored
 Credential    token_id (nullifier), issued_for_panel, spent_on_pulse|null, scheme ("rsa-blind-rfc9474"|"semaphore"|"hmac")
@@ -318,16 +323,20 @@ per crisis; `crises/` for names, drivers, admin-1 areas, connected crises. Cache
 1. **Link** each active risk (CSV, e.g. R1043) to a crisis: same iso3 and a driver keyword match (displacement / conflict /
    flood / drought) against `crises[].drivers`; the analyst confirms once (`POST /risks/{id}/link`). R1043 ↔ TCD005.
 2. **Diff** the latest two editions for every crisis: delta of index, Human Impact, People in need, access, and category
-   change. Rank by |delta| across all crises that month; record `rank_this_month` and `n_crises_this_month`.
+   change. Rank **within a metric and a direction** — a 0.8 rise in the index and a 0.9 fall are not competing for the
+   same first place, and neither is an index move competing with a component move. Record `rank_this_month` (1 = largest
+   in that metric and direction), `rank_by_abs_delta` (the absolute ordering, kept so the other reading is still
+   available) and `n_crises_this_month`.
 3. **Rules** (visible and editable on the desk, per risk): index Δ ≥ 0.5, or a component Δ ≥ 1.0, or a category change, or
    access Δ ≥ 1. A hit produces a ShiftEvent with the numbers, the crisis, the linked risk and the rule that fired.
 4. **Propose, never fire**: events appear on the desk's Alerts page; the analyst approves (creates the pulse with the
    event as evidence), or dismisses with a note. Reliability of the edition is shown next to the event.
-5. **Replay**: `POST /alerts/replay {Mar2026, Apr2026}` reproduces the real April event: TCD005 6.1 → 6.9 (+0.8, rank 1 of
-   123; Human Impact 6.0 → 7.6), linked to R1043. This is the demo's opening fact.
+5. **Replay**: `POST /alerts/replay {Mar2026, Apr2026}` reproduces the real April event: TCD005 6.1 → 6.9 (+0.8, the
+   largest deterioration of 123 crises; Human Impact 6.0 → 7.6), linked to R1043. This is the demo's opening fact. Say
+   "deterioration" on stage, never "largest move": PAK007 moved further and a jury that checks will find it.
 
-Tests: the Mar→Apr 2026 cached editions must yield TCD005 as rank 1 with delta 0.8; a month with no moves yields no
-events; a dismissed event never pulses; the same edition diffed twice yields no duplicate events.
+Tests: the Mar→Apr 2026 cached editions must yield TCD005 as rank 1 with delta 0.8 and PAK007 as rank 1 with delta -0.9,
+each in its own direction, and TCD005 second on `rank_by_abs_delta`; a month with no moves yields no events; a dismissed event never pulses; the same edition diffed twice yields no duplicate events.
 
 ## 6c. Hardening stack (Lane A or a parallel agent; every item built, flagged, and visible)
 

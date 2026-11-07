@@ -40,10 +40,10 @@ def test_an_identity_goes_in_encrypted_and_only_comes_out_through_the_log(seeded
     # The application response must not echo the identity back.
     assert "a@example.invalid" not in client.get("/api/panels/match").text
 
-    before = client.get("/api/committee/access-log").json()["n"]
+    before = client.get("/api/committee/access-log").json()["n_reads"]
     refused = client.post("/api/committee/registry/read", json={"expert_id": expert_id})
     assert refused.status_code == 422
-    assert client.get("/api/committee/access-log").json()["n"] == before
+    assert client.get("/api/committee/access-log").json()["n_reads"] == before
 
     opened = client.post("/api/committee/registry/read", json={
         "expert_id": expert_id, "who": "committee-admin", "why": "duplicate application check",
@@ -51,7 +51,7 @@ def test_an_identity_goes_in_encrypted_and_only_comes_out_through_the_log(seeded
     assert opened.status_code == 200
     assert opened.json()["identity"]["email"] == "a@example.invalid"
     log = client.get("/api/committee/access-log").json()
-    assert log["n"] == before + 1
+    assert log["n_reads"] == before + 1
     assert log["entries"][0]["who"] == "committee-admin"
 
 
@@ -205,7 +205,8 @@ def test_ledger_verify_reports_three_separate_checks(seeded):
     assert body["checked_means"]
     assert body["attestation"] is None
     assert "not resolved" in body["attestation_means"]
-    assert body["anchor"]["merkle_root"]
+    assert body["anchor"] is None, "a pending root offers no link"
+    assert body["anchor_root"]["merkle_root"]
     assert "proves nothing" in body["anchor_means"]
 
 

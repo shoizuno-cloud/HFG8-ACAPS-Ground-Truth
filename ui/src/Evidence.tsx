@@ -14,8 +14,10 @@ export type EvidenceRecord = {
   n_crises_this_month?: number;
   indicator?: string;
   value?: number;
-  baseline?: number;
-  z?: number;
+  // Null, not absent: a trigger completion rate is one published percentage with no baseline, and
+  // the engine says so rather than writing a zero that renders as "40 versus 0 baseline".
+  baseline?: number | null;
+  z?: number | null;
 };
 export function evidenceSummary(e: EvidenceRecord) {
   if (typeof e.before === "number" && typeof e.after === "number")

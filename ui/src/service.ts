@@ -8,7 +8,33 @@ import type {
 } from "./v2-types";
 import type fullRisk from "../../fixtures/GET_risks_R1043.json";
 import type { Card, Answer, Mask } from "./api";
-export type Risk = typeof fullRisk;
+// One fixture row cannot express a nullable column: R1043 happens to have a risk type and a
+// trend and no materialisation, so `typeof` alone would make all three mandatory and reject the
+// rows of the export that leave them blank. These four really are optional in the ACAPS CSV.
+export type Risk = Omit<
+  typeof fullRisk,
+  | "risk_type"
+  | "trend"
+  | "materialised"
+  | "probability_assumed_number"
+  // served_from and generated_at belong to the envelope around a single risk, not to a risk. A
+  // row inside /risks carries neither, so a type that demanded them could not describe the list.
+  | "served_from"
+  | "generated_at"
+  | "triggers"
+> & {
+  risk_type: string | null;
+  trend: string | null;
+  materialised: string | null;
+  probability_assumed_number: number | null;
+  triggers: Trigger[];
+};
+/** A trigger with no published completion rate reports null, not zero -- see the engine's
+ *  _trigger_evidence, which refuses to write a baseline nobody measured. */
+export type Trigger = Omit<
+  (typeof fullRisk.triggers)[number],
+  "completion_rate"
+> & { completion_rate: number | null };
 export type Pulse = Card["pulse"];
 export type Result = NonNullable<Card["group_view_if_round2"]> & {
   confidence_interval?: { lower: number; upper: number };
@@ -182,6 +208,23 @@ export type PatternReport = {
   never: string;
   note: string;
 };
+/** What the engine returns for a sealed answer. `credential` and `zk` arrived with the v3.2
+ *  hardening stack; `anchor` is the daily commitment root this answer landed in, pending until a
+ *  calendar confirms it. */
+export type SealReceipt = {
+  committed_at: string;
+  commitment: string;
+  mask: string;
+  pseudonym: string | null;
+  message: string;
+  sealing_note: string;
+  acaps_rating_now_visible: { probability_acaps: string | null; level: string | null };
+  credential: { spent: boolean; unlinkable?: boolean; scheme?: string; line: string } | null;
+  zk: Record<string, unknown> | null;
+  anchor: AnchorRoot | null;
+  served_from: string;
+  generated_at: string;
+};
 export const apiBase = (import.meta.env.VITE_API_URL || "/api").replace(
   /\/$/,
   "",
@@ -291,7 +334,7 @@ export const endpoint = {
   // it held here, so the two cannot drift.
   trust: () => api<TrustStatus>("/trust/status"),
   accessLog: () =>
-    api<{ entries: AccessEntry[]; n: number; guarantees: string; does_not: string }>(
+    api<{ entries: AccessEntry[]; n_reads: number; guarantees: string; does_not: string }>(
       "/committee/access-log",
     ),
   anchors: () => api<{ roots: AnchorRoot[]; enabled: boolean }>("/anchors"),
@@ -309,12 +352,7 @@ export const endpoint = {
     }>(`/ledger/${encodeURIComponent(id)}/attestation`),
   card: (token: string) => api<Card>(`/e/${encodeURIComponent(token)}`),
   answer: (token: string, body: Answer) =>
-    api<{
-      committed_at: string;
-      commitment: string;
-      generated_at: string;
-      served_from: string;
-    }>(`/e/${encodeURIComponent(token)}/answer`, body),
+    api<SealReceipt>(`/e/${encodeURIComponent(token)}/answer`, body),
 };
 export function safeUrl(value: string) {
   try {

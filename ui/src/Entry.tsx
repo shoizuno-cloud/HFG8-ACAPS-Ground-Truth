@@ -108,10 +108,10 @@ export function PublicHome() {
       <a className="skip-link" href="#public-content">
         Skip to content
       </a>
-      <p className="prototype-banner" role="note">
+      <aside className="prototype-banner" aria-label="Prototype notice">
         Prototype for the ACAPS Ground Truth challenge. Not an ACAPS service.
         Expert panels and their answers are synthetic.
-      </p>
+      </aside>
       <PortalHeader />
       <main id="public-content" className="public-home">
         <section className="public-hero">

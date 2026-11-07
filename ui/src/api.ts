@@ -1,5 +1,5 @@
 import { sampleDataEnabled, sampleResult } from "./demo-data";
-import { endpoint } from "./service";
+import { endpoint, type SealReceipt } from "./service";
 import type { EvidenceRecord } from "./Evidence";
 import cardFixture from "../../fixtures/GET_e_token.json";
 import resultFixture from "../../fixtures/GET_pulses_result.json";
@@ -31,6 +31,14 @@ export type Answer = {
   changed_mind: boolean;
 };
 export const mock = import.meta.env.VITE_MOCK === "1";
+/** What a round-2 card may see of the group: never the moderator-only integrity notes. The
+ *  plain fixture no longer carries them and the sample does, so this handles both. */
+function publicPart<T extends object>(value: T): Omit<T, "integrity_notes"> {
+  const { integrity_notes: _moderatorOnly, ...rest } = value as T & {
+    integrity_notes?: unknown;
+  };
+  return rest as Omit<T, "integrity_notes">;
+}
 export async function getCard(token: string): Promise<Card> {
   if (!mock) return endpoint.card(token);
   await new Promise((resolve) => setTimeout(resolve, 200));
@@ -48,16 +56,14 @@ export async function getCard(token: string): Promise<Card> {
     round: token === "round2" ? 2 : 1,
     group_view_if_round2:
       token === "round2"
-        ? (({ integrity_notes, ...publicResult }) => publicResult)(
-            sampleDataEnabled() ? sampleResult : resultFixture,
-          )
+        ? publicPart(sampleDataEnabled() ? sampleResult : resultFixture)
         : null,
   });
 }
 export async function sealAnswer(
   token: string,
   answer: Answer,
-): Promise<typeof sealFixture> {
+): Promise<SealReceipt> {
   if (!mock) return endpoint.answer(token, answer);
   await new Promise((resolve) => setTimeout(resolve, 300));
   // Fixture receipt only: this milestone does not implement cryptographic sealing.

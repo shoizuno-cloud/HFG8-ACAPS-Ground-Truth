@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 import { test } from "./workspace-session";
 import AxeBuilder from "@axe-core/playwright";
+import calibration from "../../fixtures/GET_me_calibration.json" with { type: "json" };
 test("jury QR, private calibration, reduced motion and keyboard access", async ({
   page,
 }, info) => {
@@ -47,7 +48,9 @@ test("jury QR, private calibration, reduced motion and keyboard access", async (
   await page
     .getByRole("button", { name: "View my private calibration" })
     .click();
-  await expect(page.getByText("0.12", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(calibration.mean_brier.toFixed(2), { exact: true }),
+  ).toBeVisible();
 
 });
 test("expert card accessibility and text scaling", async ({ page }) => {

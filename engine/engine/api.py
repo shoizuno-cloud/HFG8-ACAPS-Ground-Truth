@@ -320,8 +320,9 @@ def _alert_evidence(event: dict) -> list[dict]:
         "note": (
             f"{event['crisis_name']}: {event['metric'].replace('_', ' ')} "
             f"{event['before']} to {event['after']} between {event['month_from']} and "
-            f"{event['month_to']} ({event['rule_hit']}; rank {event['rank_this_month']} of "
-            f"{event['n_crises_this_month']} crises this month; reliability {event['reliability']})"
+            f"{event['month_to']} ({event['rule_hit']}; rank {event['rank_this_month']} by "
+            f"{event['direction']} among {event['n_crises_this_month']} crises compared this "
+            f"month; reliability {event['reliability']})"
         ),
     }]
     for name, pair in (event.get("components") or {}).items():
@@ -911,7 +912,11 @@ def verify(body: dict = Body(default_factory=dict)):
                     if attestation else
                     "No attestation yet: this risk is not resolved, so there is no outcome to sign."
                 ),
-                "anchor": anchor,
+                # `anchor` stays what the UI contract says it is: a link to a supplied proof, or
+                # null. It is null until a root is genuinely anchored, which is the honest state
+                # for every round in this build. The root itself goes under its own key.
+                "anchor": _anchor_url(anchor),
+                "anchor_root": anchor,
                 "anchor_means": (
                     (anchor or {}).get("means")
                     if anchor else "No daily root recorded for this round."
@@ -1106,6 +1111,15 @@ def _record_day_roots() -> None:
         HARD.anchors.record(day, commitments)
 
 
+def _anchor_url(root: dict | None) -> str | None:
+    """The link the ledger offers as a supplied proof. Only once the root is actually anchored:
+    a pending submission has a receipt but nothing to show anyone, and a link beside the words
+    "external anchor supplied" would be a claim the root has not earned."""
+    if not root or root.get("status") != "anchored" or not root.get("calendar"):
+        return None
+    return f"{root['calendar']}/timestamp/{root['merkle_root']}"
+
+
 def _expert_by_pseudonym(pseudonym: str) -> str | None:
     wanted = (pseudonym or "").strip().lower()
     for expert_id in STORE.experts:
@@ -1144,7 +1158,9 @@ def committee_access_log():
     """Mechanism 6. Reading an identity is allowed and logged; the log is the control."""
     return envelope({
         "entries": list(reversed(HARD.registry.log())),
-        "n": len(HARD.registry.access_log),
+        # Not `n`: that name means "answers in this round" everywhere else here, and the fixture
+        # validator rightly refuses any fixture carrying n < 5.
+        "n_reads": len(HARD.registry.access_log),
         "guarantees": (ff.mechanism("access_log") or {}).get("guarantees"),
         "does_not": (ff.mechanism("access_log") or {}).get("does_not"),
     })
@@ -1220,7 +1236,8 @@ def ledger_attestation(risk_id: str):
         "attestation": record,
         "verification": HARD.attestations.verify(record),
         "public_key": HARD.attestations.public_key(),
-        "anchor": anchor,
+        "anchor": _anchor_url(anchor),
+        "anchor_root": anchor,
         "history": HARD.attestations.for_risk(risk_id),
     })
 

@@ -1,6 +1,8 @@
 import { expect } from "@playwright/test";
 import { test } from "./workspace-session";
 import AxeBuilder from "@axe-core/playwright";
+import applyFixture from "../../fixtures/POST_experts_apply_response.json" with { type: "json" };
+import ledgerFixture from "../../fixtures/GET_ledger.json" with { type: "json" };
 test("blind round hides all ACAPS anchors, source and confidence are selectable", async ({
   page,
 }, info) => {
@@ -49,7 +51,9 @@ test("Radar filters, country map, source badge and matching work", async ({
   const header = await page.locator(".site-header").boundingBox();
   const title = await page.locator(".workspace-title").boundingBox();
   expect(header!.y + header!.height).toBeLessThanOrEqual(title!.y);
-  await expect(page.getByRole("link", { name: "Review risk" })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Review risk" }).first(),
+  ).toBeVisible();
   await page.getByLabel("Search risks").fill("earthquake");
   await expect(
     page.getByText("No risks match these filters.", { exact: false }),
@@ -97,7 +101,11 @@ test("synthetic application requires consent and distinct committee admins", asy
   await page
     .getByRole("button", { name: "Apply for committee review" })
     .click();
-  await expect(page.getByText("Application X-0009: applied.")).toBeVisible();
+  // The engine mints a random expert id, so read it from the fixture rather than pinning one
+  // that changes every time the fixtures are regenerated.
+  await expect(
+    page.getByText(`Application ${applyFixture.expert_id}: applied.`),
+  ).toBeVisible();
   await page
     .getByRole("link", { name: "Review synthetic application" })
     .click();
@@ -158,7 +166,9 @@ test("integrity is desk-only and the public ledger includes honesty and resolved
   await expect(page.getByText("quiet-heron")).toHaveCount(0);
   await page.locator(".ledger-record > summary").last().click();
   await expect(
-    page.getByRole("heading", { name: "Resolved history / R0987" }),
+    page.getByRole("heading", {
+      name: `Resolved history / ${ledgerFixture.entries[1].risk_id}`,
+    }),
   ).toBeVisible();
   await expect(page.getByText("Includes misses")).toHaveCount(2);
   await expect(
