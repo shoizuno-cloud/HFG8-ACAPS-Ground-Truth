@@ -37,4 +37,4 @@ Lane C. Revised for master prompt v3.4 (8 Nov). The deck is `pitch/sealed-signal
 
 ## Corrections owed to the deck
 
-Listed in `proposals.md` (P28 to P30): the alert screen on slide 9 lists two crises that are not in the engine's output; the scoring slide 18 and ledger slides use risk IDs and outcomes that do not match the Risk Radar export; the pilot length differs from the organisers' brief.
+Open in `proposals.md` (P30, P31): the pilot length differs from the organisers' brief, and slide 13 says phone timing was measured before `docs/evidence/phones.md` exists. The alert screen (slide 9) and the example risks on slides 18, 20 and 23 were corrected on 8 Nov.

@@ -328,8 +328,8 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
     <div class="kpi"><div><b>123</b><small>crises diffed, Mar to Apr 2026</small></div><div><b>3</b><small>moved 0.5 or more</small></div><div><b>1</b><small>linked to an active risk</small></div><div style="margin-left:auto;border:none"><span class="btn o">Run engine</span> <span class="btn o">Replay April 2026</span></div></div>
     <div class="tr h" style="grid-template-columns:60px 1fr 150px 130px 120px 190px 220px"><span>rank</span><span>crisis</span><span>index</span><span>change</span><span>rule</span><span>linked risk</span><span></span></div>
     <div class="tr" style="grid-template-columns:60px 1fr 150px 130px 120px 190px 220px;background:var(--teal-soft)"><span>1</span><span><b>TCD005</b> Displacement from Sudan to Chad</span><span>6.1 → 6.9</span><span>+0.8</span><span>index ≥ 0.5</span><span>R1043, eastern Chad</span><span><span class="btn a">Approve pulse</span> <span class="btn o">Dismiss</span></span></div>
-    <div class="tr" style="grid-template-columns:60px 1fr 150px 130px 120px 190px 220px"><span>2</span><span>SDN001 Sudan conflict</span><span>7.4 → 7.9</span><span>+0.5</span><span>index ≥ 0.5</span><span class="sub" style="font-size:16px">no active risk</span><span></span></div>
-    <div class="tr" style="grid-template-columns:60px 1fr 150px 130px 120px 190px 220px"><span>3</span><span>HTI002 Haiti gang violence</span><span>6.6 → 7.1</span><span>+0.5</span><span>index ≥ 0.5</span><span class="sub" style="font-size:16px">no active risk</span><span></span></div>
+    <div class="tr" style="grid-template-columns:60px 1fr 150px 130px 120px 190px 220px"><span>2</span><span>TZA003 Drought and floods in Tanzania</span><span>4.9 → 5.5</span><span>+0.6</span><span>index ≥ 0.5</span><span class="sub" style="font-size:16px">no active risk</span><span></span></div>
+    <div class="tr" style="grid-template-columns:60px 1fr 150px 130px 120px 190px 220px"><span>↓1</span><span>PAK007 Displacement from Afghanistan to Pakistan</span><span>7.3 → 6.4</span><span>−0.9</span><span>index ≤ −0.5, improvement</span><span class="sub" style="font-size:16px">no active risk</span><span></span></div>
     <svg viewBox="0 0 1300 240" width="1300" height="240" style="margin-top:24px;display:block">
      <line x1="60" y1="200" x2="1280" y2="200" stroke="#d9e0de" stroke-width="2"/>
      <path d="M60 60 L115 70 L171 90 L226 90 L282 100 L337 90 L393 80 L448 120 L504 120 L559 120 L615 120 L670 120 L726 120 L781 130 L837 130 L892 50 L948 50 L1003 40 L1059 30 L1114 30 L1170 30 L1225 30 L1280 30" fill="none" stroke="#0f6e6a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -485,7 +485,7 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
    <div class="bar"><i></i><i></i><i></i><b>Public ledger</b><span style="margin-left:auto">no names, ever</span></div>
    <div class="main" style="font-size:17px;line-height:1.45">
     <b>R1043, eastern Chad</b><br>Committed 7 Nov 09:00. Group 0.69, spread 0.3 to 0.9. ACAPS band High. Decision: kept High.
-    <div style="border:1.5px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:15px;line-height:1.45"><b>Honesty box</b> 8 experts, agreement 0.75, no access expert on the panel, claims 2 corroborated and 2 queued, relayed 0, panel record 3 of 4 with one miss.</div>
+    <div style="border:1.5px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:15px;line-height:1.45"><b>Honesty box</b> 8 experts, agreement 0.75, no access expert on the panel, claims 2 corroborated and 2 queued, relayed 0, panel record 2 of 3 with one miss.</div>
     <span class="btn">Verify: matches</span> <span class="sub" style="font-size:15px">round root 9c4e…b1 recomputed from 8 commitments</span>
     <div style="margin-top:12px;font-size:14px"><span class="tech">commitment SHA-256, salted, 09:00:14</span> <span class="tech">attested ML-DSA-65, key c1</span> <span class="tech">anchored OpenTimestamps, pending</span></div>
     <div style="margin-top:16px;border-top:1.5px solid var(--line);padding-top:12px;font-size:15px"><b>Registry status</b> identity map encrypted: ML-KEM-768 hybrid key establishment, AES-256-GCM at rest. Access log: 3 reads this month, each with a reason.</div>
@@ -508,12 +508,12 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
  <div style="display:flex;gap:40px;align-items:flex-start">
   <div style="width:1040px" data-s="1">
    <div class="win" style="height:620px">
-    <div class="bar"><i></i><i></i><i></i><b>Committee scoring</b><span style="margin-left:auto">panel level only</span></div>
+    <div class="bar"><i></i><i></i><i></i><b>Committee scoring</b><span style="margin-left:auto">panel level only. Illustrative: synthetic panels on example questions</span></div>
     <div class="main" style="font-size:17px">
      <div class="tr h" style="grid-template-columns:150px 1fr 120px 140px 140px 160px"><span>risk</span><span>question contract</span><span>panel</span><span>ACAPS band</span><span>outcome</span><span>Brier, panel vs band</span></div>
-     <div class="tr" style="grid-template-columns:150px 1fr 120px 140px 140px 160px"><span>R1018 Niger</span><span>flood displacement over 20k by 30 Sep, UNHCR, frozen 1 Apr</span><span>0.42</span><span>Medium, 0.5</span><span>materialised</span><span>0.34 vs 0.25</span></div>
-     <div class="tr" style="grid-template-columns:150px 1fr 120px 140px 140px 160px"><span>R1022 Mali</span><span>access index 4 or more by 31 Aug, ACAPS, frozen 2 Mar</span><span>0.71</span><span>High, 0.7</span><span>materialised</span><span>0.08 vs 0.09</span></div>
-     <div class="tr" style="grid-template-columns:150px 1fr 120px 140px 140px 160px"><span>R1031 Haiti</span><span>severity category change by 30 Jun, frozen 5 Jan</span><span>0.55</span><span>Medium, 0.5</span><span>not materialised</span><span>0.30 vs 0.25</span></div>
+     <div class="tr" style="grid-template-columns:150px 1fr 120px 140px 140px 160px"><span>Example A</span><span>flood displacement over 20k by 30 Sep, UNHCR, frozen 1 Apr</span><span>0.62</span><span>Medium, 0.5</span><span>materialised</span><span>0.14 vs 0.25</span></div>
+     <div class="tr" style="grid-template-columns:150px 1fr 120px 140px 140px 160px"><span>Example B</span><span>access index 4 or more by 31 Aug, ACAPS, frozen 2 Mar</span><span>0.71</span><span>High, 0.7</span><span>materialised</span><span>0.08 vs 0.09</span></div>
+     <div class="tr" style="grid-template-columns:150px 1fr 120px 140px 140px 160px"><span>Example C</span><span>severity category change by 30 Jun, frozen 5 Jan</span><span>0.55</span><span>Medium, 0.5</span><span>not materialised</span><span>0.30 vs 0.25</span></div>
      <div class="tr" style="grid-template-columns:150px 1fr 120px 140px 140px 160px"><span>R1043 Chad</span><span>arrivals over 50k by 31 Mar 2027, frozen 7 Nov</span><span>0.69</span><span>High, 0.7</span><span>open</span><span></span></div>
      <div style="display:flex;gap:16px;margin-top:20px"><span class="tech">question contract frozen before scoring</span><span class="tech">Brier (p − outcome)²</span><span class="tech">weights equal → shrunk → capped, secondary</span><span class="tech">adjudication by committee, not the analyst</span></div>
      <div style="margin-top:18px;font-size:16px;line-height:1.5"><b>Outcome report</b> to everyone who answered, in their channel: "the panel said 0.42, the risk materialised, the analyst had rejected the panel view; rationale on the ledger." <b>Calibration programme</b> consent-gated, numeric confidence on comparable items, report after 20 items, the expert sees it first, off at any time. <b>Pattern reports</b> about panels, never a person.</div>
@@ -521,7 +521,7 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
    </div>
   </div>
   <div style="flex:1" data-s="2">
-   <div class="num">3 / 4</div><p class="sub" style="font-size:22px;margin-bottom:30px">panel on the right side, one miss, on the public page</p>
+   <div class="num">2 / 3</div><p class="sub" style="font-size:22px;margin-bottom:30px">panel on the right side in the example, one miss, on the public page</p>
    <div class="num" style="color:var(--amber)">1</div><p class="sub" style="font-size:22px;margin-bottom:30px">panel view rejected by the analyst that later proved right: recorded as such</p>
    <div class="num">0</div><p class="sub" style="font-size:22px">leaderboards, public scores, or hidden tests of an expert</p>
   </div>
@@ -578,7 +578,7 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
     <span class="btn">Verify: matches</span>
     <p class="sub" style="font-size:15px;margin-top:8px">Recomputed the round's commitment hash. These answers existed at this time and were not changed since. Proves timing, not truth.</p>
     <div style="margin-top:14px;font-size:14px"><span class="tech">attested, ML-DSA-65</span> <span class="tech">anchored, OpenTimestamps, pending</span> <span class="tech">outcome: open</span></div>
-    <div style="margin-top:18px;border-top:1.5px solid var(--line);padding-top:12px;font-size:15px"><b>R1018, Niger</b> Group 0.42, ACAPS Medium, <b>panel view rejected</b>: analyst rationale on record. Outcome: materialised. A miss, on the page.</div>
+    <div style="margin-top:18px;border-top:1.5px solid var(--line);padding-top:12px;font-size:15px"><b>Example A, Niger</b> Group 0.62, ACAPS Medium, <b>panel view rejected</b>: analyst rationale on record. Outcome: materialised. The analyst overruled a panel that proved right, on the page. Illustrative, synthetic panel.</div>
    </div>
   </div>
  </div>
@@ -642,10 +642,10 @@ h1{font-size:120px;font-weight:600;line-height:1;letter-spacing:-2px}
    <div class="bar"><i></i><i></i><i></i><b>Public ledger</b><span style="margin-left:auto">no names, ever</span></div>
    <div class="main" style="font-size:16px;line-height:1.45">
     <b>R1043, eastern Chad</b><br>Committed 7 Nov 09:00. Group 0.69, spread 0.3 to 0.9. ACAPS band High. Decision: kept High. What decision: preparedness budget, Ouaddaï. For whom: UNHCR Chad. By when: 15 Dec.
-    <div style="border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px;line-height:1.45"><b>Honesty box</b> 8 experts, agreement 0.75, no access expert on the panel, claims 2 corroborated and 2 queued, relayed 0, panel record 3 of 4 with one miss.</div>
+    <div style="border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px;line-height:1.45"><b>Honesty box</b> 8 experts, agreement 0.75, no access expert on the panel, claims 2 corroborated and 2 queued, relayed 0, panel record 2 of 3 with one miss.</div>
     <span class="btn">Verify: matches</span> <span class="sub" style="font-size:14px">existed at this time, unchanged since; timing, not truth</span>
     <div style="margin-top:10px;font-size:13px"><span class="tech">commitment SHA-256, salted</span> <span class="tech">attested ML-DSA-65</span> <span class="tech">anchored OpenTimestamps</span></div>
-    <div style="margin-top:12px;border-top:1.5px solid var(--line);padding-top:10px;font-size:14px"><b>R1018, Niger</b> group 0.42, ACAPS Medium, <b>panel view rejected</b>, rationale on record. Outcome: materialised. <b>A miss, on the page.</b></div>
+    <div style="margin-top:12px;border-top:1.5px solid var(--line);padding-top:10px;font-size:14px"><b>Example A, Niger</b> group 0.62, ACAPS Medium, <b>panel view rejected</b>, rationale on record. Outcome: materialised. <b>The analyst overruled a panel that proved right, on the page.</b> Illustrative, synthetic panel.</div>
     <div style="margin-top:12px;border-top:1.5px solid var(--line);padding-top:10px;font-size:14px"><b>Registry</b> identity map: ML-KEM-768 hybrid key establishment, AES-256-GCM at rest, key with the committee. 3 reads this month, each with a reason, visible to the committee.</div>
    </div>
   </div>
