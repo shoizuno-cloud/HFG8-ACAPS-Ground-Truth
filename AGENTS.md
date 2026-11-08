@@ -15,6 +15,7 @@ Start with `README.md`. This file says where each part lives and which test or c
 | `docs/evidence/` | Committed outputs: `make-check.txt` (tests, UI build, fixture validation), `make-demo.txt` (the offline loop transcript), screenshots of the three screens at phone and desktop width, `sensitivity.png`. |
 | `docs/challenge/` | The organisers' original README and CLAUDE.md, unchanged, for reference. |
 | `pitch/` | The six-slide deck (`sealed-signals-slides.html`, open in a browser) and its contact sheet. |
+| `slides/` | Presentation variants: `make-animated/` (the Figma Make animated deck as a Vite project) and `motion-v2/` (an animated HTML deck and a demo walkthrough video). The pitch itself uses `pitch/`; these have not been checked against the figures in `proposals.md`. |
 | `reports/` | Generated outputs of the sensitivity test. |
 | `Makefile` | `make install`, `make check`, `make demo`, `make dev`, `make ui`. |
 
