@@ -1,74 +1,150 @@
-# Privacy engineering and hardening
+# Privacy engineering (repo page; not in the 3-minute pitch)
 
-Repo page. Not in the 3-minute pitch beyond one sentence. Lane C, revised for master prompt v3.2 (7 Nov): every item below is now built behind a flag (master prompt 6c, 6d). This page states, for each, the guarantee, what it does not do, what the demo build actually runs, and the questions Lane A must answer before the wording goes on screen. Source records were checked through search on 6-7 Nov; read the primary source before relying on a detail.
+Updated for master prompt v3.4. Sections 1 and 2 are the pilot design. Section 3 is the hardening stack of
+MASTER_PROMPT 6c as **built**, with the test that backs each claim. Section 4 is what v3.4 did to measurement, which
+is mostly to remove it. Section 5 is the part that is honestly not finished.
 
-Wording rule: on a slide, in the UI and on stage, every hardening item is described with its "guarantees / does not" sentence from `trust-design.md`, and only when its flag is on in that run.
+Wording rule for all of it: every mechanism is described with the guarantee / does-not pair from
+`trust-design.md`. Those sentences live in one place in the code, `engine/engine/hardening/flags.py`, and the API
+and the UI render them from there rather than keeping a second copy. `GET /api/trust/status` returns all six.
 
-## 1. Who can learn what
+1. **Who can learn what**: see MASTER_PROMPT.md section 1a.
+2. **Pilot design**: restricted identity registry with logged access; stable internal ids; pseudonyms to peers;
+   unattributed answers stored without an identity link, not claimable, and without personalised feedback
+   (the product says pseudonymised, never anonymous); aggregates only to the public with n >= 5.
 
-See master prompt section 1a and `trust-design.md` section 4. In one line: peers see nothing before the reveal; ACAPS admins see answers with the mask the expert chose; `anonymous` answers carry no identity; the public sees aggregates only; commitments do not hide answers from the operator.
+## 3. The hardening stack, as built
 
-## 2. The six mechanisms
+| # | Mechanism | Flag | Where the code is | Test evidence |
+| --- | --- | --- | --- | --- |
+| 1 | ML-KEM-768 + X25519 hybrid key establishment wrapping the AES-256-GCM key over the identity map (AES-256-GCM at rest) | `FF_PQ`, on | `hardening/registry.py` | `test_crypto.py::test_registry_round_trip_under_the_hybrid_kem`, `::test_registry_ciphertext_is_not_decryptable_without_the_committee_key`, `::test_registry_falls_back_and_says_so_when_the_flag_is_off` |
+| 2 | ML-DSA-65 signature over each resolved outcome record | `FF_PQ`, on | `hardening/attest.py` | `::test_attestation_verifies_and_fails_on_a_flipped_byte`, `::test_attestation_fails_when_the_record_is_edited`, `::test_attestation_public_key_is_stable_across_instances` |
+| 3 | RSA blind signatures, RFC 9474 RSABSSA-SHA384-PSS-Deterministic | `FF_BLIND`, on | `hardening/credentials.py` | `::test_blind_signature_verifies_as_standard_rsa_pss`, `::test_a_credential_cannot_be_spent_twice`, `::test_the_issuer_cannot_match_a_spent_token_to_an_approval` |
+| 4 | Semaphore-shaped group membership | `FF_ZK`, **off** | `hardening/zk.py` | `::test_nullifier_rejects_a_second_answer`, `::test_the_verdict_never_claims_the_proof_was_checked` — see section 5 |
+| 5 | OpenTimestamps anchoring of the daily commitment root | `FF_ANCHOR`, on | `hardening/anchors.py` | `::test_anchor_goes_pending_then_anchored`, `::test_an_unreachable_calendar_does_not_invent_an_anchor`, `::test_a_receipt_is_only_returned_for_a_commitment_in_that_root` |
+| 6 | Registry access log | always on | `hardening/registry.py` | `::test_a_registry_read_appears_in_the_log`, `::test_an_unattributed_read_is_refused`, `::test_counting_identities_is_not_a_read` |
 
-| # | Mechanism | Flag | Guarantee | Does not | What the demo runs (to be stated by Lane A) |
-|---|---|---|---|---|---|
-| 1 | ML-KEM-768 hybrid encryption of the identity registry | `FF_PQ` | Long-horizon confidentiality of the identity map against copy-now, decrypt-later | Protect against an administrator who holds the key, or against access-control mistakes | Which library; where the key lives; what "hybrid" means (hybrid with what) |
-| 2 | ML-DSA-65 signature on each resolved ledger entry | `FF_PQ` | The outcome record was signed by the committee key and not altered since | The truth of the outcome; anything about the key holder beyond that key | Who holds the signing key. In a hackathon build it is a demo key, not ACAPS's. Say so. |
-| 3 | Blind-signed single-use credentials (RFC 9474) | `FF_BLIND` | An answer comes from a vetted panel member and ACAPS cannot link the token to the approval | Hide timing, network metadata or distinctive wording; see section 3 | Whether submission is separated from the personal magic link |
-| 4 | Zero-knowledge panel membership (Semaphore v4) | `FF_ZK` (off until stable) | "A member of this panel answered", without saying which; one answer per pulse | Reputation portability | Off unless stable. Never claim it when off. |
-| 5 | Daily timestamp anchoring (OpenTimestamps) | `FF_ANCHOR` | Independent proof the commitments existed by that time | Anything else | Status is "pending" until a Bitcoin confirmation arrives, which takes hours. Offline it stays pending. |
-| 6 | Registry access log | on | ACAPS access to identities is defined and visible | Prevention of access by an authorised admin | Whether the log can be altered by an admin |
+Notes that matter more than the table:
 
-### Sources
+* **The blind signature is a real one.** The committee signs a value it cannot read, and the unblinded result passes
+  an ordinary `cryptography` RSA-PSS verify — the test checks it that way on purpose, against a library that knows
+  nothing about this codebase. The zero-length salt is what makes the deterministic variant deterministic; the PSS
+  encoding is written out in `credentials.py` because the blinding has to happen on the encoded integer and no
+  library exposes that step.
+* **There are two issuance paths and they do not make the same claim.** `POST /api/credentials/issue` with
+  `blinded` is the real one: the card blinds, the server signs, the card unblinds, and nothing the server stored
+  names the token it later accepts. With `count` the server runs the client side itself for the demo, so it held
+  the token id for an instant. That batch is marked `unlinkable: false`, and the committee view says which mix it
+  is looking at rather than printing the unlinkability sentence over tokens that have not earned it.
+* **An anchor is pending until a calendar says otherwise.** A submission receipt is not a proof. The status reads
+  `anchored` only after `GET /timestamp/<digest>` returns an upgraded proof, which needs the next Bitcoin block.
+  Submission was tested against the live `a.pool.opentimestamps.org` calendar and the receipt is stored; the
+  pending-to-anchored transition is tested with an injected calendar, because waiting for a block in a test suite
+  is not a test.
+* **The fallbacks are real code, not a skipped branch.** `FF_PQ` off encrypts with a data key stored beside the
+  ciphertext and signs with an HMAC; `FF_BLIND` off issues a single-use HMAC token. Each says in its own payload
+  which path ran. The flag-off fallbacks have their own tests.
+* **Key material.** ML-KEM and ML-DSA keys are derived from `COMMITTEE_KEY` under separate labels, so the published
+  key ids survive a restart. RSA has no seeded keygen in `cryptography`, so the credential issuer is generated per
+  process and `GET /api/credentials/issuer` says so: a restart retires every token signed by the old issuer.
 
-- Post-quantum standards: NIST FIPS 203 (ML-KEM) and FIPS 204 (ML-DSA), both published 13 Aug 2024 ([FIPS 203](https://csrc.nist.gov/pubs/fips/203/final), [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final)). NIST's pages carry planning notes about future corrections; check them before printing a version claim.
-- Blind signatures: Chaum 1983 (*Blind Signatures for Untraceable Payments*, DOI 10.1007/978-1-4757-0602-4_18); implementation standard [RFC 9474, RSA Blind Signatures](https://www.rfc-editor.org/rfc/rfc9474) (IRTF, informational, Oct 2023; RSABSSA, used in Privacy Pass).
-- Semaphore: [docs.semaphore.pse.dev](https://docs.semaphore.pse.dev/). Groups are Merkle trees of identity commitments; the nullifier blocks a second signal within one scope. The v4.0.0 audit by PSE (March 2024) is public; the Veridise audit covers v3 only.
-- Anchoring: OpenTimestamps ([summary](https://en.wikipedia.org/wiki/OpenTimestamps); see opentimestamps.org). Calendar servers batch hashes into a Merkle tree and commit its root to Bitcoin; a calendar cannot forge a timestamp.
+## 4. Measurement: what v3.4 took out, and what it put behind consent
 
-### Library caution (for Lane A)
+The v3.2 build computed a response-pattern report per expert: calibration, overconfidence, extremity, agreement with
+ACAPS, round-2 shift, source mix, abstention rate. It was committee-side, pseudonymous and descriptive, and it is
+gone. The reason is one sentence from section 6d: **no measurement is hidden in a pulse.** Those numbers were
+computed from answers given to a question that never said it was measuring the person answering it. Pseudonymising
+the output does not fix that; it only decides who gets to read it.
 
-Master prompt 6c names `kyber-py` and `dilithium-py`. Their own pages say they are educational pure-Python code that is not constant-time and carry a caution against use in real cryptographic applications ([kyber-py](https://github.com/GiacomoPope/kyber-py), [dilithium-py](https://pypi.org/project/dilithium-py/)). They pass the NIST known-answer tests, which shows correctness, not side-channel resistance. For a synthetic hackathon demo that is acceptable if the page says so. For a real pilot, use an audited library (for example liboqs) and hold keys in a proper key store. The README and the UI line should say "demo keys, reference implementation".
+What replaced it:
 
-## 3. Threat model for blind-signed credentials
+| v3.2 | v3.4 |
+| --- | --- |
+| `GET /committee/patterns/{pseudonym}` — one person's report | `GET /committee/patterns/{panel_id}` — sentences about the panel |
+| `GET /me/{token}/patterns?opt_in=true` | removed; individual calibration lives only in the programme below |
+| `GET /analyst/board` — pseudonyms ranked by Brier score | `GET /committee/scoring` — panels scored against the ACAPS band |
+| seed questions, knowledge-gap and timing measures on the card (v3.3) | removed from the card entirely |
 
-The master prompt asked for this (issuance timing, network metadata, revocation, scoring). Our reading, for Lane A to confirm or correct.
+**Panel reports** (`hardening/patterns.py`). After three revealed rounds on the same panel: convergence after the
+reveal, the spread over time, the abstention share, the source mix, and which expertise the panel does not have.
+Affiliation-level sentences only where that affiliation has three members on the panel; everything smaller is merged
+and the payload says it was merged. Descriptive, never causal — "UN-affiliated answers sat above the panel mean on 3
+of 4 pulses" is allowed, "UN experts are optimistic" is not. No sentence may contain a pseudonym, and a test asserts
+that over every seeded pseudonym.
 
-**What the scheme gives.** The committee signs a blinded token when an expert is approved. The expert unblinds it on their device and spends one token per answer. The server verifies the signature and rejects reuse. Because of blinding, the committee cannot match a spent token to the approval, even if it keeps all records.
+**The calibration programme** (`hardening/calibration.py`, `FF_CALIBRATION`, **off**). The only mechanism in this
+build that measures a person, and it ships off, so the default state of the system is one where nobody is measured.
+Enrolment needs an explicit yes against the current disclosure version: consent does not carry across a change to
+what is measured, and the engine refuses a consent quoting an older one. Items are short factual questions whose
+answer ACAPS already holds — taken from the resolved rows of the export's own Status column, each carrying the record
+it is adjudicated against — with a numeric confidence prompt, 50 to 100 %. A report exists only after 20 items, goes
+to the expert first and alone, and is one paragraph in plain words. The committee sees it only after a second,
+separate opt-in, and never as a weight. `off` at any time, and off means the report stops being produced.
+`GET /calibration/disclosure` is readable with the flag off on purpose: what we would measure is not a secret, it is
+the thing consent is given against.
 
-**What can still link an answer to a person:**
+Deliberately not built, and recommended against in writing: fictitious references (overclaiming foils),
+response-time and edit-count measures, test–retest traps. Nothing a participant would recognise as deception if it
+were explained to them afterwards.
 
-1. **The magic link.** The card is opened with a personal link, `/e/{token}`, that identifies the expert. If the answer is posted to `/e/{token}/answer`, the server sees who submitted and when, and blind credentials add nothing. For the `anonymous` mask to mean anonymous from ACAPS, the answer must go to an endpoint that does not know the magic link: separate request, no cookie, no logged IP, no shared session. **This is the main open question (Q-A1).**
-2. **Network metadata.** IP address, timing and user agent can identify a person on a panel of 8. A relay or a delay does not fix it. State it.
-3. **Issuance timing.** If tokens are issued to one expert at a time and spent soon after, the order of events can link them. Batch issuance at approval and a delay between issue and spend reduce this. With a 2-month pilot and about 8 experts the anonymity set is small.
-4. **Small anonymity set.** Among 8 panel members, "a vetted member answered" is a weak statement if only 3 are active that week. Also, the first expert to spend a token may be the only one awake in a time zone.
-5. **Distinctive wording and content.** A free-text line can identify the author to peers or to ACAPS. The card says so. A credential does not help.
-6. **Revocation.** To remove a compromised expert you cannot revoke a token you cannot link. You can refuse to issue new tokens and let the old ones expire. Say so.
-7. **Scoring without linkage.** An `anonymous` answer cannot be scored per person, so it cannot feed that person's calibration or pattern report. That is a feature: `anonymous` means no track record. The honesty box should say how many answers in a round were anonymous and therefore unscored.
-8. **Pattern reports vs anonymity.** Section 6d reports are per pseudonym. `anonymous` answers carry no pseudonym and must never be included. Test it.
+Test evidence: `tests/hardening/test_patterns.py` — the floor, each sentence, the affiliation merge, that no
+sentence names a person, that the module has no per-expert entry point left, and the programme's consent, floor,
+switch-off and committee-counts behaviour.
 
-**Wording for the card (one line):** "Answered with a one-time vetted credential. ACAPS cannot link it to your approval. Timing and wording can still identify you on a small panel." This follows the "guarantees / does not" rule.
+## 4a. The card, and where a written line goes
 
-## 4. Per-expert response-pattern reports (6d): the privacy view
+Three changes in v3.4 are privacy decisions as much as usability ones.
 
-The reports are sentences about each expert's behaviour (calibration, extremity, agreement after reveal, round-2 shift, source mix, abstention, answer latency, co-movement partners), shown to the committee and, opt-in, to the expert. Concerns, for the team:
+* **Nothing commits on a link click.** `POST /e/{token}/answer` drafts and returns the line the confirmation screen
+  repeats back; `POST /e/{token}/confirm` commits. A mail scanner, a link preview or a mistaken tap cannot answer on
+  somebody's behalf, and the credential is spent by the confirmation rather than the draft.
+* **The mask has no default.** A default mask is a decision about someone's confidentiality taken by whoever wrote
+  the code, so the engine refuses an answer without one rather than guessing.
+* **Correction until the deadline, with every version kept.** For an answer under the "no identity kept" mask the
+  only handle is an edit key minted once with the confirmation; the server stores its hash. A token-to-answer map
+  would have been simpler and would have reconstructed exactly the link that mask exists to prevent.
 
-- **Pseudonym is not anonymity.** The pseudonym is an HMAC of the internal id. The committee holds the registry, so a "per pseudonym" report is a report about a named person. Treat it as personal data: tell experts at sign-up, get consent, allow them to see their own report, and let them opt out of being profiled. The pilot needs a consent text; ACAPS legal should review (question to Alex).
-- **Answer latency is a time-based metric.** The brief's "Should not" row says engagement metrics must not be the goal, and our hard rule 4 says no time-in-app. Latency is not time-in-app, but it measures responsiveness. Recommend dropping it or keeping it out of anything shown to the committee. (Proposal P22.)
-- **Co-movement partners** names a pair of people as moving together. The v3 rule is that integrity notes describe patterns and do not diagnose a person. A note naming a partner is closer to an accusation. Recommend showing co-movement only as an aggregate at panel level ("two pairs on this panel moved together after reveal") on the desk, not per expert.
-- **Small numbers.** After 3 pulses, a share like "4 of 5" is noise. Show the counts and the sentence "too few to say" under 5 pulses, and never present a pattern as a trait.
-- **Never a score, never used to approve or remove, never public, never on free text.** Keep these four in the report footer and in tests.
-- **Group interpretation.** An expert who "moves toward ACAPS's band in round 2" may simply be learning. The sentence must say what happened, not why.
+Where a written line ends up is now the central disclosure question, because a panel is eight people:
 
-## 5. What we say on a slide
+* A theme **two or more** experts raised keeps its words and appears in `missing_evidence`.
+* A line **one** expert wrote keeps its count and loses its words: `missing_themes` reports it as held, and the text
+  goes to the verification queue, read only with a who and a why, with every read logged.
+* **Disagreement is unattributed and never verbatim** — a direction, a count, and the subject the notes were about,
+  derived from themes. A group of one does not even get its subject named, because in a panel of eight the subject
+  narrows it to a person.
+* The counts of the card's closed follow-up questions are moderator-only, for the same reason: a one-of-eight option
+  count read beside a distinctive line is the pair that identifies somebody.
 
-One sentence, if asked in Q&A: "Answers are committed with a timestamp and anchored daily to an independent public timestamp. Anonymous answers carry a one-time credential ACAPS cannot link to your approval, and we list what that does not cover. The identity map is encrypted with a post-quantum scheme, every read is logged, and outcomes are signed. Each of these is on the trust page with its limit." Never say "unhackable", "anonymous from everyone", or "quantum-proof".
+The honesty box carries the standing line on every entry: *in a panel of eight a distinctive reason may identify its
+author to colleagues; experts were told this before answering.* The card shows the same sentence, from the same
+constant, next to the mask picker.
 
-## 6. Questions for Lane A
+## 5. What is not built, and why the flag is off
 
-- **Q-A1.** Is the `anonymous` submission separate from the personal magic link, with no logged IP? If not, do not show the credential line for that mask.
-- **Q-A2.** What does "hybrid" mean for ML-KEM-768, and where does the committee key live in the demo?
-- **Q-A3.** Who holds the ML-DSA key in the demo? The UI line should say "demo key".
-- **Q-A4.** Does the demo run offline with the anchor `pending`? Then the ledger must say "pending", and nobody says "anchored" on stage.
-- **Q-A5.** Are `anonymous` answers excluded from 6d reports and from calibration? Is there a test?
-- **Q-A6.** Can an admin edit or delete rows in the registry access log?
+**The zero-knowledge proof verifier.** The group tree, its published root and the per-pulse nullifier are built and
+enforced: a second answer under the same nullifier is refused, server-side, and that is tested. The Groth16 check
+that proves a nullifier belongs to the tree without naming the leaf is **not** implemented. It needs the circuit's
+verification key and a BN254 pairing check, and the proof has to be generated in the browser; neither exists in
+this build. So `verify` returns `cryptographic_verification: false`, names what it did and did not check, `FF_ZK`
+ships off, and with the flag off no proof is accepted at all.
+
+Without that verifier the mechanism cannot tell a real proof from a well-formed fake, so it guarantees
+double-answer prevention and nothing else. The Trust page says this in those words. On stage it belongs in "what we
+did not do and why", beside no public scores, no auto-decisions and no blockchain logic — not in the list of
+things that work.
+
+## 6. Threat model for the credential path (Lane C)
+
+What the scheme gives: the committee signs a blinded token when an expert is approved, the card unblinds it and spends one token per answer, and a spent token is refused a second time. Because of the blinding, the committee cannot match a spent token to the approval. That claim holds for the `blinded` issuance path only. A batch minted with `count` is marked `unlinkable: false` in the committee view and makes no such claim.
+
+What can still link an answer to a person, and what we say about each:
+
+1. **The personal link.** The confirmation arrives over the expert's own magic link, so the server process sees which link was used and when. The build stores no identity with an unattributed answer, but a credential does not stop the operator from seeing the request. Pseudonymised to ACAPS, not anonymous from the operator.
+2. **Network metadata.** IP address, timing and user agent can identify a person on a panel of eight. Nothing in the build hides them.
+3. **Issuance timing.** Tokens issued to one expert and spent soon after can be matched by order. Batch issuance at approval and a delay between issue and spend lower this; they do not remove it. With eight experts the anonymity set is small.
+4. **Small panel.** "A vetted member answered" says little if only three members are active that week.
+5. **Distinctive wording.** A free-text line can identify its author to peers or to ACAPS. The card says so, and distinctive text goes to the access-logged verification queue.
+6. **Revocation.** A token that cannot be linked cannot be revoked. The remedy is to refuse new tokens to a stopped expert and let old tokens expire, because a new issuer key retires every token of the old one (`GET /api/credentials/issuer` says the issuer is generated per process).
+7. **Scoring without linkage.** An unattributed answer cannot enter anyone's calibration. That is intended: it carries no track record. Forecast scoring is at panel level.
+
+Sources: Chaum 1983, *Blind Signatures for Untraceable Payments* (DOI 10.1007/978-1-4757-0602-4_18); [RFC 9474, RSA Blind Signatures](https://www.rfc-editor.org/rfc/rfc9474); NIST [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final) and [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final), both published 13 Aug 2024; [Semaphore documentation](https://docs.semaphore.pse.dev/) (the v4.0.0 audit by PSE is public; the Veridise audit covers v3); [OpenTimestamps](https://en.wikipedia.org/wiki/OpenTimestamps).
